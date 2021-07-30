@@ -1,0 +1,131 @@
+import Foundation
+import ArgumentParser
+import SotoS3
+
+
+struct S3Manager {
+
+    func listObjects(region: Region, bucket: String, startingWith prefix: String) throws -> [S3.Object] {
+
+        let client = AWSClient(
+            credentialProvider: .configFile(),
+            httpClientProvider: .createNew
+        )
+
+        defer {
+            try! client.syncShutdown()
+        }
+
+        let s3 = S3(client: client, region: region)
+
+        let request = S3.ListObjectsV2Request(
+            bucket: bucket,
+            maxKeys: 1000,
+            prefix: prefix
+        )
+
+        let result = try s3.listObjectsV2(request).wait()
+        return result.contents ?? []
+    }
+
+    func getFileBytes(region: Region, bucket: String, key: String) throws -> Data? {
+        let client = AWSClient(
+            credentialProvider: .configFile(),
+            httpClientProvider: .createNew
+        )
+
+        defer {
+            try! client.syncShutdown()
+        }
+
+        let s3 = S3(client: client, region: region)
+
+        let request = S3.GetObjectRequest(
+            bucket: bucket,
+            key: key
+        )
+
+        let result = try s3.getObject(request).wait()
+        return result.body?.asData()
+    }
+
+    func getFileSize(region: Region, bucket: String, key: String) throws -> Int64 {
+        try listObjects(region: region, bucket: bucket, startingWith: key).first?.size ?? 0
+    }
+
+    func streamingDownloadFile(region: Region, bucket: String, key: String, destination: URL, progressCallback: FileTransferProgressCallback? = nil) throws {
+
+        let client = AWSClient(credentialProvider: .configFile(), httpClientProvider: .createNew)
+
+        defer {
+            try! client.syncShutdown()
+        }
+
+        /// Create the parent directory if needed
+        try FileManager.default.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+
+        FileManager.default.createFile(atPath: destination.path, contents: nil)
+
+        let handle = try getFileHandle(to: destination)
+
+        defer {
+            try? handle.close()
+        }
+
+        var downloadedBytes = 0
+        let totalBytes = try getFileSize(region: region, bucket: bucket, key: key)
+
+        let s3 = try getS3Client(from: client, for: bucket, in: region)
+        let objectRequest = S3.GetObjectRequest(bucket: bucket, key: key)
+
+        _ = try s3.getObjectStreaming(objectRequest, logger: logger) { buffer, loop in
+            let availableBytes = buffer.readableBytes
+            downloadedBytes += availableBytes
+            if let bytes = buffer.getData(at: buffer.readerIndex, length: availableBytes) {
+                handle.write(bytes)
+            }
+            progressCallback?(availableBytes, downloadedBytes, totalBytes)
+            return loop.makeSucceededVoidFuture()
+        }.wait()
+    }
+
+    private func getFileHandle(to destination: URL) throws -> FileHandle {
+        do {
+            return try FileHandle(forWritingTo: destination)
+        } catch let err {
+            print("Unable write to \(destination): \(err.localizedDescription)")
+            throw err
+        }
+    }
+
+    private func getS3Client(from aws: AWSClient, for bucket: String, in region: Region) throws -> S3 {
+        let s3 = S3(client: aws, region: region)
+
+        guard try bucketTransferAccelerationIsEnabled(for: bucket, in: region) else {
+            return s3
+        }
+
+        return S3(client: aws, region: region, endpoint: "https://\(bucket).s3-accelerate.amazonaws.com")
+    }
+
+    private func bucketTransferAccelerationIsEnabled(for bucket: String, in region: Region) throws -> Bool {
+        let client = AWSClient(
+            credentialProvider: .configFile(),
+            httpClientProvider: .createNew
+        )
+
+        defer {
+            try! client.syncShutdown()
+        }
+
+        let bucketInfoRequest = S3.GetBucketAccelerateConfigurationRequest(bucket: bucket)
+        return try S3(client: client, region: region)
+            .getBucketAccelerateConfiguration(bucketInfoRequest, logger: logger)
+            .wait()
+            .status == .enabled
+    }
+}
+
+extension Region: ExpressibleByArgument {}
+
+typealias FileTransferProgressCallback = (Int, Int, Int64) -> Void

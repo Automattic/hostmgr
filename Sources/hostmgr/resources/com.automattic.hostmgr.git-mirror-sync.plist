@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.automattic.hostmgr.git-mirror-sync</string>
+	<key>Program</key>
+	<string>/usr/local/bin/aws</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/usr/local/bin/aws</string>
+		<string>s3</string>
+		<string>sync</string>
+		<string>s3://a8c-repo-mirrors</string>
+		<string>/usr/local/var/git-mirrors</string>
+		<string>--delete</string>
+	</array>
+	<key>StandardErrorPath</key>
+	<string>/usr/local/var/log/git-mirror-server-sync-stderr.log</string>
+	<key>StandardOutPath</key>
+	<string>/usr/local/var/log/git-mirror-server-sync-stdout.log</string>
+	<key>StartInterval</key>
+	<integer>900</integer>
+	<key>WorkingDirectory</key>
+	<string>/usr/local/var/</string>
+</dict>
+</plist>
