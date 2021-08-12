@@ -29,6 +29,8 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
     // swiftlint:disable:next function_body_length
     func generateExports(from environment: [String: String] = ProcessInfo.processInfo.environment) throws -> [String: String] {
 
+        // See https://buildkite.com/docs/pipelines/environment-variables for
+        // and up-to-date list of environment variables that Buildkite exports
         let copyableExports = [
             "BUILDKITE_JOB_ID",
             "BUILDKITE_REPO",
