@@ -32,6 +32,7 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
         // See https://buildkite.com/docs/pipelines/environment-variables for
         // and up-to-date list of environment variables that Buildkite exports
         let copyableExports = [
+            "BUILDKITE",
             "BUILDKITE_JOB_ID",
             "BUILDKITE_REPO",
             "BUILDKITE_COMMIT",
