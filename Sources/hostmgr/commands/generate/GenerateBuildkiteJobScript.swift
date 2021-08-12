@@ -26,6 +26,7 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
         ].joined(separator: "\n")
     }
 
+    // swiftlint:disable:next function_body_length
     func generateExports(from environment: [String: String] = ProcessInfo.processInfo.environment) throws -> [String: String] {
 
         let copyableExports = [
