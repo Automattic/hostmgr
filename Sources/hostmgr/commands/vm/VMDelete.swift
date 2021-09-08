@@ -24,7 +24,7 @@ struct VMDeleteCommand: ParsableCommand {
         try vm?.delete()
 
         if let prefix = startingWith {
-            try VMLocalImageManager().lookupStoppedVMsBy(prefix: prefix).forEach { try $0.delete() }
+            try VMLocalImageManager().lookupVMsBy(prefix: prefix).forEach { try $0.delete() }
         }
     }
 }

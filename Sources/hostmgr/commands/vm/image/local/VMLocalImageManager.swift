@@ -30,14 +30,14 @@ struct VMLocalImageManager {
         try Parallels().lookupVM(named: name)?.delete()
     }
 
-    func lookupStoppedVMsBy(handle: String) throws -> [StoppedVM] {
-        return try Parallels().lookupStoppedVMs().filter { vm in
+    func lookupVMsBy(handle: String) throws -> [VMProtocol] {
+        return try Parallels().lookupAllVMs().filter { vm in
             return vm.name == handle || vm.uuid == handle
         }
     }
 
-    func lookupStoppedVMsBy(prefix: String) throws -> [StoppedVM] {
-        return try Parallels().lookupStoppedVMs().filter { vm in
+    func lookupVMsBy(prefix: String) throws -> [VMProtocol] {
+        return try Parallels().lookupAllVMs().filter { vm in
             return vm.name.hasPrefix(prefix)
         }
     }
