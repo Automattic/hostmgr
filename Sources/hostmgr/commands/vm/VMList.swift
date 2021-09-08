@@ -19,8 +19,8 @@ struct VMListCommand: ParsableCommand {
             case .running: try printRunningVMs()
             case .stopped: try printStoppedVMs()
             case .packaged: try printPackagedVMs()
-            case .suspended: debugPrint("It's not currently possible to look up suspended VMs")
-            case .invalid: debugPrint("It's not currently possible to look up invalid VMs")
+            case .suspended: try printSuspendedVMs()
+            case .invalid: try printInvalidVMs()
             case nil: try printAllVMs()
         }
     }
@@ -28,24 +28,43 @@ struct VMListCommand: ParsableCommand {
     private func printAllVMs() throws {
         try printRunningVMs()
         try printStoppedVMs()
+        try printPackagedVMs()
+        try printSuspendedVMs()
+        try printInvalidVMs()
     }
 
     private func printRunningVMs() throws {
         try Parallels().lookupRunningVMs().forEach {
-            print("running\t\($0.name)\t\($0.uuid)\t\($0.ipAddress)")
+            printStatus(status: .running, vm: $0, ip: $0.ipAddress)
         }
     }
 
     private func printStoppedVMs() throws {
         try Parallels().lookupStoppedVMs().forEach {
-            print("stopped\t\($0.name)\t\($0.uuid)")
+            printStatus(status: .stopped, vm: $0)
+        }
+    }
+
+    private func printSuspendedVMs() throws {
+        try Parallels().lookupSuspendedVMs().forEach {
+            printStatus(status: .suspended, vm: $0)
         }
     }
 
     private func printPackagedVMs() throws {
         try Parallels().lookupPackagedVMs().forEach {
-            print("packaged\t\($0.name)\t\($0.uuid)")
+            printStatus(status: .packaged, vm: $0)
         }
+    }
+
+    private func printInvalidVMs() throws {
+        try Parallels().lookupInvalidVMs().forEach {
+            printStatus(status: .invalid, vm: $0)
+        }
+    }
+
+    private func printStatus(status: VMStatus, vm: VMProtocol, ip: String? = nil) {
+        print("\(status.rawValue)\t\(vm.name)\t\(vm.uuid)")
     }
 }
 
