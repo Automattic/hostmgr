@@ -40,6 +40,7 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
             "BUILDKITE_TAG",
             "BUILDKITE_REFSPEC",
             "BUILDKITE_PULL_REQUEST",
+            "BUILDKITE_PULL_REQUEST_REPO",
             "BUILDKITE_AGENT_META_DATA_QUEUE",
             "BUILDKITE_ORGANIZATION_SLUG",
             "BUILDKITE_PIPELINE_SLUG",
