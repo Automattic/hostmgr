@@ -30,18 +30,51 @@ struct VMCloneCommand: ParsableCommand {
     )
     var wait: Bool = false
 
+    @Flag(
+        help: "Don't customize the VM's CPU and memory for the physical host – retain its existing settings"
+    )
+    var skipHostCustomization: Bool = false
+
+    @Option(
+        help: "Hypervisor Type"
+    )
+    var hypervisorType: StoppedVM.HypervisorType = .apple
+
+    @Option(
+        help: "Networking Type"
+    )
+    var networkingType: StoppedVM.NetworkType = .bridged
+
     func run() throws {
 
         let startDate = Date()
 
         try cloneVM(vm: source, wait: wait || start, startDate: startDate)
 
-        if start {
-            guard let newVM = try Parallels().lookupVM(named: destination)?.asStoppedVM() else {
-                print("Error finding cloned VM")
-                VMCloneCommand.exit()
-            }
+        guard let newVM = try Parallels().lookupVM(named: destination)?.asStoppedVM() else {
+            print("Error finding cloned VM")
+            VMCloneCommand.exit()
+        }
 
+        if !skipHostCustomization {
+
+            let totalSystemMemory = Int(ProcessInfo().physicalMemory / (1024 * 1024)) // In MB
+            let vmAvailableMemory = totalSystemMemory - 4096 // Always leave 4GB available to the VM host – the VM can have the rest
+
+            logger.debug("Total System Memory: \(totalSystemMemory) MB")
+            logger.debug("Allocating \(vmAvailableMemory) MB to VM")
+
+            let cpuCoreCount = ProcessInfo().physicalProcessorCount
+            logger.debug("Allocating \(cpuCoreCount) cores to VM")
+
+            try newVM.set(.cpuCount(cpuCoreCount))
+            try newVM.set(.memorySize(vmAvailableMemory))
+        }
+
+        try newVM.set(.hypervisorType(hypervisorType))
+        try newVM.set(.networkType(networkingType))
+
+        if start {
             try startVM(vm: newVM, wait: wait, startDate: startDate)
         }
     }
@@ -76,3 +109,6 @@ struct VMCloneCommand: ParsableCommand {
         print(String(format: "VM cloned and booted in %.2f seconds", Date().timeIntervalSince(startDate)))
     }
 }
+
+extension StoppedVM.NetworkType: ExpressibleByArgument {}
+extension StoppedVM.HypervisorType: ExpressibleByArgument {}
