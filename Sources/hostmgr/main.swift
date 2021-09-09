@@ -4,6 +4,8 @@ import Logging
 
 struct HostMgr: ParsableCommand {
 
+    private var appVersion = "0.6.0"
+
     static var configuration = CommandConfiguration(
         abstract: "A utility for managing VM hosts",
         subcommands: [
@@ -20,7 +22,7 @@ struct HostMgr: ParsableCommand {
     func run() throws {
         logger.debug("Starting Up")
         if version {
-            print("1.0.0")
+            print(appVersion)
         } else {
             throw CleanExit.helpRequest(self)
         }
