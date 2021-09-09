@@ -11,7 +11,7 @@
         }
       },
       {
-        "package": "kcpassword-swift",
+        "package": "kcpassword",
         "repositoryURL": "https://github.com/jkmassel/kcpassword-swift.git",
         "state": {
           "branch": null,
