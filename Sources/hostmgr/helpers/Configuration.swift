@@ -7,6 +7,11 @@ enum SchedulableSyncCommand: String, Codable, CaseIterable, ExpressibleByArgumen
     case vm_images = "vm_images"
 }
 
+enum AWSConfigurationType: String, Codable {
+    case configurationFile
+    case ec2Environment
+}
+
 struct Configuration: Codable {
     var version = 1
 
@@ -44,6 +49,9 @@ struct Configuration: Codable {
         URL(fileURLWithPath: localGitMirrorStorageDirectory)
     }
     var gitMirrorPort: UInt = 41362
+
+    var allowAWSAcceleratedTransfer: Bool = true
+    var awsConfigurationMethod: AWSConfigurationType = .configurationFile
 
     static var shared: Configuration = (try? StateManager.getConfiguration()) ?? Configuration()
 

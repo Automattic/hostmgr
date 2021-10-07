@@ -7,10 +7,7 @@ struct S3Manager {
 
     func listObjects(region: Region, bucket: String, startingWith prefix: String) throws -> [S3.Object] {
 
-        let client = AWSClient(
-            credentialProvider: .configFile(),
-            httpClientProvider: .createNew
-        )
+        let client = getAWSClient()
 
         defer {
             try! client.syncShutdown()
@@ -29,10 +26,7 @@ struct S3Manager {
     }
 
     func getFileBytes(region: Region, bucket: String, key: String) throws -> Data? {
-        let client = AWSClient(
-            credentialProvider: .configFile(),
-            httpClientProvider: .createNew
-        )
+        let client = getAWSClient()
 
         defer {
             try! client.syncShutdown()
@@ -55,7 +49,7 @@ struct S3Manager {
 
     func streamingDownloadFile(region: Region, bucket: String, key: String, destination: URL, progressCallback: FileTransferProgressCallback? = nil) throws {
 
-        let client = AWSClient(credentialProvider: .configFile(), httpClientProvider: .createNew)
+        let client = getAWSClient()
 
         defer {
             try! client.syncShutdown()
@@ -98,10 +92,28 @@ struct S3Manager {
         }
     }
 
+    private func getAWSClient() -> AWSClient {
+
+        var credentialProvider: CredentialProviderFactory
+
+        print("Using \(Configuration.shared.awsConfigurationMethod) to connect to AWS")
+
+        switch Configuration.shared.awsConfigurationMethod {
+            case .configurationFile:credentialProvider = .configFile()
+            case .ec2Environment: credentialProvider = .ec2
+
+        }
+
+        return AWSClient(
+            credentialProvider: credentialProvider,
+            httpClientProvider: .createNew
+        )
+    }
+
     private func getS3Client(from aws: AWSClient, for bucket: String, in region: Region) throws -> S3 {
         let s3 = S3(client: aws, region: region)
 
-        guard try bucketTransferAccelerationIsEnabled(for: bucket, in: region) else {
+        guard try bucketTransferAccelerationIsEnabled(for: bucket, in: region) && Configuration.shared.allowAWSAcceleratedTransfer else {
             return s3
         }
 
@@ -109,10 +121,7 @@ struct S3Manager {
     }
 
     private func bucketTransferAccelerationIsEnabled(for bucket: String, in region: Region) throws -> Bool {
-        let client = AWSClient(
-            credentialProvider: .configFile(),
-            httpClientProvider: .createNew
-        )
+        let client = getAWSClient()
 
         defer {
             try! client.syncShutdown()
