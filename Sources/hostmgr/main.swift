@@ -4,7 +4,7 @@ import Logging
 
 struct HostMgr: ParsableCommand {
 
-    private var appVersion = "0.6.0"
+    private var appVersion = "0.7.0"
 
     static var configuration = CommandConfiguration(
         abstract: "A utility for managing VM hosts",
