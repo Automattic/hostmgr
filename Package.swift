@@ -31,12 +31,24 @@ let package = Package(
                 .product(name: "Tqdm", package: "swift-tqdm"),
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "kcpassword", package: "kcpassword"),
+                .target(name: "libhostmgr")
             ],
             exclude: ["resources"]
         ),
+        .target(
+            name: "libhostmgr",
+            dependencies: [
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "SotoS3", package: "soto"),
+            ]
+        ),
         .testTarget(
-            name: "hostmgrTests",
-            dependencies: ["hostmgr"]
+            name: "libhostmgrTests",
+            dependencies: ["libhostmgr"],
+            resources: [
+                .copy("resources/configurations/0.6.0.json"),
+                .copy("resources/configurations/defaults.json"),
+            ]
         ),
     ]
 )

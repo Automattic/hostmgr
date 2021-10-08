@@ -1,5 +1,6 @@
 import Foundation
 import prlctl
+import libhostmgr
 
 struct VMLocalImageManager {
 

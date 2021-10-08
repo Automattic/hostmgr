@@ -1,0 +1,8 @@
+{
+  "authorizedKeysBucket" : "my-bucket",
+  "authorizedKeysRegion" : "us-east-2",
+  "gitMirrorBucket" : "my-mirror-bucket",
+  "vmImagesRegion" : "us-east-2",
+  "version" : 1,
+  "vmImagesBucket" : "my-images-bucket"
+}

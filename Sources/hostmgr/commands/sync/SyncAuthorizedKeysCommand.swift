@@ -1,6 +1,7 @@
 import Foundation
 import ArgumentParser
 import SotoS3
+import libhostmgr
 
 struct SyncAuthorizedKeysCommand: ParsableCommand {
 

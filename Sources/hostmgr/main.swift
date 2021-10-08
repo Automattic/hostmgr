@@ -1,6 +1,7 @@
 import ArgumentParser
 import SotoS3
 import Logging
+import libhostmgr
 
 struct HostMgr: ParsableCommand {
 
@@ -14,6 +15,7 @@ struct HostMgr: ParsableCommand {
             InitCommand.self,
             RunCommand.self,
             SetCommand.self,
+            BenchmarkCommand.self,
         ])
 
     @Flag(help: "Print the version and exit")
@@ -77,13 +79,6 @@ struct InitCommand: ParsableCommand {
 
         print("== Authorized Keys Sync ==\n")
 
-        let authorizedKeysSyncInterval = prompt(
-            "How frequently would you like to sync the authorized_keys file? (in seconds)",
-            currentValue: String(Configuration.shared.authorizedKeysSyncInterval)
-        ) { Int($0) != nil && Int($0) != 0 }
-
-        Configuration.shared.authorizedKeysSyncInterval = Int(authorizedKeysSyncInterval)!
-
         Configuration.shared.authorizedKeysBucket = prompt(
             "Which S3 bucket contains your authorized_keys file?",
             currentValue: Configuration.shared.authorizedKeysBucket
@@ -95,12 +90,6 @@ struct InitCommand: ParsableCommand {
         ) { Region(awsRegionName: $0) != nil }
 
         Configuration.shared.authorizedKeysRegion = Region(awsRegionName: authorizedKeysRegion)!
-
-        print("== Git Mirror Server Setup ==\n")
-        Configuration.shared.gitMirrorPort = promptForUInt(
-            "Which port would you like to use for the git mirror server?",
-            currentValue: Configuration.shared.gitMirrorPort
-        )
 
         Configuration.shared.gitMirrorBucket = prompt(
             "Which S3 bucket would you like to use as the data source for the git mirror server?",

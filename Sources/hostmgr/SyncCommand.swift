@@ -1,5 +1,6 @@
 import Foundation
 import ArgumentParser
+import libhostmgr
 
 struct SyncCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
@@ -15,7 +16,7 @@ struct SyncCommand: ParsableCommand {
     var list: Bool = false
 
     @Argument
-    var task: SchedulableSyncCommand?
+    var task: Configuration.SchedulableSyncCommand?
 
     func run() throws {
 
@@ -25,7 +26,7 @@ struct SyncCommand: ParsableCommand {
         }
 
         if list {
-            SchedulableSyncCommand.allCases.forEach { print($0) }
+            Configuration.SchedulableSyncCommand.allCases.forEach { print($0) }
             return
         }
 
@@ -38,10 +39,10 @@ struct SyncCommand: ParsableCommand {
         }
     }
 
-    private func perform(task: SchedulableSyncCommand) throws {
+    private func perform(task: Configuration.SchedulableSyncCommand) throws {
         switch task {
-            case .authorized_keys: try SyncAuthorizedKeysTask().run()
-            case .vm_images: try SyncVMImagesTask().run()
+            case .authorizedKeys: try SyncAuthorizedKeysTask().run()
+            case .vmImages: try SyncVMImagesTask().run()
         }
     }
 }
