@@ -23,20 +23,19 @@ struct Configuration: Codable {
     /// VM Remote Image Settings
     var vmImagesBucket: String = ""
     var vmImagesRegion: Region = .useast1
-    var useVMTransferAcceleration: Bool = false
 
     /// Images that are protected from deletion (useful for local work, or for a fallback image)
     var protectedImages: [String] = []
-    private var localImageStorageDirectory: String = "/usr/local/var/vm-images"
+    private var localImageStorageDirectory: String! = "/usr/local/var/vm-images"
     var vmStorageDirectory: URL {
         URL(fileURLWithPath: localImageStorageDirectory)
     }
 
     /// authorized_keys file sync
-    var authorizedKeysSyncInterval: Int = 3600
+    var authorizedKeysSyncInterval: Int! = 3600
     var authorizedKeysBucket: String = ""
     var authorizedKeysRegion: Region = .useast1
-    var localAuthorizedKeys: String = FileManager.default
+    var localAuthorizedKeys: String! = FileManager.default
         .homeDirectoryForCurrentUser
         .appendingPathComponent(".ssh")
         .appendingPathComponent("authorized_keys")
@@ -44,14 +43,14 @@ struct Configuration: Codable {
 
     /// git repo mirroring
     var gitMirrorBucket: String = ""
-    private var localGitMirrorStorageDirectory: String = "/usr/local/var/git-mirrors"
+    private var localGitMirrorStorageDirectory: String! = "/usr/local/var/git-mirrors"
     var gitMirrorDirectory: URL {
         URL(fileURLWithPath: localGitMirrorStorageDirectory)
     }
-    var gitMirrorPort: UInt = 41362
+    var gitMirrorPort: UInt! = 41362
 
-    var allowAWSAcceleratedTransfer: Bool = true
-    var awsConfigurationMethod: AWSConfigurationType = .configurationFile
+    var allowAWSAcceleratedTransfer: Bool! = true
+    var awsConfigurationMethod: AWSConfigurationType! = .configurationFile
 
     static var shared: Configuration = (try? StateManager.getConfiguration()) ?? Configuration()
 

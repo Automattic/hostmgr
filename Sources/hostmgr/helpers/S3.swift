@@ -96,12 +96,12 @@ struct S3Manager {
 
         var credentialProvider: CredentialProviderFactory
 
-        print("Using \(Configuration.shared.awsConfigurationMethod) to connect to AWS")
+        print("Using \(Configuration.shared.awsConfigurationMethod!) to connect to AWS")
 
         switch Configuration.shared.awsConfigurationMethod {
             case .configurationFile:credentialProvider = .configFile()
             case .ec2Environment: credentialProvider = .ec2
-
+            case .none: credentialProvider = .configFile()
         }
 
         return AWSClient(
@@ -113,7 +113,11 @@ struct S3Manager {
     private func getS3Client(from aws: AWSClient, for bucket: String, in region: Region) throws -> S3 {
         let s3 = S3(client: aws, region: region)
 
-        guard try bucketTransferAccelerationIsEnabled(for: bucket, in: region) && Configuration.shared.allowAWSAcceleratedTransfer else {
+        guard Configuration.shared.allowAWSAcceleratedTransfer else {
+            return s3
+        }
+
+        guard try bucketTransferAccelerationIsEnabled(for: bucket, in: region) else {
             return s3
         }
 
