@@ -61,6 +61,11 @@ struct Configuration: Codable {
         return self
     }
 
+    static var isValid: Bool {
+        let configuration = try? StateManager.getConfiguration()
+        return configuration != nil
+    }
+
     @discardableResult
     func save() throws -> Configuration {
         return try StateManager.write(configuration: self)
