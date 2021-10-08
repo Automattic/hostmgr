@@ -1,0 +1,20 @@
+{
+  "authorizedKeysBucket" : "authorized-keys-bucket",
+  "authorizedKeysRegion" : "us-east-2",
+  "authorizedKeysSyncInterval" : 123456,
+  "gitMirrorBucket" : "git-mirror-bucket",
+  "vmImagesRegion" : "us-east-2",
+  "version" : 1,
+  "protectedImages" : [
+    "foo-bar-baz",
+  ],
+  "useVMTransferAcceleration" : false,
+  "localGitMirrorStorageDirectory" : "git-mirror-storage-dir",
+  "localAuthorizedKeys" : "authorized-keys-path",
+  "syncTasks" : [
+    "vm_images"
+  ],
+  "localImageStorageDirectory" : "image-storage-dir",
+  "gitMirrorPort" : 123456,
+  "vmImagesBucket" : "vm-images-bucket"
+}

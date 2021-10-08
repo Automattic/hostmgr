@@ -1,6 +1,7 @@
 import Foundation
 import ArgumentParser
 import Logging
+import libhostmgr
 
 struct GenerateGitMirrorManifestCommand: ParsableCommand {
 

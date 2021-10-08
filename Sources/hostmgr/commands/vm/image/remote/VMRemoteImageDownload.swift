@@ -2,6 +2,7 @@ import Foundation
 import ArgumentParser
 import SotoS3
 import Tqdm
+import libhostmgr
 
 struct VMRemoteImageDownload: ParsableCommand {
 

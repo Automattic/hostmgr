@@ -2,6 +2,7 @@ import Foundation
 import ArgumentParser
 import prlctl
 import Logging
+import libhostmgr
 
 private let startDate = Date()
 

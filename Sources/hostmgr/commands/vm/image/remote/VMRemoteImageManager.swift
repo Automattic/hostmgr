@@ -1,6 +1,7 @@
 import Foundation
 import Cocoa
 import SotoS3
+import libhostmgr
 
 import IOKit
 import IOKit.pwr_mgt
