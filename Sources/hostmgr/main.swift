@@ -16,6 +16,7 @@ struct HostMgr: ParsableCommand {
             RunCommand.self,
             SetCommand.self,
             BenchmarkCommand.self,
+            ConfigCommand.self,
         ])
 
     @Flag(help: "Print the version and exit")
