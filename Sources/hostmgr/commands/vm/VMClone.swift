@@ -45,11 +45,16 @@ struct VMCloneCommand: ParsableCommand {
     )
     var networkingType: StoppedVM.NetworkType = .bridged
 
+    @Option(
+        help: "Clone type"
+    )
+    var depth: CloneType = .shallow
+
     func run() throws {
 
         let startDate = Date()
 
-        try cloneVM(vm: source, wait: wait || start, startDate: startDate)
+        try clone(vm: source, wait: wait || start, startDate: startDate, type: depth)
 
         guard let newVM = try Parallels().lookupVM(named: destination)?.asStoppedVM() else {
             print("Error finding cloned VM")
@@ -60,18 +65,20 @@ struct VMCloneCommand: ParsableCommand {
 
             let totalSystemMemory = Int(ProcessInfo().physicalMemory / (1024 * 1024)) // In MB
             let vmAvailableMemory = totalSystemMemory - 4096 // Always leave 4GB available to the VM host – the VM can have the rest
+            let cpuCoreCount = ProcessInfo().physicalProcessorCount
 
             logger.debug("Total System Memory: \(totalSystemMemory) MB")
             logger.debug("Allocating \(vmAvailableMemory) MB to VM")
-
-            let cpuCoreCount = ProcessInfo().physicalProcessorCount
-            logger.debug("Allocating \(cpuCoreCount) cores to VM")
-
-            try newVM.set(.cpuCount(cpuCoreCount))
             try newVM.set(.memorySize(vmAvailableMemory))
+
+            logger.debug("Allocating \(cpuCoreCount) cores to VM")
+            try newVM.set(.cpuCount(cpuCoreCount))
         }
 
+        logger.debug("Setting Hypervisor type to \(hypervisorType)")
         try newVM.set(.hypervisorType(hypervisorType))
+
+        logger.debug("Setting Networking type to \(networkingType)")
         try newVM.set(.networkType(networkingType))
 
         if start {
@@ -79,8 +86,8 @@ struct VMCloneCommand: ParsableCommand {
         }
     }
 
-    func cloneVM(vm: StoppedVM, wait: Bool, startDate: Date) throws {
-        try vm.clone(as: destination, fast: true)
+    func clone(vm: StoppedVM, wait: Bool, startDate: Date, type: CloneType = .shallow) throws {
+        try vm.clone(as: destination, fast: type.shouldUseFastClone)
 
         guard wait else {
             return
@@ -108,7 +115,23 @@ struct VMCloneCommand: ParsableCommand {
 
         print(String(format: "VM cloned and booted in %.2f seconds", Date().timeIntervalSince(startDate)))
     }
+
+    enum CloneType: String {
+        /// Shallow clones are far faster and are most useful when the cloned VM will be discarded
+        case shallow
+
+        /// Deep clones are slower, but are easier to export as a new VM
+        case full
+
+        var shouldUseFastClone: Bool {
+            switch self {
+                case .shallow: return true
+                case .full: return false
+            }
+        }
+    }
 }
 
 extension StoppedVM.NetworkType: ExpressibleByArgument {}
 extension StoppedVM.HypervisorType: ExpressibleByArgument {}
+extension VMCloneCommand.CloneType: ExpressibleByArgument {}
