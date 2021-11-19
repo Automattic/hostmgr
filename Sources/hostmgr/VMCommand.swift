@@ -17,6 +17,7 @@ struct VMCommand: ParsableCommand {
             VMCleanCommand.self,
             VMImportCommand.self,
             VMImageCommand.self,
+            VMExistsCommand.self,
         ]
     )
 }
