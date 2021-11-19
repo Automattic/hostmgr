@@ -5,7 +5,7 @@ if ! command -v gh &> /dev/null; then
 	brew install gh
 fi
 
-swift build -c release
+swift build -c release --arch arm64 --arch x86_64
 BUILDDIR=.build/artifacts/release
 mkdir -p $BUILDDIR
 
