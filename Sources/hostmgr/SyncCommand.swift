@@ -15,13 +15,16 @@ struct SyncCommand: ParsableCommand {
     @Flag(help: "List available sync tasks")
     var list: Bool = false
 
+    @Flag(help: "Force the job to run immediately, ignoring the schedule")
+    var force: Bool = false
+
     @Argument
     var task: Configuration.SchedulableSyncCommand?
 
     func run() throws {
 
         if let task = task {
-            try perform(task: task)
+            try perform(task: task, immediately: force)
             return
         }
 
@@ -34,15 +37,15 @@ struct SyncCommand: ParsableCommand {
         try GenerateGitMirrorManifestTask().run()
 
         try Configuration.shared.syncTasks.forEach { command in
-            print("Running \(command.rawValue)")
-            try perform(task: command)
+            force ? print("Force-running \(command.rawValue)") : print("Running \(command.rawValue)")
+            try perform(task: command, immediately: self.force)
         }
     }
 
-    private func perform(task: Configuration.SchedulableSyncCommand) throws {
+    private func perform(task: Configuration.SchedulableSyncCommand, immediately: Bool) throws {
         switch task {
-            case .authorizedKeys: try SyncAuthorizedKeysTask().run()
-            case .vmImages: try SyncVMImagesTask().run()
+            case .authorizedKeys: try SyncAuthorizedKeysTask().run(force: immediately)
+            case .vmImages: try SyncVMImagesTask().run(force: immediately)
         }
     }
 }
