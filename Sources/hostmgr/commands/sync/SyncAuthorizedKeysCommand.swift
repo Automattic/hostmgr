@@ -58,12 +58,12 @@ struct SyncAuthorizedKeysTask {
         self.destination = destination
     }
 
-    func run() throws {
+    func run(force: Bool = false) throws {
         let state = State.get()
 
         logger.debug("Downloading file from s3://\(bucket)/\(key) in \(region) to \(destination)")
 
-        guard state.shouldRun else {
+        guard state.shouldRun && force else {
             print("This job is not scheduled to run until \(state.nextRunTime)")
             return
         }

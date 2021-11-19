@@ -18,7 +18,7 @@ struct SyncVMImagesCommand: ParsableCommand {
 
 struct SyncVMImagesTask {
 
-    func run() throws {
+    func run(force: Bool = false) throws {
         var state = State.get()
 
         guard !state.isRunning else {
@@ -26,7 +26,7 @@ struct SyncVMImagesTask {
             return
         }
 
-        guard state.shouldRun else {
+        guard state.shouldRun && force else {
             print("This job is not scheduled to run until \(state.nextRunTime)")
             return
         }
