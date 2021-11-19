@@ -2,7 +2,13 @@ import Foundation
 
 public struct StateManager {
 
-    private static let configurationDirectory = URL(fileURLWithPath: "/usr/local/etc/hostmgr")
+    private static var configurationDirectory: URL {
+        switch ProcessInfo.processInfo.processorArchitecture {
+            case .arm64: return URL(fileURLWithPath: "/opt/homebrew/etc/hostmgr")
+            case .x86_64: return URL(fileURLWithPath: "/usr/local/etc/hostmgr")
+        }
+    }
+
     private static let filename = "config.json"
 
     private static var configurationPath: URL {
@@ -10,7 +16,7 @@ public struct StateManager {
     }
 
     private static var stateDirectory: URL {
-        URL(fileURLWithPath: "/usr/local/var/hostmgr").appendingPathComponent("state")
+        configurationDirectory.appendingPathComponent("hostmgr").appendingPathComponent("state")
     }
 
     public static var configurationFileExists: Bool {

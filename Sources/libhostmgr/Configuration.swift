@@ -21,8 +21,21 @@ public struct Configuration: Codable {
             .vmImages,
         ]
 
-        static let defaultLocalImageStorageDirectory = "/usr/local/var/vm-images"
-        static let defaultLocalGitMirrorStorageDirectory = "/usr/local/var/git-mirrors"
+        static var storageRoot: URL {
+            switch ProcessInfo.processInfo.processorArchitecture {
+                case .arm64: return URL(fileURLWithPath: "/opt/homebrew/var")
+                case .x86_64: return URL(fileURLWithPath: "/usr/local/var")
+            }
+        }
+
+        static var defaultLocalImageStorageDirectory: String {
+            return storageRoot.appendingPathComponent("vm-images").path
+        }
+
+        static var defaultLocalGitMirrorStorageDirectory: String {
+            return storageRoot.appendingPathComponent("git-mirrors").path
+        }
+
         static let defaultGitMirrorPort: UInt = 41362
 
         static let defaultAWSAcceleratedTransferAllowed = true
