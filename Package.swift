@@ -32,8 +32,7 @@ let package = Package(
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "kcpassword", package: "kcpassword"),
                 .target(name: "libhostmgr")
-            ],
-            exclude: ["resources"]
+            ]
         ),
         .target(
             name: "libhostmgr",
