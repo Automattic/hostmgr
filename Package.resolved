@@ -33,8 +33,8 @@
         "repositoryURL": "https://github.com/jkmassel/prlctl.git",
         "state": {
           "branch": null,
-          "revision": "fd17498881c12c31e8d580b26890af8ef815a31a",
-          "version": "1.14.0"
+          "revision": "85ecbf8dd6bba4a8f6f060cb15ec2ac7c272fb92",
+          "version": "1.16.0"
         }
       },
       {

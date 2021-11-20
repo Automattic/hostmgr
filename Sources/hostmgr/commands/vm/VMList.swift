@@ -21,6 +21,8 @@ struct VMListCommand: ParsableCommand {
             case .packaged: try printPackagedVMs()
             case .suspended: try printSuspendedVMs()
             case .invalid: try printInvalidVMs()
+            case .starting: try printStartingVMs()
+            case .stopping: try printStartingVMs()
             case nil: try printAllVMs()
         }
     }
@@ -31,6 +33,8 @@ struct VMListCommand: ParsableCommand {
         try printPackagedVMs()
         try printSuspendedVMs()
         try printInvalidVMs()
+        try printStartingVMs()
+        try printStoppingVMs()
     }
 
     private func printRunningVMs() throws {
@@ -60,6 +64,18 @@ struct VMListCommand: ParsableCommand {
     private func printInvalidVMs() throws {
         try Parallels().lookupInvalidVMs().forEach {
             printStatus(status: .invalid, vm: $0)
+        }
+    }
+
+    private func printStartingVMs() throws {
+        try Parallels().lookupStartingVMs().forEach {
+            printStatus(status: .starting, vm: $0)
+        }
+    }
+
+    private func printStoppingVMs() throws {
+        try Parallels().lookupStoppingVMs().forEach {
+            printStatus(status: .stopping, vm: $0)
         }
     }
 
