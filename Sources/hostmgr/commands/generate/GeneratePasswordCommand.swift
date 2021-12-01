@@ -6,7 +6,7 @@ struct GeneratePasswordCommand: ParsableCommand {
 
     static let configuration = CommandConfiguration(
         commandName: "password",
-        abstract: "Generate a git mirror server manifest"
+        abstract: "Generate a random login password"
     )
 
     @Option(
