@@ -63,7 +63,7 @@ struct SyncAuthorizedKeysTask {
 
         logger.debug("Downloading file from s3://\(bucket)/\(key) in \(region) to \(destination)")
 
-        guard state.shouldRun && force else {
+        guard state.shouldRun || force else {
             print("This job is not scheduled to run until \(state.nextRunTime)")
             return
         }
@@ -97,8 +97,7 @@ struct SyncAuthorizedKeysTask {
         var lastRunAt: Date = Date.distantPast
 
         var shouldRun: Bool {
-            let runInterval = TimeInterval(Configuration.shared.authorizedKeysSyncInterval)
-            return self.lastRunAt < Date().addingTimeInterval(runInterval * -1)
+            Date() > nextRunTime
         }
 
         var nextRunTime: Date {
