@@ -25,6 +25,10 @@ struct HostMgr: ParsableCommand {
     func run() throws {
         logger.debug("Starting Up")
 
+        if !Configuration.exists {
+            try Configuration.defaultConfiguration.save()
+        }
+
         guard Configuration.isValid else {
             print("Invalid configuration – exiting")
             throw ExitCode(1)

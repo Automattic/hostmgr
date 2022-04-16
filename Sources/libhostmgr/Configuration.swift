@@ -126,6 +126,8 @@ public struct Configuration: Codable {
         allowAWSAcceleratedTransfer = values.decode(forKey: .allowAWSAcceleratedTransfer, defaultingTo: Defaults.defaultAWSAcceleratedTransferAllowed)
         awsConfigurationMethod = values.decode(forKey: .awsConfigurationMethod, defaultingTo: Defaults.defaultAWSConfigurationMethod)
     }
+    
+    public static let defaultConfiguration = Configuration()
 }
 
 /// Accessor Helpers
@@ -138,6 +140,10 @@ public extension Configuration {
         return configuration != nil
     }
 
+    static var exists: Bool {
+        StateManager.configurationFileExists
+    }
+    
     @discardableResult
     func save() throws -> Configuration {
         return try StateManager.write(configuration: self)
