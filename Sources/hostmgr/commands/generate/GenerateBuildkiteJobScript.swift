@@ -95,6 +95,10 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
 
             /// Used by the S3 Git Mirror plugin
             "GIT_MIRROR_SERVER_ROOT": "http://\(try getIpAddress()):\( Configuration.shared.gitMirrorPort)",
+
+            /// If the project uses Fastlane, we don't want it to print the plugins table.
+            /// Our release toolkit plugin defines many actions and would pollute the logs with many lines of dashes
+            "FASTLANE_HIDE_PLUGINS_TABLE": "1",
         ]
         .merging(copyableExports, uniquingKeysWith: { lhs, rhs in lhs })
         .compactMapValues { $0 }
