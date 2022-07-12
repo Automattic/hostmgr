@@ -62,6 +62,7 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
             "BUILDKITE_LABEL",
             "BUILDKITE_AGENT_NAME",
             "BUILDKITE_BUILD_URL",
+            "BUILDKITE_BUILD_NUMBER",
 
             /// These ones aren't printed as part of the default list – we're copying them so that `bootstrap` works
             "BUILDKITE_AGENT_ACCESS_TOKEN",
