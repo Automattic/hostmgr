@@ -15,10 +15,6 @@ public struct StateManager {
         configurationDirectory.appendingPathComponent(filename)
     }
 
-    private static var stateDirectory: URL {
-        configurationDirectory.appendingPathComponent("hostmgr").appendingPathComponent("state")
-    }
-
     public static var configurationFileExists: Bool {
         FileManager.default.fileExists(atPath: configurationPath.path)
     }
@@ -37,21 +33,5 @@ public struct StateManager {
         let data = try encoder.encode(configuration)
         try data.write(to: configurationPath)
         return configuration
-    }
-
-    public static func load<T>(key: String) throws -> T where T: Codable {
-        let url = stateDirectory.appendingPathComponent(key)
-        try FileManager.default.createDirectory(at: stateDirectory, withIntermediateDirectories: true)
-
-        let data = try Data(contentsOf: url)
-        return try JSONDecoder().decode(T.self, from: data)
-    }
-
-    public static func store<T>(key: String, value: T) throws where T: Codable {
-        let url = stateDirectory.appendingPathComponent(key)
-        try FileManager.default.createDirectory(at: stateDirectory, withIntermediateDirectories: true)
-
-        let data = try JSONEncoder().encode(value)
-        try data.write(to: url)
     }
 }

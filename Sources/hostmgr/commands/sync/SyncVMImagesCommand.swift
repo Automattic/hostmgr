@@ -4,32 +4,26 @@ import SotoS3
 import prlctl
 import libhostmgr
 
-struct SyncVMImagesCommand: ParsableCommand {
+struct SyncVMImagesCommand: ParsableCommand, FollowsCommandPolicies {
 
     static let configuration = CommandConfiguration(
         commandName: "vm_images",
         abstract: "Sync this machine's VM images with those avaiable remotely"
     )
 
+    @Flag(help: "Force the job to run immediately, ignoring command policies")
+    var force: Bool = false
+
+    static let commandIdentifier: String = "sync-vm-images"
+
+    /// A set of command policies that control the circumstances under which this command can be run
+    static let commandPolicies: [CommandPolicy] = [
+        .serialExecution,
+        .scheduled(every: 3600)
+    ]
+
     func run() throws {
-        try SyncVMImagesTask().run()
-    }
-}
-
-struct SyncVMImagesTask {
-
-    let storageDirectory = Configuration.shared.vmStorageDirectory
-
-    func run(force: Bool = false, state: State = State.get()) throws {
-        guard !state.isRunning else {
-            print("Already syncing VMs, so we won't try to run again")
-            return
-        }
-
-        guard state.shouldRun || force else {
-            print("Sync VM Images is not scheduled to run until \(state.nextRunTime)")
-            return
-        }
+        try to(evaluateCommandPolicies(), unless: force)
 
         /// The manifest defines which images should be distributed to VM hosts
         let manifest = try VMRemoteImageManager().getManifest()
@@ -53,28 +47,22 @@ struct SyncVMImagesTask {
         try VMLocalImageManager().delete(images: imagesToDelete)
 
         try imagesToDownload.forEach {
-            try download(image: $0, state: state)
+            try download(image: $0)
         }
 
-        try State.set(state: State(lastRunAt: Date()))
+        try recordLastRun()
     }
 
-    private func download(image: VMRemoteImageManager.RemoteImage, state: State = State.get()) throws {
+    private func download(image: VMRemoteImageManager.RemoteImage) throws {
+        let storageDirectory = Configuration.shared.vmStorageDirectory
         let destination = storageDirectory.appendingPathComponent(image.fileName)
 
         logger.info("Downloading the VM – this will take a few minutes")
         logger.trace("Downloading \(image.basename) to \(destination)")
 
         try VMRemoteImageManager().download(image: image, to: destination) { _, downloaded, total in
-            /// Only update the heartbeat every 5 seconds to avoid thrashing the disk
-            guard abs(state.heartBeat.timeIntervalSinceNow) > 5 else {
-                return
-            }
-
-            try? State.set(state: State(
-                lastRunAt: state.lastRunAt,
-                heartBeat: Date()
-            ))
+            // Only update the heartbeat every 5 seconds to avoid thrashing the disk
+            try? recordHeartbeat()
 
             let percent = String(format: "%.2f", Double(downloaded) / Double(total) * 100)
             logger.trace("\(percent)% complete")
@@ -98,36 +86,5 @@ struct SyncVMImagesTask {
         logger.info("\tName:\t\(vmToImport.name)")
         logger.info("\tUUID:\t\(vmToImport.uuid)")
 
-    }
-
-    struct State: Codable {
-        private static let key = "sync-vm-images-state"
-        var lastRunAt: Date = Date.distantPast
-
-        var shouldRun: Bool {
-            guard !isRunning else { return false }
-
-            return Date() > nextRunTime
-        }
-
-        var nextRunTime: Date {
-            let runInterval = TimeInterval(Configuration.shared.authorizedKeysSyncInterval)
-            return self.lastRunAt.addingTimeInterval(runInterval)
-        }
-
-        var heartBeat: Date = Date.distantPast
-
-        // if we haven't hear from a job in 60 seconds, assume it's failed and we should try again
-        var isRunning: Bool {
-            abs(heartBeat.timeIntervalSinceNow) < 60
-        }
-
-        static func get() -> State {
-            (try? StateManager.load(key: key)) ?? State()
-        }
-
-        static func set(state: State) throws {
-            try StateManager.store(key: key, value: state)
-        }
     }
 }

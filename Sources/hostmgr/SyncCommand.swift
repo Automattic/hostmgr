@@ -45,8 +45,12 @@ struct SyncCommand: ParsableCommand {
 
     private func perform(task: Configuration.SchedulableSyncCommand, immediately: Bool) throws {
         switch task {
-        case .authorizedKeys: try SyncAuthorizedKeysTask().run(force: immediately)
-        case .vmImages: try SyncVMImagesTask().run(force: immediately)
+        case .authorizedKeys:
+            let command = SyncAuthorizedKeysCommand(force: immediately)
+            try command.run()
+        case .vmImages:
+            let command = SyncVMImagesCommand(force: immediately)
+            try command.run()
         }
     }
 }
