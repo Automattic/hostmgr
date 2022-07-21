@@ -20,6 +20,16 @@ steps:
     plugins: *common_plugins
 
   #################
+  # Lint
+  #################
+  - label: "🧪 Lint"
+    command: |
+      make lint
+    plugins: *common_plugins
+    agents:
+      queue: default
+
+  #################
   # Publish the Binary (if we're building a tag)
   #################
   - label: "⬆️ Publish Binary"
