@@ -26,12 +26,11 @@ struct VMCommand: ParsableCommand {
 extension VM: ExpressibleByArgument {
 
     public init?(argument: String) {
-
         guard let foundVM = try? Parallels().lookupVM(named: argument) else {
             return nil
         }
 
-        self.init(from: foundVM)
+        self = foundVM
     }
 
     public static var allValueStrings: [String] {
@@ -55,7 +54,7 @@ extension StoppedVM: ExpressibleByArgument {
             return nil
         }
 
-        self.init(vm: foundVM)
+        self = foundVM
     }
 
     public static var allValueStrings: [String] {
@@ -79,7 +78,7 @@ extension RunningVM: ExpressibleByArgument {
             return nil
         }
 
-        self.init(vm: foundVM)
+        self = foundVM
     }
 
     public static var allValueStrings: [String] {
