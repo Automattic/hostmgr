@@ -29,7 +29,7 @@ struct NetworkBenchmark: ParsableCommand {
 
     private func showProgress(availableBytes: Int, downloadedBytes: Int, totalBytes: Int64) {
 
-        /// Sample only one in 100 entries
+        // Sample only one in 100 entries
         guard Int.random(in: 0...1000) == 0 else {
             return
         }

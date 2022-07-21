@@ -57,7 +57,10 @@ extension ProcessInfo {
             try task.run()
 
             let cpuCountData = output.fileHandleForReading.readDataToEndOfFile()
-            let cpuCountString = String(data: cpuCountData, encoding: .utf8)!.trimmingCharacters(in: .whitespacesAndNewlines)
+            let cpuCountString = String(
+                data: cpuCountData,
+                encoding: .utf8
+            )!.trimmingCharacters(in: .whitespacesAndNewlines)
 
             return Int(cpuCountString) ?? self.processorCount
         } catch _ {

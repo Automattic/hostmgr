@@ -27,11 +27,11 @@ extension VM: ExpressibleByArgument {
 
     public init?(argument: String) {
 
-        guard let vm = try? Parallels().lookupVM(named: argument) else {
+        guard let foundVM = try? Parallels().lookupVM(named: argument) else {
             return nil
         }
 
-        self.init(from: vm)
+        self.init(from: foundVM)
     }
 
     public static var allValueStrings: [String] {
@@ -48,11 +48,14 @@ extension VM: ExpressibleByArgument {
 
 extension StoppedVM: ExpressibleByArgument {
     public init?(argument: String) {
-        guard let vm = try? Parallels().lookupStoppedVMs().first(where: { $0.name == argument || $0.uuid == argument }) else {
+        guard let foundVM = try? Parallels()
+            .lookupStoppedVMs()
+            .first(where: { $0.name == argument || $0.uuid == argument })
+        else {
             return nil
         }
 
-        self.init(vm: vm)
+        self.init(vm: foundVM)
     }
 
     public static var allValueStrings: [String] {
@@ -69,11 +72,14 @@ extension StoppedVM: ExpressibleByArgument {
 
 extension RunningVM: ExpressibleByArgument {
     public init?(argument: String) {
-        guard let vm = try? Parallels().lookupRunningVMs().first(where: { $0.name == argument || $0.uuid == argument }) else {
+        guard let foundVM = try? Parallels()
+            .lookupRunningVMs()
+            .first(where: { $0.name == argument || $0.uuid == argument })
+        else {
             return nil
         }
 
-        self.init(vm: vm)
+        self.init(vm: foundVM)
     }
 
     public static var allValueStrings: [String] {

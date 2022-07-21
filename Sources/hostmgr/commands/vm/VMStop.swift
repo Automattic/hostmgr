@@ -10,7 +10,7 @@ struct VMStopCommand: ParsableCommand {
     )
 
     @Argument(help: "The Name or ID of the VM you'd like to stop")
-    var vm: RunningVM?
+    var virtualMachine: RunningVM?
 
     @Flag(help: "Kill the VM immediately, without waiting for it to shut down")
     var immediately: Bool = false
@@ -19,12 +19,12 @@ struct VMStopCommand: ParsableCommand {
     var all: Bool = false
 
     func run() throws {
-        try all ? shutdownAll() : vm?.shutdown()
+        try all ? shutdownAll() : virtualMachine?.shutdown()
     }
 
     private func shutdownAll() throws {
-        try Parallels().lookupRunningVMs().forEach { vm in
-            try vm.shutdown(immediately: immediately)
-        }
+        try Parallels()
+            .lookupRunningVMs()
+            .forEach { try $0.shutdown(immediately: immediately) }
     }
 }

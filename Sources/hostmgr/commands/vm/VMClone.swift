@@ -54,7 +54,12 @@ struct VMCloneCommand: ParsableCommand {
 
         let startDate = Date()
 
-        try clone(vm: source, wait: wait || start, startDate: startDate, type: depth)
+        try clone(
+            virtualMachine: source,
+            wait: wait || start,
+            startDate: startDate,
+            type: depth
+        )
 
         guard let newVM = try Parallels().lookupVM(named: destination)?.asStoppedVM() else {
             print("Error finding cloned VM")
@@ -63,8 +68,11 @@ struct VMCloneCommand: ParsableCommand {
 
         if !skipHostCustomization {
 
-            let totalSystemMemory = Int(ProcessInfo().physicalMemory / (1024 * 1024)) // In MB
-            let vmAvailableMemory = totalSystemMemory - 4096 // Always leave 4GB available to the VM host – the VM can have the rest
+            // Convert bytes to MB
+            let totalSystemMemory = Int(ProcessInfo().physicalMemory / (1024 * 1024))
+
+            // Always leave 4GB available to the VM host – the VM can have the rest
+            let vmAvailableMemory = totalSystemMemory - 4096
             let cpuCoreCount = ProcessInfo().physicalProcessorCount
 
             logger.debug("Total System Memory: \(totalSystemMemory) MB")
@@ -82,12 +90,17 @@ struct VMCloneCommand: ParsableCommand {
         try newVM.set(.networkType(networkingType))
 
         if start {
-            try startVM(vm: newVM, wait: wait, startDate: startDate)
+            try startVM(virtualMachine: newVM, wait: wait, startDate: startDate)
         }
     }
 
-    func clone(vm: StoppedVM, wait: Bool, startDate: Date, type: CloneType = .shallow) throws {
-        try vm.clone(as: destination, fast: type.shouldUseFastClone)
+    func clone(
+        virtualMachine: StoppedVM,
+        wait: Bool,
+        startDate: Date,
+        type: CloneType = .shallow
+    ) throws {
+        try virtualMachine.clone(as: destination, fast: type.shouldUseFastClone)
 
         guard wait else {
             return
@@ -100,9 +113,9 @@ struct VMCloneCommand: ParsableCommand {
         print(String(format: "VM cloned in %.2f seconds", Date().timeIntervalSince(startDate)))
     }
 
-    func startVM(vm: StoppedVM, wait: Bool, startDate: Date) throws {
+    func startVM(virtualMachine: StoppedVM, wait: Bool, startDate: Date) throws {
 
-        try vm.start()
+        try virtualMachine.start()
 
         guard wait else {
             return
@@ -110,9 +123,15 @@ struct VMCloneCommand: ParsableCommand {
 
         repeat {
             usleep(100)
-        } while try Parallels().lookupRunningVMs().filter { $0.uuid == vm.uuid && $0.hasIpV4Address }.isEmpty
+        } while try Parallels()
+            .lookupRunningVMs()
+            .filter { $0.uuid == virtualMachine.uuid && $0.hasIpV4Address }
+            .isEmpty
 
-        print(String(format: "VM cloned and booted in %.2f seconds", Date().timeIntervalSince(startDate)))
+        print(String(
+            format: "VM cloned and booted in %.2f seconds",
+            Date().timeIntervalSince(startDate))
+        )
     }
 
     enum CloneType: String {
@@ -124,8 +143,8 @@ struct VMCloneCommand: ParsableCommand {
 
         var shouldUseFastClone: Bool {
             switch self {
-                case .shallow: return true
-                case .full: return false
+            case .shallow: return true
+            case .full: return false
             }
         }
     }

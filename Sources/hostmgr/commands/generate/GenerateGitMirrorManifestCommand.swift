@@ -30,7 +30,9 @@ struct GenerateGitMirrorManifestTask {
 
     func generateTextManifest(fromPaths paths: [String]) -> String {
         paths
-            .filter { $0.hasSuffix(".git.tar") } /// By using the `.git.tar` suffix, we avoid files that are currently being copied (which could look like: `2021-07-19.git.tar.e963f487`)
+            // By using the `.git.tar` suffix, we avoid files that are currently being
+            // copied (which could look like: `2021-07-19.git.tar.e963f487`)
+            .filter { $0.hasSuffix(".git.tar") }
             .reduce([String: String](), flatten)
             .map { $0.key + $0.value }
             .sorted()

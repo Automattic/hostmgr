@@ -10,7 +10,7 @@ struct VMStartCommand: ParsableCommand {
     )
 
     @Argument
-    var vm: StoppedVM
+    var virtualMachine: StoppedVM
 
     @Flag(help: "Wait for the machine to finish starting up?")
     var wait: Bool = false
@@ -18,7 +18,7 @@ struct VMStartCommand: ParsableCommand {
     func run() throws {
         let startDate = Date()
 
-        try vm.start()
+        try virtualMachine.start()
 
         guard wait else {
             return
@@ -26,7 +26,10 @@ struct VMStartCommand: ParsableCommand {
 
         repeat {
             usleep(100)
-        } while try Parallels().lookupRunningVMs().filter { $0.uuid == vm.uuid && $0.hasIpAddress }.isEmpty
+        } while try Parallels()
+            .lookupRunningVMs()
+            .filter { $0.uuid == virtualMachine.uuid && $0.hasIpAddress }
+            .isEmpty
 
         let elapsed = Date().timeIntervalSince(startDate)
         print(String(format: "System booted in %.2f seconds", elapsed))

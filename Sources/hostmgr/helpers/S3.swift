@@ -7,13 +7,13 @@ struct S3Manager {
 
     func listObjects(region: Region, bucket: String, startingWith prefix: String) throws -> [S3.Object] {
 
-        let client = getAWSClient()
+        let awsClient = getAWSClient()
 
         defer {
-            try! client.syncShutdown()
+            try? awsClient.syncShutdown()
         }
 
-        let s3 = S3(client: client, region: region)
+        let s3Client = S3(client: awsClient, region: region)
 
         let request = S3.ListObjectsV2Request(
             bucket: bucket,
@@ -21,25 +21,26 @@ struct S3Manager {
             prefix: prefix
         )
 
-        let result = try s3.listObjectsV2(request).wait()
+        let result = try s3Client.listObjectsV2(request).wait()
         return result.contents ?? []
     }
 
     func getFileBytes(region: Region, bucket: String, key: String) throws -> Data? {
-        let client = getAWSClient()
+        let awsClient = getAWSClient()
 
         defer {
-            try! client.syncShutdown()
+            try? awsClient.syncShutdown()
         }
 
-        let s3 = S3(client: client, region: region)
+        let s3Client = S3(client: awsClient, region: region)
 
         let request = S3.GetObjectRequest(
             bucket: bucket,
             key: key
         )
 
-        let result = try s3.getObject(request).wait()
+        let result = try s3Client.getObject(request).wait()
+
         return result.body?.asData()
     }
 
@@ -47,16 +48,25 @@ struct S3Manager {
         try listObjects(region: region, bucket: bucket, startingWith: key).first?.size ?? 0
     }
 
-    func streamingDownloadFile(region: Region, bucket: String, key: String, destination: URL, progressCallback: FileTransferProgressCallback? = nil) throws {
+    func streamingDownloadFile(
+        region: Region,
+        bucket: String,
+        key: String,
+        destination: URL,
+        progressCallback: FileTransferProgressCallback? = nil
+    ) throws {
 
         let client = getAWSClient()
 
         defer {
-            try! client.syncShutdown()
+            try? client.syncShutdown()
         }
 
-        /// Create the parent directory if needed
-        try FileManager.default.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+        // Create the parent directory if needed
+        try FileManager.default.createDirectory(
+            at: destination.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
 
         FileManager.default.createFile(atPath: destination.path, contents: nil)
 
@@ -69,10 +79,10 @@ struct S3Manager {
         var downloadedBytes = 0
         let totalBytes = try getFileSize(region: region, bucket: bucket, key: key)
 
-        let s3 = try getS3Client(from: client, for: bucket, in: region)
+        let s3Client = try getS3Client(from: client, for: bucket, in: region)
         let objectRequest = S3.GetObjectRequest(bucket: bucket, key: key)
 
-        _ = try s3.getObjectStreaming(objectRequest, logger: logger) { buffer, loop in
+        _ = try s3Client.getObjectStreaming(objectRequest, logger: logger) { buffer, loop in
             let availableBytes = buffer.readableBytes
             downloadedBytes += availableBytes
             if let bytes = buffer.getData(at: buffer.readerIndex, length: availableBytes) {
@@ -99,9 +109,9 @@ struct S3Manager {
         print("Using \(Configuration.shared.awsConfigurationMethod!) to connect to AWS")
 
         switch Configuration.shared.awsConfigurationMethod {
-            case .configurationFile:credentialProvider = .configFile()
-            case .ec2Environment: credentialProvider = .ec2
-            case .none: credentialProvider = .configFile()
+        case .configurationFile:credentialProvider = .configFile()
+        case .ec2Environment: credentialProvider = .ec2
+        case .none: credentialProvider = .configFile()
         }
 
         return AWSClient(
@@ -110,17 +120,21 @@ struct S3Manager {
         )
     }
 
-    private func getS3Client(from aws: AWSClient, for bucket: String, in region: Region) throws -> S3 {
-        let s3 = S3(client: aws, region: region)
+    private func getS3Client(
+        from aws: AWSClient,
+        for bucket: String,
+        in region: Region
+    ) throws -> S3 {
+        let s3Client = S3(client: aws, region: region)
 
         guard Configuration.shared.allowAWSAcceleratedTransfer else {
             logger.log(level: .info, "Using Standard S3 Download")
-            return s3
+            return s3Client
         }
 
         guard try bucketTransferAccelerationIsEnabled(for: bucket, in: region) else {
             logger.log(level: .info, "Using Standard S3 Download")
-            return s3
+            return s3Client
         }
 
         logger.log(level: .info, "Using Accelerated S3 Download")
@@ -132,7 +146,7 @@ struct S3Manager {
         let client = getAWSClient()
 
         defer {
-            try! client.syncShutdown()
+            try? client.syncShutdown()
         }
 
         let bucketInfoRequest = S3.GetBucketAccelerateConfigurationRequest(bucket: bucket)

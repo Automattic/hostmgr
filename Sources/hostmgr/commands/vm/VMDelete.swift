@@ -12,7 +12,7 @@ struct VMDeleteCommand: ParsableCommand {
     @Argument(
         help: "The name of the VM to delete"
     )
-    var vm: StoppedVM?
+    var virtualMachine: StoppedVM?
 
     @Option(
         name: .shortAndLong,
@@ -21,7 +21,7 @@ struct VMDeleteCommand: ParsableCommand {
     var startingWith: String?
 
     func run() throws {
-        try vm?.delete()
+        try virtualMachine?.delete()
 
         if let prefix = startingWith {
             try VMLocalImageManager().lookupVMsBy(prefix: prefix).forEach { try $0.delete() }
