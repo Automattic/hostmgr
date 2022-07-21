@@ -3,7 +3,6 @@ import Cocoa
 import SotoS3
 import libhostmgr
 
-import IOKit
 import IOKit.pwr_mgt
 
 class SystemSleepManager {
@@ -109,7 +108,11 @@ struct VMRemoteImageManager {
         return RemoteImage(imageKey: imageObjectKey, checksumKey: checksumObjectKey, size: imageObjectSize)
     }
 
-    func download(image: RemoteImage, to destination: URL, progressCallback: FileTransferProgressCallback? = nil) throws {
+    func download(
+        image: RemoteImage,
+        to destination: URL,
+        progressCallback: FileTransferProgressCallback? = nil
+    ) throws {
         let region = Configuration.shared.vmImagesRegion
         let bucket = Configuration.shared.vmImagesBucket
 
@@ -140,7 +143,7 @@ struct VMRemoteImageManager {
                 let basename = (filename as NSString).deletingPathExtension         // basename = my-image
 
                 guard
-                    let checksum = checksums.first(where: { $0.key?.contains(basename) ?? false } )?.key,
+                    let checksum = checksums.first(where: { $0.key?.contains(basename) ?? false })?.key,
                     let size = images.first(where: { $0.key == key })?.size
                 else {
                     return nil

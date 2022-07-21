@@ -30,7 +30,7 @@ struct SetAutomaticLoginPasswordCommand: ParsableCommand {
 
     func run() throws {
 
-        /// Don't run if the file exists (unless the user specifies `--force`
+        // Don't run if the file exists (unless the user specifies `--force`)
         guard !FileManager.default.fileExists(atPath: path) || force else {
             print("Not writing to \(path) – it already exists")
             return

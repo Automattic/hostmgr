@@ -39,20 +39,20 @@ struct VMImportCommand: ParsableCommand {
             Self.exit()
         }
 
-        guard let vm = try Parallels().importVM(at: url) else {
+        guard let importedVirtualMachine = try Parallels().importVM(at: url) else {
             print("Unable to import VM at \(path)")
             Self.exit()
         }
 
-        guard let package = vm.asPackagedVM() else {
-            throw CleanExit.message("Imported \(vm.name)")
+        guard let package = importedVirtualMachine.asPackagedVM() else {
+            throw CleanExit.message("Imported \(importedVirtualMachine.name)")
         }
 
         print("Unpacking the VM – this will take a few minutes")
         try package.unpack()
 
         print("Imported Complete")
-        print("\tName:\t\(vm.name)")
-        print("\tUUID:\t\(vm.uuid)")
+        print("\tName:\t\(importedVirtualMachine.name)")
+        print("\tUUID:\t\(importedVirtualMachine.uuid)")
     }
 }

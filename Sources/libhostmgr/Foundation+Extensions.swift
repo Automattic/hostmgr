@@ -2,7 +2,7 @@ import Foundation
 
 enum ProcessorArchitecture: String {
     case arm64
-    case x86_64
+    case x64 = "x86_64"
 }
 
 extension ProcessInfo {

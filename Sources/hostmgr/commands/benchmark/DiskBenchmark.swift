@@ -23,7 +23,7 @@ struct DiskBenchmark: ParsableCommand {
             file.write(bytes)
             totalBytesWritten += Int64(byteCount)
 
-            /// Sample only one in 100 entries
+            // Sample only one in 100 entries
             guard Int.random(in: 0...1000) == 0 else {
                 continue
             }

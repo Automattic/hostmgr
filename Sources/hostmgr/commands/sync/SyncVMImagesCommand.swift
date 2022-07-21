@@ -18,9 +18,9 @@ struct SyncVMImagesCommand: ParsableCommand {
 
 struct SyncVMImagesTask {
 
-    func run(force: Bool = false) throws {
-        var state = State.get()
+    let storageDirectory = Configuration.shared.vmStorageDirectory
 
+    func run(force: Bool = false, state: State = State.get()) throws {
         guard !state.isRunning else {
             print("Already syncing VMs, so we won't try to run again")
             return
@@ -44,53 +44,60 @@ struct SyncVMImagesTask {
 
         let imagesToDownload = candidateImages.filter { !localImages.contains($0.basename) }
         let imagesToDelete = localImages
-            .filter { !manifest.contains($0) }  // If it's not in the manifest, it should be deleted
-            .filter { !Configuration.shared.protectedImages.contains($0) } // If it's a protected image it should not be deleted
+            // If it's not in the manifest, it should be deleted
+            .filter { !manifest.contains($0) }
+            // If it's a protected image it should not be deleted
+            .filter { !Configuration.shared.protectedImages.contains($0) }
 
         logger.info("Deleting local images:\(imagesToDelete)")
         try VMLocalImageManager().delete(images: imagesToDelete)
 
-        let storageDirectory = Configuration.shared.vmStorageDirectory
-
-        for image in imagesToDownload {
-            let destination = storageDirectory.appendingPathComponent(image.fileName)
-
-            logger.info("Downloading the VM – this will take a few minutes")
-            logger.trace("Downloading \(image.basename) to \(destination)")
-
-            try VMRemoteImageManager().download(image: image, to: destination) { _, downloaded, total in
-                /// Only update the heartbeat every 5 seconds to avoid thrashing the disk
-                guard abs(state.heartBeat.timeIntervalSinceNow) > 5 else {
-                    return
-                }
-
-                state.heartBeat = Date()
-                try? State.set(state: state)
-
-                let percent = String(format: "%.2f", Double(downloaded) / Double(total) * 100)
-                logger.trace("\(percent)% complete")
-            }
-
-            logger.info("Download Complete")
-
-            guard let vm = try Parallels().importVM(at: destination) else {
-                print("Unable to import VM at \(destination)")
-                return
-            }
-
-            guard let package = vm.asPackagedVM() else {
-                throw CleanExit.message("Imported \(vm.name)")
-            }
-
-            logger.info("Unpacking the VM – this will take a few minutes")
-            try package.unpack()
-
-            logger.info("Imported Complete")
-            logger.info("\tName:\t\(vm.name)")
-            logger.info("\tUUID:\t\(vm.uuid)")
+        try imagesToDownload.forEach {
+            try download(image: $0, state: state)
         }
 
         try State.set(state: State(lastRunAt: Date()))
+    }
+
+    private func download(image: VMRemoteImageManager.RemoteImage, state: State = State.get()) throws {
+        let destination = storageDirectory.appendingPathComponent(image.fileName)
+
+        logger.info("Downloading the VM – this will take a few minutes")
+        logger.trace("Downloading \(image.basename) to \(destination)")
+
+        try VMRemoteImageManager().download(image: image, to: destination) { _, downloaded, total in
+            /// Only update the heartbeat every 5 seconds to avoid thrashing the disk
+            guard abs(state.heartBeat.timeIntervalSinceNow) > 5 else {
+                return
+            }
+
+            try? State.set(state: State(
+                lastRunAt: state.lastRunAt,
+                heartBeat: Date()
+            ))
+
+            let percent = String(format: "%.2f", Double(downloaded) / Double(total) * 100)
+            logger.trace("\(percent)% complete")
+        }
+
+        logger.info("Download Complete")
+
+        guard let vmToImport = try Parallels().importVM(at: destination) else {
+            print("Unable to import VM at \(destination)")
+            return
+        }
+
+        guard let package = vmToImport.asPackagedVM() else {
+            throw CleanExit.message("Imported \(vmToImport.name)")
+        }
+
+        logger.info("Unpacking the VM – this will take a few minutes")
+        try package.unpack()
+
+        logger.info("Imported Complete")
+        logger.info("\tName:\t\(vmToImport.name)")
+        logger.info("\tUUID:\t\(vmToImport.uuid)")
+
     }
 
     struct State: Codable {

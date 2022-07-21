@@ -18,13 +18,13 @@ public struct Configuration: Codable {
 
         static let defaultSyncTasks: [SchedulableSyncCommand] = [
             .authorizedKeys,
-            .vmImages,
+            .vmImages
         ]
 
         static var storageRoot: URL {
             switch ProcessInfo.processInfo.processorArchitecture {
-                case .arm64: return URL(fileURLWithPath: "/opt/homebrew/var")
-                case .x86_64: return URL(fileURLWithPath: "/usr/local/var")
+            case .arm64: return URL(fileURLWithPath: "/opt/homebrew/var")
+            case .x64: return URL(fileURLWithPath: "/usr/local/var")
             }
         }
 
@@ -101,30 +101,53 @@ public struct Configuration: Codable {
         case awsConfigurationMethod
     }
 
-    public init(){}
+    public init() {}
 
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         version = 1
-        syncTasks = ( try? values.decode([SchedulableSyncCommand].self, forKey: .syncTasks) ) ?? Defaults.defaultSyncTasks
+        syncTasks = values.decode(
+            forKey: .syncTasks,
+            defaultingTo: Defaults.defaultSyncTasks
+        )
 
         vmImagesBucket = try values.decode(String.self, forKey: .vmImagesBucket)
         vmImagesRegion = try values.decode(Region.self, forKey: .vmImagesRegion)
 
-        protectedImages = ( try? values.decode([String].self, forKey: .protectedImages) ) ?? []
-        localImageStorageDirectory = values.decode(forKey: .localImageStorageDirectory, defaultingTo: Defaults.defaultLocalImageStorageDirectory)
+        protectedImages = values.decode(
+            forKey: .protectedImages,
+            defaultingTo: [])
+        localImageStorageDirectory = values.decode(
+            forKey: .localImageStorageDirectory,
+            defaultingTo: Defaults.defaultLocalImageStorageDirectory
+        )
 
         authorizedKeysSyncInterval = values.decode(forKey: .authorizedKeysSyncInterval, defaultingTo: 3600)
         authorizedKeysBucket = try values.decode(String.self, forKey: .authorizedKeysBucket)
         authorizedKeysRegion = try values.decode(Region.self, forKey: .authorizedKeysRegion)
-        localAuthorizedKeys = values.decode(forKey: .localAuthorizedKeys, defaultingTo: Defaults.defaultLocalAuthorizedKeysFilePath)
+        localAuthorizedKeys = values.decode(
+            forKey: .localAuthorizedKeys,
+            defaultingTo: Defaults.defaultLocalAuthorizedKeysFilePath
+        )
 
         gitMirrorBucket = try values.decode(String.self, forKey: .gitMirrorBucket)
-        localGitMirrorStorageDirectory = values.decode(forKey: .localGitMirrorStorageDirectory, defaultingTo: Defaults.defaultLocalGitMirrorStorageDirectory)
-        gitMirrorPort = values.decode(forKey: .gitMirrorPort, defaultingTo: Defaults.defaultGitMirrorPort)
+        localGitMirrorStorageDirectory = values.decode(
+            forKey: .localGitMirrorStorageDirectory,
+            defaultingTo: Defaults.defaultLocalGitMirrorStorageDirectory
+        )
+        gitMirrorPort = values.decode(
+            forKey: .gitMirrorPort,
+            defaultingTo: Defaults.defaultGitMirrorPort
+        )
 
-        allowAWSAcceleratedTransfer = values.decode(forKey: .allowAWSAcceleratedTransfer, defaultingTo: Defaults.defaultAWSAcceleratedTransferAllowed)
-        awsConfigurationMethod = values.decode(forKey: .awsConfigurationMethod, defaultingTo: Defaults.defaultAWSConfigurationMethod)
+        allowAWSAcceleratedTransfer = values.decode(
+            forKey: .allowAWSAcceleratedTransfer,
+            defaultingTo: Defaults.defaultAWSAcceleratedTransferAllowed
+        )
+        awsConfigurationMethod = values.decode(
+            forKey: .awsConfigurationMethod,
+            defaultingTo: Defaults.defaultAWSConfigurationMethod
+        )
     }
 }
 
@@ -161,8 +184,7 @@ private extension KeyedDecodingContainer {
     func decode<T: Decodable>(forKey key: KeyedDecodingContainer<K>.Key, defaultingTo defaultValue: T) -> T {
         do {
             return try self.decode(T.self, forKey: key)
-        }
-        catch {
+        } catch {
             return defaultValue
         }
     }

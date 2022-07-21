@@ -13,9 +13,9 @@ struct VMCleanCommand: ParsableCommand {
         name: .shortAndLong,
         help: "The VM to clean"
     )
-    var vm: StoppedVM
-    
+    var virtualMachine: StoppedVM
+
     func run() throws {
-        try vm.clean()
+        try virtualMachine.clean()
     }
 }

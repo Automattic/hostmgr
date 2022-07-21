@@ -32,14 +32,14 @@ struct VMLocalImageManager {
     }
 
     func lookupVMsBy(handle: String) throws -> [VMProtocol] {
-        return try Parallels().lookupAllVMs().filter { vm in
-            return vm.name == handle || vm.uuid == handle
-        }
+        return try Parallels()
+            .lookupAllVMs()
+            .filter { $0.name == handle || $0.uuid == handle }
     }
 
     func lookupVMsBy(prefix: String) throws -> [VMProtocol] {
-        return try Parallels().lookupAllVMs().filter { vm in
-            return vm.name.hasPrefix(prefix)
-        }
+        return try Parallels()
+            .lookupAllVMs()
+            .filter { $0.name.hasPrefix(prefix) }
     }
 }

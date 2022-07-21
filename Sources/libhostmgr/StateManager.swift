@@ -4,8 +4,8 @@ public struct StateManager {
 
     private static var configurationDirectory: URL {
         switch ProcessInfo.processInfo.processorArchitecture {
-            case .arm64: return URL(fileURLWithPath: "/opt/homebrew/etc/hostmgr")
-            case .x86_64: return URL(fileURLWithPath: "/usr/local/etc/hostmgr")
+        case .arm64: return URL(fileURLWithPath: "/opt/homebrew/etc/hostmgr")
+        case .x64: return URL(fileURLWithPath: "/usr/local/etc/hostmgr")
         }
     }
 

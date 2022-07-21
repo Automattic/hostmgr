@@ -8,7 +8,7 @@ struct SyncCommand: ParsableCommand {
         abstract: "Sync remote data with this host",
         subcommands: [
             SyncAuthorizedKeysCommand.self,
-            SyncVMImagesCommand.self,
+            SyncVMImagesCommand.self
         ]
     )
 
@@ -33,7 +33,8 @@ struct SyncCommand: ParsableCommand {
             return
         }
 
-        // Always regenerate the git mirror manifest – this is a lazy hack to make it so it doesn't need to be installed separately
+        // Always regenerate the git mirror manifest – this is a lazy hack
+        // to make it so it doesn't need to be installed separately
         try GenerateGitMirrorManifestTask().run()
 
         try Configuration.shared.syncTasks.forEach { command in
@@ -44,8 +45,8 @@ struct SyncCommand: ParsableCommand {
 
     private func perform(task: Configuration.SchedulableSyncCommand, immediately: Bool) throws {
         switch task {
-            case .authorizedKeys: try SyncAuthorizedKeysTask().run(force: immediately)
-            case .vmImages: try SyncVMImagesTask().run(force: immediately)
+        case .authorizedKeys: try SyncAuthorizedKeysTask().run(force: immediately)
+        case .vmImages: try SyncVMImagesTask().run(force: immediately)
         }
     }
 }

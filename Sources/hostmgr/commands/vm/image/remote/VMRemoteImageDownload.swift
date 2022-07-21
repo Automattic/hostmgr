@@ -38,11 +38,20 @@ struct VMRemoteImageDownload: ParsableCommand {
             Self.exit()
         }
 
-        let destination = URL(fileURLWithPath: destination.replacingOccurrences(of: Constants.imageName, with: remoteImage.fileName))
+        let newDestination = destination.replacingOccurrences(
+            of: Constants.imageName,
+            with: remoteImage.fileName
+        )
+        let destination = URL(fileURLWithPath: newDestination)
 
         try SystemSleepManager.disableSleepFor {
-            let progress = Tqdm(description: "Downloading \(remoteImage.fileName)", total: Int(remoteImage.size), unit: " bytes", unitScale: true)
-            try remote.download(image: remoteImage, to: destination) { change, downloaded, total in
+            let progress = Tqdm(
+                description: "Downloading \(remoteImage.fileName)",
+                total: Int(remoteImage.size),
+                unit: " bytes",
+                unitScale: true
+            )
+            try remote.download(image: remoteImage, to: destination) { change, _, _ in
                 progress.update(n: change)
             }
             progress.close()

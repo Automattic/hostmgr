@@ -5,16 +5,36 @@ import XCTest
 final class ConfigurationTests: XCTestCase {
 
     func testThatEmptyConfigurationUsesDefaults() {
-        XCTAssertEqual(Configuration().syncTasks, Configuration.Defaults.defaultSyncTasks)
+        XCTAssertEqual(
+            Configuration().syncTasks,
+            Configuration.Defaults.defaultSyncTasks
+        )
 
-        XCTAssertEqual(Configuration().localImageStorageDirectory, Configuration.Defaults.defaultLocalImageStorageDirectory)
-        XCTAssertEqual(Configuration().localGitMirrorStorageDirectory, Configuration.Defaults.defaultLocalGitMirrorStorageDirectory)
-        XCTAssertEqual(Configuration().gitMirrorPort, Configuration.Defaults.defaultGitMirrorPort)
+        XCTAssertEqual(
+            Configuration().localImageStorageDirectory,
+            Configuration.Defaults.defaultLocalImageStorageDirectory
+        )
+        XCTAssertEqual(
+            Configuration().localGitMirrorStorageDirectory,
+            Configuration.Defaults.defaultLocalGitMirrorStorageDirectory
+        )
+        XCTAssertEqual(
+            Configuration().gitMirrorPort,
+            Configuration.Defaults.defaultGitMirrorPort
+        )
+        XCTAssertEqual(
+            Configuration().allowAWSAcceleratedTransfer,
+            Configuration.Defaults.defaultAWSAcceleratedTransferAllowed
+        )
+        XCTAssertEqual(
+            Configuration().awsConfigurationMethod,
+            Configuration.Defaults.defaultAWSConfigurationMethod
+        )
 
-        XCTAssertEqual(Configuration().allowAWSAcceleratedTransfer, Configuration.Defaults.defaultAWSAcceleratedTransferAllowed)
-        XCTAssertEqual(Configuration().awsConfigurationMethod, Configuration.Defaults.defaultAWSConfigurationMethod)
-
-        XCTAssertEqual(Configuration().localAuthorizedKeys, Configuration.Defaults.defaultLocalAuthorizedKeysFilePath)
+        XCTAssertEqual(
+            Configuration().localAuthorizedKeys,
+            Configuration.Defaults.defaultLocalAuthorizedKeysFilePath
+        )
     }
 
     func testThatv060ConfigurationCanBeParsed() throws {
@@ -52,7 +72,10 @@ final class ConfigurationTests: XCTestCase {
     func testThatConfigurationWithoutLocalGitMirrorStorageDirectoryUsesDefault() throws {
         let data = getJSONDataForResource(named: "defaults")
         let configuration = try Configuration.from(data: data)
-        XCTAssertEqual(Configuration.Defaults.defaultLocalGitMirrorStorageDirectory, configuration.gitMirrorDirectory.path)
+        XCTAssertEqual(
+            Configuration.Defaults.defaultLocalGitMirrorStorageDirectory,
+            configuration.gitMirrorDirectory.path
+        )
     }
 
     func testThatConfigurationWithoutLocalGitMirrorPortUsesDefault() throws {
@@ -64,7 +87,10 @@ final class ConfigurationTests: XCTestCase {
     func testThatConfigurationWithoutAWSAccelerationSettingUsesDefault() throws {
         let data = getJSONDataForResource(named: "defaults")
         let configuration = try Configuration.from(data: data)
-        XCTAssertEqual(Configuration.Defaults.defaultAWSAcceleratedTransferAllowed, configuration.allowAWSAcceleratedTransfer)
+        XCTAssertEqual(
+            Configuration.Defaults.defaultAWSAcceleratedTransferAllowed,
+            configuration.allowAWSAcceleratedTransfer
+        )
     }
 
     func testThatConfigurationWithoutSyncTasksUsesDefault() throws {
