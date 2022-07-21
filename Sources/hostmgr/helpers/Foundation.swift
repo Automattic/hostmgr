@@ -22,6 +22,10 @@ extension FileManager {
     func subpaths(at url: URL) -> [String] {
         self.subpaths(atPath: url.path) ?? []
     }
+
+    func displayName(at url: URL) -> String {
+        displayName(atPath: url.path)
+    }
 }
 
 extension URL: ExpressibleByArgument {

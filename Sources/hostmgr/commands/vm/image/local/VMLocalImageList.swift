@@ -5,11 +5,14 @@ struct VMLocalImageListCommand: ParsableCommand {
 
     static let configuration = CommandConfiguration(
         commandName: "list",
-        abstract: "List available VM images"
+        abstract: "List VM images that exist on disk on the local machine"
     )
 
     func run() throws {
-        let images =  try VMLocalImageManager().list()
-        images.sorted().forEach { print("\($0)") }
+        try VMLocalImageManager()
+            .listImageFilePaths()
+            .map { $0.lastPathComponent }
+            .sorted()
+            .forEach { print("\($0)") }
     }
 }

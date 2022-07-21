@@ -12,34 +12,36 @@ struct VMLocalImageManager {
         self.fileManager = fileManager
     }
 
+    /// A list of VM images present on disk
     func list() throws -> [String] {
-        try Parallels().lookupAllVMs().map { $0.name }
+        try fileManager
+            .contentsOfDirectory(atPath: imageDirectory.path)
     }
 
+    /// A list of paths to VM images on disk
     func listImageFilePaths() throws -> [URL] {
-        try fileManager.contentsOfDirectory(atPath: imageDirectory.path)
+        try fileManager
+            .contentsOfDirectory(atPath: imageDirectory.path)
             .map { imageDirectory.appendingPathComponent($0) }
     }
 
+    /// Delete a list of VM images from the local disk by image name
     func delete(images: [String]) throws {
-        for image in images {
-            try delete(name: image)
-        }
+        try images.forEach(self.delete)
     }
 
+    /// Delete a single VM image from the local disk by image name
     func delete(name: String) throws {
-        try Parallels().lookupVM(named: name)?.delete()
+        guard let vmPath = try pathToLocalImage(named: name) else {
+            return
+        }
+
+        try self.fileManager.removeItem(at: vmPath)
     }
 
-    func lookupVMsBy(handle: String) throws -> [VMProtocol] {
-        return try Parallels()
-            .lookupAllVMs()
-            .filter { $0.name == handle || $0.uuid == handle }
-    }
-
-    func lookupVMsBy(prefix: String) throws -> [VMProtocol] {
-        return try Parallels()
-            .lookupAllVMs()
-            .filter { $0.name.hasPrefix(prefix) }
+    func pathToLocalImage(named name: String) throws -> URL? {
+        try listImageFilePaths().first { path in
+            FileManager.default.displayName(at: path).starts(with: name)
+        }
     }
 }

@@ -24,7 +24,13 @@ struct VMDeleteCommand: ParsableCommand {
         try virtualMachine?.delete()
 
         if let prefix = startingWith {
-            try VMLocalImageManager().lookupVMsBy(prefix: prefix).forEach { try $0.delete() }
+            try lookupVMsBy(prefix: prefix).forEach { try $0.delete() }
         }
+    }
+
+    func lookupVMsBy(prefix: String) throws -> [VMProtocol] {
+        return try Parallels()
+            .lookupAllVMs()
+            .filter { $0.name.hasPrefix(prefix) }
     }
 }
