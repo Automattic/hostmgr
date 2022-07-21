@@ -18,7 +18,7 @@ public struct Configuration: Codable {
 
         static let defaultSyncTasks: [SchedulableSyncCommand] = [
             .authorizedKeys,
-            .vmImages,
+            .vmImages
         ]
 
         static var storageRoot: URL {
@@ -101,7 +101,7 @@ public struct Configuration: Codable {
         case awsConfigurationMethod
     }
 
-    public init(){}
+    public init() {}
 
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
@@ -161,8 +161,7 @@ private extension KeyedDecodingContainer {
     func decode<T: Decodable>(forKey key: KeyedDecodingContainer<K>.Key, defaultingTo defaultValue: T) -> T {
         do {
             return try self.decode(T.self, forKey: key)
-        }
-        catch {
+        } catch {
             return defaultValue
         }
     }

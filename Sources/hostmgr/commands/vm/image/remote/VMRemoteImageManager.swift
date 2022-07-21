@@ -140,7 +140,7 @@ struct VMRemoteImageManager {
                 let basename = (filename as NSString).deletingPathExtension         // basename = my-image
 
                 guard
-                    let checksum = checksums.first(where: { $0.key?.contains(basename) ?? false } )?.key,
+                    let checksum = checksums.first(where: { $0.key?.contains(basename) ?? false })?.key,
                     let size = images.first(where: { $0.key == key })?.size
                 else {
                     return nil

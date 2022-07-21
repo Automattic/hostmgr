@@ -11,7 +11,7 @@ extension FileManager {
 
     func directoryExists(atUrl url: URL) -> Bool {
         var isDirectory: ObjCBool = false
-        let exists = self.fileExists(atPath: url.path, isDirectory:&isDirectory)
+        let exists = self.fileExists(atPath: url.path, isDirectory: &isDirectory)
         return exists && isDirectory.boolValue
     }
 
@@ -60,8 +60,7 @@ extension ProcessInfo {
             let cpuCountString = String(data: cpuCountData, encoding: .utf8)!.trimmingCharacters(in: .whitespacesAndNewlines)
 
             return Int(cpuCountString) ?? self.processorCount
-        }
-        catch _ {
+        } catch _ {
             // Fall back to returning the count including SMT cores
             return self.processorCount
         }

@@ -14,7 +14,7 @@ struct VMCleanCommand: ParsableCommand {
         help: "The VM to clean"
     )
     var vm: StoppedVM
-    
+
     func run() throws {
         try vm.clean()
     }

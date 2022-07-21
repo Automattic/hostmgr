@@ -23,7 +23,7 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
         return [
             "source ~/.circ",               // Need to source .circ first in order to set up the SSH session properly
             exports,                        // Declare all of our environment variables
-            "buildkite-agent bootstrap",    // Then let's go!
+            "buildkite-agent bootstrap"    // Then let's go!
         ].joined(separator: "\n")
     }
 
@@ -68,7 +68,7 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
             /// These ones aren't printed as part of the default list – we're copying them so that `bootstrap` works
             "BUILDKITE_AGENT_ACCESS_TOKEN",
             "BUILDKITE_BUILD_ID",
-            "BUILDKITE_PLUGINS_PATH",
+            "BUILDKITE_PLUGINS_PATH"
 
         ].reduce([String: String]()) { dictionary, key in
             var mutableDictionary = dictionary
@@ -97,9 +97,9 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
             "BUILDKITE_PLUGINS": environment["BUILDKITE_PLUGINS"]?.escapingQuotes(),
 
             /// Used by the S3 Git Mirror plugin
-            "GIT_MIRROR_SERVER_ROOT": "http://\(try getIpAddress()):\( Configuration.shared.gitMirrorPort)",
+            "GIT_MIRROR_SERVER_ROOT": "http://\(try getIpAddress()):\( Configuration.shared.gitMirrorPort)"
         ]
-        .merging(copyableExports, uniquingKeysWith: { lhs, rhs in lhs })
+        .merging(copyableExports, uniquingKeysWith: { lhs, _ in lhs })
         .compactMapValues { $0 }
     }
 

@@ -8,7 +8,7 @@ struct SyncCommand: ParsableCommand {
         abstract: "Sync remote data with this host",
         subcommands: [
             SyncAuthorizedKeysCommand.self,
-            SyncVMImagesCommand.self,
+            SyncVMImagesCommand.self
         ]
     )
 

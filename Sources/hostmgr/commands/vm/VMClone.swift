@@ -112,7 +112,6 @@ struct VMCloneCommand: ParsableCommand {
             usleep(100)
         } while try Parallels().lookupRunningVMs().filter { $0.uuid == vm.uuid && $0.hasIpV4Address }.isEmpty
 
-
         print(String(format: "VM cloned and booted in %.2f seconds", Date().timeIntervalSince(startDate)))
     }
 

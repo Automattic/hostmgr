@@ -16,7 +16,7 @@ struct HostMgr: ParsableCommand {
             RunCommand.self,
             SetCommand.self,
             BenchmarkCommand.self,
-            ConfigCommand.self,
+            ConfigCommand.self
         ])
 
     @Flag(help: "Print the version and exit")
@@ -46,7 +46,7 @@ struct SetCommand: ParsableCommand {
         commandName: "set",
         abstract: "Set system values",
         subcommands: [
-            SetAutomaticLoginPasswordCommand.self,
+            SetAutomaticLoginPasswordCommand.self
         ]
     )
 }
@@ -140,12 +140,10 @@ struct InitCommand: ParsableCommand {
                 if let isValid = isValid {
                     if isValid(value) {
                         return value
-                    }
-                    else {
+                    } else {
                         if let currentValue = currentValue, isValid(currentValue) {
                             return currentValue
-                        }
-                        else {
+                        } else {
                             continue
                         }
                     }
