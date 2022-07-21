@@ -11,8 +11,7 @@ let package = Package(
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         .package(url: "https://github.com/apple/swift-argument-parser", from: "0.4.0"),
-        .package(url: "https://github.com/soto-project/soto.git", from: "5.0.0"),
-        .package(url: "https://github.com/swift-server/async-http-client.git", "1.5.0"..."1.5.1"), /// This was breaking S3 download, pinned until that's fixed
+        .package(url: "https://github.com/soto-project/soto.git", from: "6.0.0"),
         .package(url: "https://github.com/jkmassel/prlctl.git", from: "1.14.0"),
         .package(url: "https://github.com/ebraraktas/swift-tqdm.git", from: "0.1.2"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
@@ -26,7 +25,6 @@ let package = Package(
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "SotoS3", package: "soto"),
-                .product(name: "AsyncHTTPClient", package: "async-http-client"), /// can be removed when we remove the pin above
                 .product(name: "prlctl", package: "prlctl"),
                 .product(name: "Tqdm", package: "swift-tqdm"),
                 .product(name: "Logging", package: "swift-log"),
