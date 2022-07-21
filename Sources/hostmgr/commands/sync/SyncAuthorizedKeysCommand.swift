@@ -3,7 +3,7 @@ import ArgumentParser
 import SotoS3
 import libhostmgr
 
-struct SyncAuthorizedKeysCommand: ParsableCommand {
+struct SyncAuthorizedKeysCommand: ParsableCommand, FollowsCommandPolicies {
 
     static let configuration = CommandConfiguration(
         commandName: "authorized_keys",
@@ -34,40 +34,20 @@ struct SyncAuthorizedKeysCommand: ParsableCommand {
     )
     var destination: String = Configuration.shared.localAuthorizedKeys
 
+    @Flag(help: "Force the job to run immediately, ignoring command policies")
+    var force: Bool = false
+
+    static let commandIdentifier: String = "authorized-key-sync"
+
+    /// A set of command policies that control the circumstances under which this command can be run
+    static let commandPolicies: [CommandPolicy] = [
+        .scheduled(every: 3600)
+    ]
+
     func run() throws {
-        try SyncAuthorizedKeysTask(bucket: bucket, region: region, key: key, destination: destination).run()
-    }
-}
-
-struct SyncAuthorizedKeysTask {
-
-    private let bucket: String
-    private let region: Region
-    private let key: String
-    private let destination: String
-
-    init(
-        bucket: String = Configuration.shared.authorizedKeysBucket,
-        region: Region = Configuration.shared.authorizedKeysRegion,
-        key: String = "authorized_keys",
-        destination: String = Configuration.shared.localAuthorizedKeys
-    ) {
-        self.bucket = bucket
-        self.region = region
-        self.key = key
-        self.destination = destination
-    }
-
-    func run(force: Bool = false) throws {
-        let state = State.get()
+        try to(evaluateCommandPolicies(), unless: force)
 
         logger.debug("Downloading file from s3://\(bucket)/\(key) in \(region) to \(destination)")
-
-        guard state.shouldRun || force else {
-            print("This job is not scheduled to run until \(state.nextRunTime)")
-            return
-        }
-
         logger.trace("Job schedule allows for running")
 
         guard let bytes = try S3Manager().getFileBytes(region: region, bucket: bucket, key: key) else {
@@ -89,28 +69,6 @@ struct SyncAuthorizedKeysTask {
             .posixPermissions: 0o600
         ], ofItemAtPath: destination)
 
-        try State.set(state: State(lastRunAt: Date()))
-    }
-
-    struct State: Codable {
-        private static let key = "authorized-key-sync-state"
-        var lastRunAt: Date = Date.distantPast
-
-        var shouldRun: Bool {
-            Date() > nextRunTime
-        }
-
-        var nextRunTime: Date {
-            let runInterval = TimeInterval(Configuration.shared.authorizedKeysSyncInterval)
-            return self.lastRunAt.addingTimeInterval(runInterval)
-        }
-
-        static func get() -> State {
-            (try? StateManager.load(key: key)) ?? State()
-        }
-
-        static func set(state: State) throws {
-            try StateManager.store(key: key, value: state)
-        }
+        try recordLastRun()
     }
 }
