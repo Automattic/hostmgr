@@ -1,0 +1,6 @@
+…ViewController`
+
+Notice I also updated the comment. I started with removing the
+`AlertView` reference, because that's an implementation detail that
+should be irrelevant for translators. Replacing it with "alert view"
+seemed too generic, so I added more explanation.
