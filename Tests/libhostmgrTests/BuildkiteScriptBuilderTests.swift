@@ -98,7 +98,7 @@ class BuildkiteScriptBuilderTests: XCTestCase {
         )
 
         // Note: this also tests that escaped strings are wrapped in quotes
-        XCTAssertEqual("buildkite-agent bootstrap \"/Users/my\\ builder\\ user/.bashrc\"", command.escapedText)
+        XCTAssertEqual(#"buildkite-agent bootstrap "/Users/my\\ builder\\ user/.bashrc""#, command.escapedText)
     }
 
     // MARK: End-to-end Tests
