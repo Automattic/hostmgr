@@ -81,24 +81,23 @@ class BuildkiteScriptBuilderTests: XCTestCase {
     }
 
     // MARK: - Command Tests
-    func testThatCommandEscapingDoesNotEscapeMultiWordCommands() throws {
-        let command = BuildkiteScriptBuilder.Command(command: "buildkite-agent bootstrap")
-        XCTAssertEqual("buildkite-agent bootstrap", command.escapedText)
-    }
-
-    func testThatCommandDoesNotEscapeCompoundCommands() throws {
+    func testThatCommandDoesNotQuoteCompoundCommands() throws {
         let command = BuildkiteScriptBuilder.Command(command: "buildkite-agent", arguments: ["bootstrap"])
         XCTAssertEqual("buildkite-agent bootstrap", command.escapedText)
     }
 
-    func testThatCommandEscapesSpacesInArguments() throws {
+    func testThatCommandEscapingDoesNotQuoteMultiWordCommands() throws {
+        let command = BuildkiteScriptBuilder.Command(command: "buildkite-agent bootstrap")
+        XCTAssertEqual("buildkite-agent bootstrap", command.escapedText)
+    }
+
+    func testThatCommandQuotesArgumentsContainingSpaces() throws {
         let command = BuildkiteScriptBuilder.Command(
             command: "buildkite-agent bootstrap",
             arguments: ["/Users/my builder user/.bashrc"]
         )
 
-        // Note: this also tests that escaped strings are wrapped in quotes
-        XCTAssertEqual(#"buildkite-agent bootstrap "/Users/my\\ builder\\ user/.bashrc""#, command.escapedText)
+        XCTAssertEqual(#"buildkite-agent bootstrap "/Users/my builder user/.bashrc""#, command.escapedText)
     }
 
     // MARK: End-to-end Tests

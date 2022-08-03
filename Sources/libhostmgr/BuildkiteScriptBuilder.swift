@@ -138,7 +138,7 @@ public struct BuildkiteScriptBuilder {
         var escapedArguments: [String] {
             arguments.map {
                 if $0.rangeOfCharacter(from: .whitespaces) != nil {
-                    return "\"\($0.escapingSpaces)\""
+                    return "\"\($0)\""
                 }
 
                 return $0
