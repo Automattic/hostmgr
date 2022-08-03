@@ -30,7 +30,10 @@ public struct BuildkiteScriptBuilder {
     }
 
     /// Copy environment variables from the existing environment into the build script based on their prefix.
-    public mutating func copyEnvironmentVariables(prefixedBy prefix: String, from environment: [String: String] = ProcessInfo.processInfo.environment) {
+    public mutating func copyEnvironmentVariables(
+        prefixedBy prefix: String,
+        from environment: [String: String] = ProcessInfo.processInfo.environment
+    ) {
         environment
             .filter { $0.key.starts(with: prefix) }
             .forEach { key, value in

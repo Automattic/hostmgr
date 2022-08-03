@@ -5,7 +5,10 @@ import DotEnv
 
 class BuildkiteScriptBuilderTests: XCTestCase {
 
-    private var codeQuoteEnvironmentPath: String { getPathForEnvFile(named: "buildkite-environment-variables-with-code-quotes") }
+    private var codeQuoteEnvironmentPath: String {
+        getPathForEnvFile(named: "buildkite-environment-variables-with-code-quotes")
+    }
+
     private var basicEnvironmentPath: String { getPathForEnvFile(named: "buildkite-environment-variables-basic") }
 
     private var scriptBuilder: BuildkiteScriptBuilder!
@@ -33,28 +36,48 @@ class BuildkiteScriptBuilderTests: XCTestCase {
     func testThatOrganizationSlugEnvironmentVariableIsImported() throws {
         let env = try DotEnv.read(path: codeQuoteEnvironmentPath)
         scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_", from: readLines(from: env))
-        XCTAssertEqual(scriptBuilder.environmentVariables["BUILDKITE_ORGANIZATION_SLUG"], BuildkiteScriptBuilder.Value(wrapping: "automattic"))
-        XCTAssertEqual(scriptBuilder.environmentVariables["BUILDKITE_ORGANIZATION_SLUG"]?.escapedRepresentation, "automattic")
+        XCTAssertEqual(
+            BuildkiteScriptBuilder.Value(wrapping: "automattic"),
+            scriptBuilder.environmentVariables["BUILDKITE_ORGANIZATION_SLUG"]
+        )
+        XCTAssertEqual(
+            "automattic",
+            scriptBuilder.environmentVariables["BUILDKITE_ORGANIZATION_SLUG"]?.escapedRepresentation
+        )
     }
 
     func testThatCommitMessageEnvironmentVariableIsImported() throws {
         let env = try DotEnv.read(path: codeQuoteEnvironmentPath)
         scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_", from: readLines(from: env))
-        XCTAssertEqual(scriptBuilder.environmentVariables["BUILDKITE_MESSAGE"], BuildkiteScriptBuilder.Value(wrapping: "A simple message with `code quotes`"))
-        XCTAssertEqual(scriptBuilder.environmentVariables["BUILDKITE_MESSAGE"]?.escapedRepresentation, "A simple message with \\`code quotes\\`")
+        XCTAssertEqual(
+            BuildkiteScriptBuilder.Value(wrapping: "A simple message with `code quotes`"),
+            scriptBuilder.environmentVariables["BUILDKITE_MESSAGE"]
+        )
+        XCTAssertEqual(
+            "A simple message with \\`code quotes\\`",
+            scriptBuilder.environmentVariables["BUILDKITE_MESSAGE"]?.escapedRepresentation
+        )
     }
 
     func testThatPullRequestEnvironmentVariableIsImported() throws {
         let env = try DotEnv.read(path: codeQuoteEnvironmentPath)
         scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_", from: readLines(from: env))
-        XCTAssertEqual(scriptBuilder.environmentVariables["BUILDKITE_PULL_REQUEST"], BuildkiteScriptBuilder.Value(wrapping: "19136"))
+        XCTAssertEqual(
+            BuildkiteScriptBuilder.Value(wrapping: "19136"),
+            scriptBuilder.environmentVariables["BUILDKITE_PULL_REQUEST"]
+        )
     }
 
     func testThatCommitMessageWithCodeQuotesIsProperlyEscaped() throws {
-        let original = try getContentsOfResourceAsValue(named: "buildkite-commit-message-original", withExtension: "txt")
-        let expected = try getContentsOfResource(named: "buildkite-commit-message-expected", withExtension: "txt")
+        let original = try getContentsOfResourceAsValue(
+            named: "buildkite-commit-message-original",
+            withExtension: "txt"
+        )
 
-        XCTAssertEqual(expected, original.escapedRepresentation)
+        XCTAssertEqual(
+            try getContentsOfResource(named: "buildkite-commit-message-expected", withExtension: "txt"),
+            original.escapedRepresentation
+        )
     }
 
     // MARK: - Command Tests
@@ -69,8 +92,13 @@ class BuildkiteScriptBuilderTests: XCTestCase {
     }
 
     func testThatCommandEscapesSpacesInArguments() throws {
-        let command = BuildkiteScriptBuilder.Command(command: "buildkite-agent bootstrap", arguments: ["/Users/my builder user/.bashrc"])
-        XCTAssertEqual("buildkite-agent bootstrap \"/Users/my\\ builder\\ user/.bashrc\"", command.escapedText) // Note: this also tests that escaped strings are wrapped in quotes
+        let command = BuildkiteScriptBuilder.Command(
+            command: "buildkite-agent bootstrap",
+            arguments: ["/Users/my builder user/.bashrc"]
+        )
+
+        // Note: this also tests that escaped strings are wrapped in quotes
+        XCTAssertEqual("buildkite-agent bootstrap \"/Users/my\\ builder\\ user/.bashrc\"", command.escapedText)
     }
 
     // MARK: End-to-end Tests
@@ -82,10 +110,16 @@ class BuildkiteScriptBuilderTests: XCTestCase {
         scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_", from: readLines(from: env))
         scriptBuilder.addCommand("buildkite-agent", "bootstrap")
         scriptBuilder.addEnvironmentVariable(named: "BUILDKITE_AGENT_NAME", value: "builder")
-        scriptBuilder.addEnvironmentVariable(named: "BUILDKITE_BUILD_PATH", value: "/usr/local/var/buildkite-agent/builds")
+        scriptBuilder.addEnvironmentVariable(
+            named: "BUILDKITE_BUILD_PATH",
+            value: "/usr/local/var/buildkite-agent/builds"
+        )
         scriptBuilder.addEnvironmentVariable(named: "CI", value: "true")
 
-        let expectedOutput = try getContentsOfResource(named: "buildkite-environment-variables-basic-expected-output", withExtension: "txt")
+        let expectedOutput = try getContentsOfResource(
+            named: "buildkite-environment-variables-basic-expected-output",
+            withExtension: "txt"
+        )
         XCTAssertEqual(expectedOutput, scriptBuilder.build())
     }
 
@@ -96,7 +130,10 @@ class BuildkiteScriptBuilderTests: XCTestCase {
         }
     }
 
-    private func getContentsOfResourceAsValue(named key: String, withExtension extension: String) throws -> BuildkiteScriptBuilder.Value {
+    private func getContentsOfResourceAsValue(
+        named key: String,
+        withExtension extension: String
+    ) throws -> BuildkiteScriptBuilder.Value {
         try BuildkiteScriptBuilder.Value(wrapping: getContentsOfResource(named: key, withExtension: `extension`))
     }
 

@@ -18,7 +18,10 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
         scriptBuilder.addCommand("buildkite-agent bootstrap")
 
         // Manually specify the build path to keep them nice and clean in the output
-        scriptBuilder.addEnvironmentVariable(named: "BUILDKITE_BUILD_PATH", value: "/usr/local/var/buildkite-agent/builds")
+        scriptBuilder.addEnvironmentVariable(
+            named: "BUILDKITE_BUILD_PATH",
+            value: "/usr/local/var/buildkite-agent/builds"
+        )
 
         // Keep the agent name simple for better folder paths
         scriptBuilder.addEnvironmentVariable(named: "BUILDKITE_AGENT_NAME", value: "builder")
@@ -27,7 +30,10 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
         scriptBuilder.addEnvironmentVariable(named: "CI", value: "true")
 
         // Used by the S3 Git Mirror plugin
-        scriptBuilder.addEnvironmentVariable(named: "GIT_MIRROR_SERVER_ROOT", value: "http://\(try getIpAddress()):\( Configuration.shared.gitMirrorPort)")
+        scriptBuilder.addEnvironmentVariable(
+            named: "GIT_MIRROR_SERVER_ROOT",
+            value: "http://\(try getIpAddress()):\( Configuration.shared.gitMirrorPort)"
+        )
 
         let scriptText = scriptBuilder.build()
 
