@@ -1,4 +1,5 @@
 import Foundation
+import TSCBasic
 
 public struct BuildkiteScriptBuilder {
 
@@ -95,7 +96,7 @@ public struct BuildkiteScriptBuilder {
 
     /// Helper that wraps command escape logic for shorthand use in a `map` statement.
     func escapeCommand(_ command: Command) -> String {
-        command.escapedText.trimmingWhitespace
+        command.escapedText
     }
 
     /// An object representing the `value` in an environment variable's key/value pair.
@@ -136,13 +137,7 @@ public struct BuildkiteScriptBuilder {
 
         /// A helper to print only the escaped arguments
         var escapedArguments: [String] {
-            arguments.map {
-                if $0.rangeOfCharacter(from: .whitespaces) != nil {
-                    return "\"\($0)\""
-                }
-
-                return $0
-            }
+            arguments.map { $0.spm_shellEscaped() }
         }
     }
 }

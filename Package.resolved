@@ -146,6 +146,24 @@
         }
       },
       {
+        "package": "swift-system",
+        "repositoryURL": "https://github.com/apple/swift-system.git",
+        "state": {
+          "branch": null,
+          "revision": "836bc4557b74fe6d2660218d56e3ce96aff76574",
+          "version": "1.1.1"
+        }
+      },
+      {
+        "package": "swift-tools-support-core",
+        "repositoryURL": "https://github.com/apple/swift-tools-support-core",
+        "state": {
+          "branch": null,
+          "revision": "b7667f3e266af621e5cc9c77e74cacd8e8c00cb4",
+          "version": "0.2.5"
+        }
+      },
+      {
         "package": "swift-tqdm",
         "repositoryURL": "https://github.com/ebraraktas/swift-tqdm.git",
         "state": {

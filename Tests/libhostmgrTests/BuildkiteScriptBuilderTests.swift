@@ -97,7 +97,25 @@ class BuildkiteScriptBuilderTests: XCTestCase {
             arguments: ["/Users/my builder user/.bashrc"]
         )
 
-        XCTAssertEqual(#"buildkite-agent bootstrap "/Users/my builder user/.bashrc""#, command.escapedText)
+        XCTAssertEqual(#"buildkite-agent bootstrap '/Users/my builder user/.bashrc'"#, command.escapedText)
+    }
+
+    func testThatCommandQuotesArgumentsContainingSingleQuotes() throws {
+        let command = BuildkiteScriptBuilder.Command(
+            command: "buildkite-agent bootstrap",
+            arguments: ["--name", #"My 'very important' agent"#]
+        )
+
+        XCTAssertEqual("buildkite-agent bootstrap --name 'My '\''very important'\'' agent'", command.escapedText)
+    }
+
+    func testThatCommandQuotesArgumentsContainingDoubleQuotes() throws {
+        let command = BuildkiteScriptBuilder.Command(
+            command: "buildkite-agent bootstrap",
+            arguments: ["--name", #"My "very important" agent"#]
+        )
+
+        XCTAssertEqual(#"buildkite-agent bootstrap --name 'My "very important" agent'"#, command.escapedText)
     }
 
     // MARK: End-to-end Tests
