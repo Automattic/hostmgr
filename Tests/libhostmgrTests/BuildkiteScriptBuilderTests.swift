@@ -82,37 +82,35 @@ class BuildkiteScriptBuilderTests: XCTestCase {
 
     // MARK: - Command Tests
     func testThatCommandDoesNotQuoteCompoundCommands() throws {
-        let command = BuildkiteScriptBuilder.Command(command: "buildkite-agent", arguments: ["bootstrap"])
+        let command = BuildkiteScriptBuilder.Command("buildkite-agent", "bootstrap")
         XCTAssertEqual("buildkite-agent bootstrap", command.escapedText)
     }
 
     func testThatCommandEscapingDoesNotQuoteMultiWordCommands() throws {
-        let command = BuildkiteScriptBuilder.Command(command: "buildkite-agent bootstrap")
+        let command = BuildkiteScriptBuilder.Command("buildkite-agent bootstrap")
         XCTAssertEqual("buildkite-agent bootstrap", command.escapedText)
     }
 
     func testThatCommandQuotesArgumentsContainingSpaces() throws {
-        let command = BuildkiteScriptBuilder.Command(
-            command: "buildkite-agent bootstrap",
-            arguments: ["/Users/my builder user/.bashrc"]
-        )
-
+        let command = BuildkiteScriptBuilder.Command("buildkite-agent bootstrap", "/Users/my builder user/.bashrc")
         XCTAssertEqual(#"buildkite-agent bootstrap '/Users/my builder user/.bashrc'"#, command.escapedText)
     }
 
     func testThatCommandQuotesArgumentsContainingSingleQuotes() throws {
         let command = BuildkiteScriptBuilder.Command(
-            command: "buildkite-agent bootstrap",
-            arguments: ["--name", #"My 'very important' agent"#]
+            "buildkite-agent bootstrap",
+            "--name",
+            "My 'very important' agent"
         )
 
-        XCTAssertEqual("buildkite-agent bootstrap --name 'My '\''very important'\'' agent'", command.escapedText)
+        XCTAssertEqual(#"buildkite-agent bootstrap --name 'My '\''very important'\'' agent'"#, command.escapedText)
     }
 
     func testThatCommandQuotesArgumentsContainingDoubleQuotes() throws {
         let command = BuildkiteScriptBuilder.Command(
-            command: "buildkite-agent bootstrap",
-            arguments: ["--name", #"My "very important" agent"#]
+            "buildkite-agent bootstrap",
+            "--name",
+            #"My "very important" agent"#
         )
 
         XCTAssertEqual(#"buildkite-agent bootstrap --name 'My "very important" agent'"#, command.escapedText)
