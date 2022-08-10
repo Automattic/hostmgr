@@ -13,8 +13,8 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
     func run() throws {
         var scriptBuilder = BuildkiteScriptBuilder()
 
-        scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_")
         scriptBuilder.addDependency(atPath: "~/.circ")
+        scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_")
         scriptBuilder.addCommand("buildkite-agent bootstrap")
 
         // Manually specify the build path to keep them nice and clean in the output
