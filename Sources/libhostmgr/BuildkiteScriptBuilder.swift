@@ -35,11 +35,9 @@ public struct BuildkiteScriptBuilder {
         prefixedBy prefix: String,
         from environment: [String: String] = ProcessInfo.processInfo.environment
     ) {
-        environment
-            .filter { $0.key.starts(with: prefix) }
-            .forEach { key, value in
-                environmentVariables[key] = Value(wrapping: value)
-            }
+        for (key, value) in environment where key.starts(with: prefix) {
+            environmentVariables[key] = Value(wrapping: value)
+        }
     }
 
     /// Add a line to the build script.
