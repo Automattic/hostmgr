@@ -14,6 +14,7 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
         var scriptBuilder = BuildkiteScriptBuilder()
 
         scriptBuilder.addDependency(atPath: "~/.circ")
+        scriptBuilder.addEnvironmentVariable(named: "BUILDKITE", value: "true")
         scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_")
         scriptBuilder.addCommand("buildkite-agent bootstrap")
 
