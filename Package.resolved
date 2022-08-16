@@ -11,6 +11,15 @@
         }
       },
       {
+        "package": "DotEnv",
+        "repositoryURL": "https://github.com/swiftpackages/DotEnv.git",
+        "state": {
+          "branch": null,
+          "revision": "1f15bb9de727d694af1d003a1a5d7a553752850f",
+          "version": "3.0.0"
+        }
+      },
+      {
         "package": "jmespath.swift",
         "repositoryURL": "https://github.com/adam-fowler/jmespath.swift.git",
         "state": {
@@ -134,6 +143,24 @@
           "branch": null,
           "revision": "2cb54f91ddafc90832c5fa247faf5798d0a7c204",
           "version": "1.13.0"
+        }
+      },
+      {
+        "package": "swift-system",
+        "repositoryURL": "https://github.com/apple/swift-system.git",
+        "state": {
+          "branch": null,
+          "revision": "836bc4557b74fe6d2660218d56e3ce96aff76574",
+          "version": "1.1.1"
+        }
+      },
+      {
+        "package": "swift-tools-support-core",
+        "repositoryURL": "https://github.com/apple/swift-tools-support-core",
+        "state": {
+          "branch": null,
+          "revision": "b7667f3e266af621e5cc9c77e74cacd8e8c00cb4",
+          "version": "0.2.5"
         }
       },
       {

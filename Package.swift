@@ -16,6 +16,9 @@ let package = Package(
         .package(url: "https://github.com/ebraraktas/swift-tqdm.git", from: "0.1.2"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
         .package(name: "kcpassword", url: "https://github.com/jkmassel/kcpassword-swift.git", from: "1.0.0"),
+        .package(url: "https://github.com/swiftpackages/DotEnv.git", from: "3.0.0"),
+        .package(url: "https://github.com/apple/swift-tools-support-core", from: "0.2.5")
+
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -37,14 +40,23 @@ let package = Package(
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "SotoS3", package: "soto"),
+                .product(name: "TSCBasic", package: "swift-tools-support-core")
             ]
         ),
         .testTarget(
             name: "libhostmgrTests",
-            dependencies: ["libhostmgr"],
+            dependencies: [
+                "libhostmgr",
+                .product(name: "DotEnv", package: "DotEnv"),
+            ],
             resources: [
                 .copy("resources/configurations/0.6.0.json"),
                 .copy("resources/configurations/defaults.json"),
+                .copy("resources/buildkite-environment-variables-basic-expected-output.txt"),
+                .copy("resources/buildkite-environment-variables-basic.env"),
+                .copy("resources/buildkite-environment-variables-with-code-quotes.env"),
+                .copy("resources/buildkite-commit-message-original.txt"),
+                .copy("resources/buildkite-commit-message-expected.txt"),
             ]
         ),
     ]

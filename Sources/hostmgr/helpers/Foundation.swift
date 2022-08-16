@@ -35,10 +35,6 @@ extension URL: ExpressibleByArgument {
 }
 
 extension String {
-    func escapingQuotes() -> Self {
-        self.replacingOccurrences(of: "\"", with: "\\\"")
-    }
-
     var expandingTildeInPath: String {
         return NSString(string: self).expandingTildeInPath
     }
