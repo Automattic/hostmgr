@@ -23,6 +23,11 @@ struct HostMgr: ParsableCommand {
     var version: Bool = false
 
     func run() throws {
+        if version {
+            print(appVersion)
+            return
+        }
+
         logger.debug("Starting Up")
 
         guard Configuration.isValid else {
@@ -30,11 +35,7 @@ struct HostMgr: ParsableCommand {
             throw ExitCode(1)
         }
 
-        if version {
-            print(appVersion)
-        } else {
-            throw CleanExit.helpRequest(self)
-        }
+        throw CleanExit.helpRequest(self)
     }
 }
 
