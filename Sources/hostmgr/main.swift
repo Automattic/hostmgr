@@ -3,7 +3,7 @@ import SotoS3
 import Logging
 import libhostmgr
 
-struct HostMgr: ParsableCommand {
+struct Hostmgr: ParsableCommand {
 
     private var appVersion = "0.14.0"
 
@@ -40,7 +40,7 @@ struct HostMgr: ParsableCommand {
 }
 
 initializeLoggingSystem()
-HostMgr.main()
+Hostmgr.main()
 
 struct SetCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
