@@ -13,7 +13,6 @@ public struct BuildkiteScriptBuilder {
     var commands = [Command]()
 
     public init() {
-        self.environmentVariables["BUILDKITE"] = Value(wrapping: "true")
     }
 
     /// Add another dependency to the build script.

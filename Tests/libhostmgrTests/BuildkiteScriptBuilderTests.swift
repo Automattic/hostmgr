@@ -122,6 +122,7 @@ class BuildkiteScriptBuilderTests: XCTestCase {
     func testThatBasicCommandOutputMatchesExpectations() throws {
         let env = try DotEnv.read(path: basicEnvironmentPath)
         scriptBuilder.addDependency(atPath: "~/.circ")
+        scriptBuilder.addEnvironmentVariable(named: "BUILDKITE", value: "true")
         scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_", from: readLines(from: env))
         scriptBuilder.addCommand("buildkite-agent", "bootstrap")
         scriptBuilder.addEnvironmentVariable(named: "BUILDKITE_AGENT_NAME", value: "builder")
