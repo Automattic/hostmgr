@@ -23,7 +23,7 @@ struct Hostmgr: ParsableCommand {
     var version: Bool = false
 
     func run() throws {
-        if version {
+        guard version == false else {
             print(appVersion)
             return
         }
