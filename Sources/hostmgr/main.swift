@@ -3,7 +3,7 @@ import SotoS3
 import Logging
 import libhostmgr
 
-struct HostMgr: ParsableCommand {
+struct Hostmgr: ParsableCommand {
 
     private var appVersion = "0.14.0"
 
@@ -23,6 +23,11 @@ struct HostMgr: ParsableCommand {
     var version: Bool = false
 
     func run() throws {
+        guard version == false else {
+            print(appVersion)
+            return
+        }
+
         logger.debug("Starting Up")
 
         guard Configuration.isValid else {
@@ -30,16 +35,12 @@ struct HostMgr: ParsableCommand {
             throw ExitCode(1)
         }
 
-        if version {
-            print(appVersion)
-        } else {
-            throw CleanExit.helpRequest(self)
-        }
+        throw CleanExit.helpRequest(self)
     }
 }
 
 initializeLoggingSystem()
-HostMgr.main()
+Hostmgr.main()
 
 struct SetCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
