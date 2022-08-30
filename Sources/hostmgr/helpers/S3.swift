@@ -140,7 +140,12 @@ struct S3Manager {
 
         logger.log(level: .info, "Using Accelerated S3 Download")
 
-        return S3(client: aws, region: region, endpoint: "https://\(bucket).s3-accelerate.amazonaws.com", timeout: timeout)
+        return S3(
+            client: aws,
+            region: region,
+            endpoint: "https://\(bucket).s3-accelerate.amazonaws.com",
+            timeout: timeout
+        )
     }
 
     private func bucketTransferAccelerationIsEnabled(for bucket: String, in region: Region) throws -> Bool {
