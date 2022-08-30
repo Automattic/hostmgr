@@ -125,7 +125,8 @@ struct S3Manager {
         for bucket: String,
         in region: Region
     ) throws -> S3 {
-        let s3Client = S3(client: aws, region: region)
+        let timeout = TimeAmount.minutes(30)
+        let s3Client = S3(client: aws, region: region, timeout: timeout)
 
         guard Configuration.shared.allowAWSAcceleratedTransfer else {
             logger.log(level: .info, "Using Standard S3 Download")
@@ -139,7 +140,7 @@ struct S3Manager {
 
         logger.log(level: .info, "Using Accelerated S3 Download")
 
-        return S3(client: aws, region: region, endpoint: "https://\(bucket).s3-accelerate.amazonaws.com")
+        return S3(client: aws, region: region, endpoint: "https://\(bucket).s3-accelerate.amazonaws.com", timeout: timeout)
     }
 
     private func bucketTransferAccelerationIsEnabled(for bucket: String, in region: Region) throws -> Bool {
