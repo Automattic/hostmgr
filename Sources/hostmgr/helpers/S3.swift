@@ -125,7 +125,7 @@ struct S3Manager {
         for bucket: String,
         in region: Region
     ) throws -> S3 {
-        let timeout = TimeAmount.minutes(30)
+        let timeout = TimeAmount.hours(2)
         let s3Client = S3(client: aws, region: region, timeout: timeout)
 
         guard Configuration.shared.allowAWSAcceleratedTransfer else {

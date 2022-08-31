@@ -5,10 +5,11 @@ import libhostmgr
 
 struct Hostmgr: ParsableCommand {
 
-    private var appVersion = "0.14.1"
+    private static var appVersion = "0.14.2"
 
     static var configuration = CommandConfiguration(
         abstract: "A utility for managing VM hosts",
+        version: appVersion,
         subcommands: [
             VMCommand.self,
             SyncCommand.self,
@@ -18,25 +19,6 @@ struct Hostmgr: ParsableCommand {
             BenchmarkCommand.self,
             ConfigCommand.self
         ])
-
-    @Flag(help: "Print the version and exit")
-    var version: Bool = false
-
-    func run() throws {
-        guard version == false else {
-            print(appVersion)
-            return
-        }
-
-        logger.debug("Starting Up")
-
-        guard Configuration.isValid else {
-            print("Invalid configuration – exiting")
-            throw ExitCode(1)
-        }
-
-        throw CleanExit.helpRequest(self)
-    }
 }
 
 initializeLoggingSystem()
