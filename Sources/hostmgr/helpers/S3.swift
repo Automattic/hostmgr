@@ -125,7 +125,9 @@ struct S3Manager {
         for bucket: String,
         in region: Region
     ) throws -> S3 {
-        let timeout = TimeAmount.hours(2)
+        // A VM image (about 25 GB) can be downloaded in about 25 mins. Setting this timeout to be slightly
+        // longer gives us some tolerance for slower downloading speed.
+        let timeout = TimeAmount.minutes(40)
         let s3Client = S3(client: aws, region: region, timeout: timeout)
 
         guard Configuration.shared.allowAWSAcceleratedTransfer else {
