@@ -6,7 +6,7 @@ struct VMRemoteImageListCommand: ParsableCommand {
 
     static let configuration = CommandConfiguration(
         commandName: "list",
-        abstract: "List available VM images"
+        abstract: "List VM images that are available for download from the server"
     )
 
     func run() throws {
