@@ -79,7 +79,12 @@ struct S3Manager {
         var downloadedBytes = 0
         let totalBytes = try getFileSize(region: region, bucket: bucket, key: key)
 
-        let s3Client = try getS3Client(from: client, for: bucket, in: region)
+        // Estimate the time to download the file under 10 MB/s download speed
+        let totalMB = Int64(Measurement<UnitInformationStorage>(value: Double(totalBytes), unit: .bytes).converted(to: .megabytes).value)
+        let timeout = totalMB / 10
+        logger.info("Download timeout: \(timeout / 60) minutes")
+
+        let s3Client = try getS3Client(from: client, for: bucket, in: region).with(timeout: .seconds(timeout))
         let objectRequest = S3.GetObjectRequest(bucket: bucket, key: key)
 
         _ = try s3Client.getObjectStreaming(objectRequest, logger: logger) { buffer, loop in
@@ -125,10 +130,7 @@ struct S3Manager {
         for bucket: String,
         in region: Region
     ) throws -> S3 {
-        // A VM image (about 25 GB) can be downloaded in about 25 mins. Setting this timeout to be slightly
-        // longer gives us some tolerance for slower downloading speed.
-        let timeout = TimeAmount.minutes(40)
-        let s3Client = S3(client: aws, region: region, timeout: timeout)
+        let s3Client = S3(client: aws, region: region)
 
         guard Configuration.shared.allowAWSAcceleratedTransfer else {
             logger.log(level: .info, "Using Standard S3 Download")
@@ -145,8 +147,7 @@ struct S3Manager {
         return S3(
             client: aws,
             region: region,
-            endpoint: "https://\(bucket).s3-accelerate.amazonaws.com",
-            timeout: timeout
+            endpoint: "https://\(bucket).s3-accelerate.amazonaws.com"
         )
     }
 
