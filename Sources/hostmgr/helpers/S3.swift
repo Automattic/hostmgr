@@ -89,7 +89,8 @@ struct S3Manager {
             .value
         )
         let estimatedDownloadSpeedInMBPS: Int64 = 10
-        let timeout = totalMB / estimatedDownloadSpeedInMBPS
+        let minimalTimeout: Int64 = 60
+        let timeout = max(totalMB / estimatedDownloadSpeedInMBPS, minimalTimeout)
         logger.info("Download timeout: \(timeout / 60) minutes")
 
         let s3Client = try getS3Client(from: client, for: bucket, in: region).with(timeout: .seconds(timeout))
