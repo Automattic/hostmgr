@@ -130,24 +130,19 @@ struct S3Manager {
         for bucket: String,
         in region: Region
     ) throws -> S3 {
-        let s3Client = S3(client: aws, region: region)
-
-        guard Configuration.shared.allowAWSAcceleratedTransfer else {
+        let options: AWSServiceConfig.Options
+        if try Configuration.shared.allowAWSAcceleratedTransfer && bucketTransferAccelerationIsEnabled(for: bucket, in: region) {
+            logger.log(level: .info, "Using Accelerated S3 Download")
+            options = .s3UseTransferAcceleratedEndpoint
+        } else {
             logger.log(level: .info, "Using Standard S3 Download")
-            return s3Client
+            options = []
         }
-
-        guard try bucketTransferAccelerationIsEnabled(for: bucket, in: region) else {
-            logger.log(level: .info, "Using Standard S3 Download")
-            return s3Client
-        }
-
-        logger.log(level: .info, "Using Accelerated S3 Download")
 
         return S3(
             client: aws,
             region: region,
-            endpoint: "https://\(bucket).s3-accelerate.amazonaws.com"
+            options: options
         )
     }
 
