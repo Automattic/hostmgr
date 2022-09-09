@@ -80,7 +80,14 @@ struct S3Manager {
         let totalBytes = try getFileSize(region: region, bucket: bucket, key: key)
 
         // Estimate the time to download the file under 10 MB/s download speed
-        let totalMB = Int64(Measurement<UnitInformationStorage>(value: Double(totalBytes), unit: .bytes).converted(to: .megabytes).value)
+        let totalMB = Int64(
+            Measurement<UnitInformationStorage>(
+                value: Double(totalBytes),
+                unit: .bytes
+            )
+            .converted(to: .megabytes)
+            .value
+        )
         let timeout = totalMB / 10
         logger.info("Download timeout: \(timeout / 60) minutes")
 
@@ -131,7 +138,8 @@ struct S3Manager {
         in region: Region
     ) throws -> S3 {
         let options: AWSServiceConfig.Options
-        if try Configuration.shared.allowAWSAcceleratedTransfer && bucketTransferAccelerationIsEnabled(for: bucket, in: region) {
+        if try Configuration.shared.allowAWSAcceleratedTransfer
+            && bucketTransferAccelerationIsEnabled(for: bucket, in: region) {
             logger.log(level: .info, "Using Accelerated S3 Download")
             options = .s3UseTransferAcceleratedEndpoint
         } else {
