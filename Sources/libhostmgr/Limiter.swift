@@ -34,7 +34,8 @@ public class Limiter {
         }
     }
 
-    /// The `operation` will be called the very first time this function is called, and, at most, once per specified period.
+    /// The `operation` will be called the very first time this function is called, and, at most, once per specified
+    /// period.
     private func throttle(operation: @escaping () async -> Void) {
         guard task == nil else { return }
 
