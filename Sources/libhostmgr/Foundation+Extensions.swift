@@ -14,3 +14,52 @@ extension ProcessInfo {
         return ProcessorArchitecture(rawValue: identifier)!
     }
 }
+
+extension FileManager {
+    public func fileExists(at url: URL) -> Bool {
+        fileExists(atPath: url.path)
+    }
+
+    public func directoryExists(at url: URL) throws -> Bool {
+        var isDir: ObjCBool = true
+        return fileExists(atPath: url.path, isDirectory: &isDir) && isDir.boolValue
+    }
+
+    public func createTemporaryFile(containing string: String = "") throws -> URL {
+        let file = temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try string.write(to: file, atomically: false, encoding: .utf8)
+        return file
+    }
+
+    public func createDirectoryTree(atUrl url: URL) throws {
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+    }
+
+    public func subpaths(at url: URL) -> [String] {
+        self.subpaths(atPath: url.path) ?? []
+    }
+
+    public func displayName(at url: URL) -> String {
+        displayName(atPath: url.path)
+    }
+
+    public func createFile(at url: URL, contents: Data) throws {
+        createFile(atPath: url.path, contents: contents)
+    }
+}
+
+public func to(_ callback: @autoclosure () throws -> Void, if conditional: Bool) rethrows {
+    guard conditional == true else {
+        return
+    }
+
+    try callback()
+}
+
+public func to(_ callback: @autoclosure () throws -> Void, unless conditional: Bool) rethrows {
+    guard conditional == false else {
+        return
+    }
+
+    try callback()
+}
