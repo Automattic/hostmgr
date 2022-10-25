@@ -11,8 +11,8 @@ struct SyncVMImagesCommand: ParsableCommand, FollowsCommandPolicies {
         abstract: "Sync this machine's VM images with those avaiable remotely"
     )
 
-    @Flag(help: "Force the job to run immediately, ignoring command policies")
-    var force: Bool = false
+    @OptionGroup
+    var options: SharedSyncOptions
 
     static let commandIdentifier: String = "sync-vm-images"
 
@@ -23,7 +23,7 @@ struct SyncVMImagesCommand: ParsableCommand, FollowsCommandPolicies {
     ]
 
     func run() throws {
-        try to(evaluateCommandPolicies(), unless: force)
+        try to(evaluateCommandPolicies(), unless: options.force)
 
         /// The manifest defines which images should be distributed to VM hosts
         let manifest = try VMRemoteImageManager().getManifest()

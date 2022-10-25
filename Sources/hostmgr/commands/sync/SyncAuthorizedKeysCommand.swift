@@ -34,8 +34,8 @@ struct SyncAuthorizedKeysCommand: ParsableCommand, FollowsCommandPolicies {
     )
     var destination: String = Configuration.shared.localAuthorizedKeys
 
-    @Flag(help: "Force the job to run immediately, ignoring command policies")
-    var force: Bool = false
+    @OptionGroup
+    var options: SharedSyncOptions
 
     static let commandIdentifier: String = "authorized-key-sync"
 
@@ -45,7 +45,7 @@ struct SyncAuthorizedKeysCommand: ParsableCommand, FollowsCommandPolicies {
     ]
 
     func run() throws {
-        try to(evaluateCommandPolicies(), unless: force)
+        try to(evaluateCommandPolicies(), unless: options.force)
 
         logger.debug("Downloading file from s3://\(bucket)/\(key) in \(region) to \(destination)")
         logger.trace("Job schedule allows for running")
