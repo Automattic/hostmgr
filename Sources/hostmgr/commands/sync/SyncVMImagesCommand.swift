@@ -60,12 +60,14 @@ struct SyncVMImagesCommand: ParsableCommand, FollowsCommandPolicies {
         logger.info("Downloading the VM – this will take a few minutes")
         logger.trace("Downloading \(image.basename) to \(destination)")
 
-        try VMRemoteImageManager().download(image: image, to: destination) { _, downloaded, total in
-            // Only update the heartbeat every 5 seconds to avoid thrashing the disk
-            try? recordHeartbeat()
+        let limiter = Limiter(policy: .throttle, operationsPerSecond: 1)
 
-            let percent = String(format: "%.2f", Double(downloaded) / Double(total) * 100)
-            logger.trace("\(percent)% complete")
+        try VMRemoteImageManager().download(image: image, to: destination) { _, downloaded, total in
+            limiter.perform {
+                try? recordHeartbeat()
+                let percent = String(format: "%.2f", Double(downloaded) / Double(total) * 100)
+                logger.trace("\(percent)% complete")
+            }
         }
 
         logger.info("Download Complete")
