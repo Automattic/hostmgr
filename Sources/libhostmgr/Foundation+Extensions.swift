@@ -16,16 +16,34 @@ extension ProcessInfo {
 }
 
 extension FileManager {
-    func fileExists(at url: URL) -> Bool {
+    public func fileExists(at url: URL) -> Bool {
         fileExists(atPath: url.path)
     }
 
-    func directoryExists(at url: URL) throws -> Bool {
-        var isDir:ObjCBool = true
+    public func directoryExists(at url: URL) throws -> Bool {
+        var isDir: ObjCBool = true
         return fileExists(atPath: url.path, isDirectory: &isDir) && isDir.boolValue
     }
 
-    func createFile(at url: URL, contents: Data) throws {
+    public func createTemporaryFile(containing string: String = "") throws -> URL {
+        let file = temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try string.write(to: file, atomically: false, encoding: .utf8)
+        return file
+    }
+
+    public func createDirectoryTree(atUrl url: URL) throws {
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+    }
+
+    public func subpaths(at url: URL) -> [String] {
+        self.subpaths(atPath: url.path) ?? []
+    }
+
+    public func displayName(at url: URL) -> String {
+        displayName(atPath: url.path)
+    }
+
+    public func createFile(at url: URL, contents: Data) throws {
         createFile(atPath: url.path, contents: contents)
     }
 }
