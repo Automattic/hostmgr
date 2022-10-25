@@ -1,6 +1,7 @@
 import Foundation
 import Logging
 
+// swiftlint:disable type_name
 /// A hack to allow global logging
 struct logger {
     static func debug(_ message:  @autoclosure () -> Logger.Message) {
