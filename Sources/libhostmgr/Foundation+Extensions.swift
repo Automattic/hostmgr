@@ -29,3 +29,19 @@ extension FileManager {
         createFile(atPath: url.path, contents: contents)
     }
 }
+
+public func to(_ callback: @autoclosure () throws -> Void, if conditional: Bool) rethrows {
+    guard conditional == true else {
+        return
+    }
+
+    try callback()
+}
+
+public func to(_ callback: @autoclosure () throws -> Void, unless conditional: Bool) rethrows {
+    guard conditional == false else {
+        return
+    }
+
+    try callback()
+}

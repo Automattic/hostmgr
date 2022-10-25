@@ -71,10 +71,3 @@ extension ProcessInfo {
     }
 }
 
-func to(_ callback: @autoclosure () throws -> Void, unless conditional: Bool) rethrows {
-    guard conditional == false else {
-        return
-    }
-
-    try callback()
-}

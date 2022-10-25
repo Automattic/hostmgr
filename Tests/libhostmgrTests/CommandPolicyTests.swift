@@ -1,6 +1,11 @@
 import XCTest
 @testable import libhostmgr
 
+struct TestCommand: FollowsCommandPolicies {
+    static var commandIdentifier = "TestCommandIdentifier"
+    static var commandPolicies: [CommandPolicy] = []
+}
+
 class CommandPolicyTests: XCTestCase {
 
     private let stateStorageManager = InMemoryStorageManager()
@@ -12,6 +17,31 @@ class CommandPolicyTests: XCTestCase {
 
     override func tearDownWithError() throws {
         try stateStorageManager.deleteAll()
+    }
+
+    // MARK: Evaluation
+    func testThatEvaluationIsPerformedWhenPredicateIsFalseForUnlessStatement() throws {
+        var value = false
+        to({ value = true }(), unless: false)
+        XCTAssertTrue(value)
+    }
+
+    func testThatEvaluationIsNotPerformedWhenPredicateIsFalseForUnlessStatement() throws {
+        var value = false
+        to({ value = true }(), unless: true)
+        XCTAssertFalse(value)
+    }
+
+    func testThatEvaluationIsPerformedWhenPredicateIsTrueForIfStatement() throws {
+        var value = false
+        to({ value = true }(), if: true)
+        XCTAssertTrue(value)
+    }
+
+    func testThatEvaluationIsNotPerformedWhenPredicateIsFalseForIfStatement() throws {
+        var value = false
+        to({ value = true }(), if: false)
+        XCTAssertFalse(value)
     }
 
     // MARK: Schedule Tests
