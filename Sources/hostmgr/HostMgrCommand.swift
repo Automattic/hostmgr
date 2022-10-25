@@ -4,7 +4,7 @@ import Logging
 import libhostmgr
 
 @main
-struct Hostmgr: ParsableCommand {
+struct Hostmgr: AsyncParsableCommand {
 
     private static var appVersion = "0.14.2"
 
@@ -22,7 +22,7 @@ struct Hostmgr: ParsableCommand {
         ]
     )
 
-    mutating func run() throws {
+    mutating func run() async throws {
         Logger.initializeLoggingSystem()
 
         logger.trace("Starting Up")
