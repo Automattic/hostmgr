@@ -21,8 +21,8 @@ extension FileManager {
     }
 
     func directoryExists(at url: URL) throws -> Bool {
-        let resourceValues = try url.resourceValues(forKeys: [.isDirectoryKey])
-        return resourceValues.isDirectory == true
+        var isDir:ObjCBool = true
+        return fileExists(atPath: url.path, isDirectory: &isDir) && isDir.boolValue
     }
 
     func createFile(at url: URL, contents: Data) throws {
