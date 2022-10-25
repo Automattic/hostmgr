@@ -1,14 +1,33 @@
 import Foundation
 import Logging
 
-var logger = Logger(label: "com.automattic.hostmgr")
+/// A hack to allow global logging
+struct logger {
+    static func debug(_ message:  @autoclosure () -> Logger.Message) {
+        Logger.shared.debug(message())
+    }
 
-func initializeLoggingSystem() {
-    let logLevelFromEnv = ProcessInfo.processInfo.environment["LOG_LEVEL"].flatMap { Logger.Level(rawValue: $0) }
-    logger.logLevel = logLevelFromEnv ?? .info
-    LoggingSystem.bootstrap { label in
-        MultiplexLogHandler([
-            StreamLogHandler.standardError(label: label)
-        ])
+    static func trace(_ message:  @autoclosure () -> Logger.Message) {
+        Logger.shared.trace(message())
+    }
+
+    static func info(_ message:  @autoclosure () -> Logger.Message) {
+        Logger.shared.info(message())
+    }
+}
+
+extension Logger {
+    static var shared = Logger(label: "com.automattic.hostmgr")
+
+    static func initializeLoggingSystem() {
+        #if DEBUG
+        Logger.shared.logLevel = .trace
+        #endif
+
+        LoggingSystem.bootstrap { label in
+            MultiplexLogHandler([
+                StreamLogHandler.standardError(label: label)
+            ])
+        }
     }
 }

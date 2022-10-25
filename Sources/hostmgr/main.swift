@@ -21,7 +21,7 @@ struct Hostmgr: ParsableCommand {
         ])
 }
 
-initializeLoggingSystem()
+Logger.initializeLoggingSystem()
 Hostmgr.main()
 
 struct SetCommand: ParsableCommand {

@@ -96,7 +96,7 @@ struct S3Manager {
         let s3Client = try getS3Client(from: client, for: bucket, in: region).with(timeout: .seconds(timeout))
         let objectRequest = S3.GetObjectRequest(bucket: bucket, key: key)
 
-        _ = try s3Client.getObjectStreaming(objectRequest, logger: logger) { buffer, loop in
+        _ = try s3Client.getObjectStreaming(objectRequest, logger: Logger.shared) { buffer, loop in
             let availableBytes = buffer.readableBytes
             downloadedBytes += availableBytes
             if let bytes = buffer.getData(at: buffer.readerIndex, length: availableBytes) {
@@ -142,10 +142,10 @@ struct S3Manager {
         let options: AWSServiceConfig.Options
         if try Configuration.shared.allowAWSAcceleratedTransfer
             && bucketTransferAccelerationIsEnabled(for: bucket, in: region) {
-            logger.log(level: .info, "Using Accelerated S3 Download")
+            logger.info("Using Accelerated S3 Download")
             options = .s3UseTransferAcceleratedEndpoint
         } else {
-            logger.log(level: .info, "Using Standard S3 Download")
+            logger.info("Using Standard S3 Download")
             options = []
         }
 
@@ -165,7 +165,7 @@ struct S3Manager {
 
         let bucketInfoRequest = S3.GetBucketAccelerateConfigurationRequest(bucket: bucket)
         return try S3(client: client, region: region)
-            .getBucketAccelerateConfiguration(bucketInfoRequest, logger: logger)
+            .getBucketAccelerateConfiguration(bucketInfoRequest, logger: Logger.shared)
             .wait()
             .status == .enabled
     }
