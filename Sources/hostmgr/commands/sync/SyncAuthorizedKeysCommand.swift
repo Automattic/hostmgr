@@ -50,7 +50,7 @@ struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
         logger.debug("Downloading file from s3://\(bucket)/\(key) in \(region) to \(destination)")
         logger.trace("Job schedule allows for running")
 
-        let s3Manager = libhostmgr.S3Manager(bucket: self.bucket, region: self.region.rawValue)
+        let s3Manager = S3Manager(bucket: self.bucket, region: self.region.rawValue)
 
         guard let object = try await s3Manager.lookupObject(atPath: key) else {
             print("Unable to locate authorized_keys file – exiting")

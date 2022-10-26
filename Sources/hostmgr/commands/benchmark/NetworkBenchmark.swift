@@ -24,7 +24,7 @@ struct NetworkBenchmark: AsyncParsableCommand {
             throw CleanExit.message("Unable to find a remote image to use as a network benchmark")
         }
 
-        let manager =  libhostmgr.S3Manager(
+        let manager = S3Manager(
             bucket: Configuration.shared.vmImagesBucket,
             region: Configuration.shared.vmImagesRegion.rawValue
         )
@@ -40,7 +40,7 @@ struct NetworkBenchmark: AsyncParsableCommand {
         lhs.imageObject.size < rhs.imageObject.size
     }
 
-    private func updateProgress(_ progress: libhostmgr.FileTransferProgress) {
+    private func updateProgress(_ progress: FileTransferProgress) {
         Self.limiter.perform {
             let downloadedSize = ByteCountFormatter.string(fromByteCount: Int64(progress.current), countStyle: .file)
             let totalSize = ByteCountFormatter.string(fromByteCount: Int64(progress.total), countStyle: .file)

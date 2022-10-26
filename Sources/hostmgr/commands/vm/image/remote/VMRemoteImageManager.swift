@@ -67,24 +67,13 @@ struct VMRemoteImageManager {
         }
     }
 
-    private let bucket: String = Configuration.shared.vmImagesBucket
-    private let region: Region = Configuration.shared.vmImagesRegion
+    private let s3Manager: S3ManagerProtocol
 
-    private var s3Manager: S3ManagerProtocol {
-        libhostmgr.S3Manager(bucket: self.bucket, region: self.region.rawValue)
-    }
+    init(s3Manager: S3ManagerProtocol? = nil) {
+        let bucket: String = Configuration.shared.vmImagesBucket
+        let region: Region = Configuration.shared.vmImagesRegion
 
-    func getManifest() throws -> [String] {
-        guard
-            let manifest = try S3Manager().getFileBytes(region: region, bucket: bucket, key: "manifest.txt"),
-            let manifestString = String(data: manifest, encoding: .utf8)
-        else {
-            return []
-        }
-
-        return manifestString
-            .split(separator: "\n")
-            .map { String($0) }
+        self.s3Manager = s3Manager ?? S3Manager(bucket: bucket, region: region.rawValue)
     }
 
     func getManifest() async throws -> [String] {
@@ -99,29 +88,6 @@ struct VMRemoteImageManager {
         return manifestString
             .split(separator: "\n")
             .map { String($0) }
-    }
-
-    func getImage(forPath path: String) throws -> RemoteImage? {
-
-        let basename = (path as NSString).deletingPathExtension
-        let objects = try S3Manager().listObjects(region: region, bucket: bucket, startingWith: basename)
-
-        /// There should only be two objects — the VM image, and it's checksum file
-        guard
-            objects.count == 2,
-            let imageObject = objects.first(where: { $0.key?.hasSuffix(".pvmp") ?? false }),
-            let imageObjectKey = imageObject.key,
-            let imageObjectSize = imageObject.size,
-            let checksumObject = objects.first(where: { $0.key?.hasSuffix(".sha256.txt") ?? false}),
-            let checksumObjectKey = checksumObject.key
-        else {
-            return nil
-        }
-
-        return RemoteImage(
-            imageObject: S3Object(key: imageObjectKey, size: Int(imageObjectSize)),
-            checksumObject: S3Object(key: checksumObjectKey)
-        )
     }
 
     func getImage(forPath path: String) async throws -> RemoteImage? {
@@ -143,41 +109,12 @@ struct VMRemoteImageManager {
         image: RemoteImage,
         to destination: URL,
         progressCallback: FileTransferProgressCallback? = nil
-    ) throws {
-        let region = Configuration.shared.vmImagesRegion
-        let bucket = Configuration.shared.vmImagesBucket
-
-        /// Create the parent directory if it doesn't already exist
-        let parentDirectory = destination.deletingLastPathComponent()
-        try FileManager.default.createDirectory(at: parentDirectory, withIntermediateDirectories: true)
-
-        try S3Manager().streamingDownloadFile(
-            region: region,
-            bucket: bucket,
-            key: image.imageObject.key,
-            destination: destination,
-            progressCallback: progressCallback
-        )
-    }
-
-    func download(
-        image: RemoteImage,
-        to destination: URL,
-        progressCallback: libhostmgr.FileTransferProgressCallback? = nil
     ) async throws {
         _ = try await self.s3Manager.download(
             object: image.imageObject,
             to: destination,
             progressCallback: progressCallback
         )
-    }
-
-    func list(prefix: String = "images/") throws -> [RemoteImage] {
-        let objects = try S3Manager()
-            .listObjects(region: region, bucket: bucket, startingWith: prefix)
-            .compactMap(self.convertToNewS3Object)
-
-        return remoteImagesFrom(objects: objects)
     }
 
     func list(prefix: String = "images/") async throws -> [RemoteImage] {
