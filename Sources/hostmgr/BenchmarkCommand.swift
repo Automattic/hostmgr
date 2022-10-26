@@ -1,7 +1,7 @@
 import Foundation
 import ArgumentParser
 
-struct BenchmarkCommand: ParsableCommand {
+struct BenchmarkCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "benchmark",
         abstract: "System tests",

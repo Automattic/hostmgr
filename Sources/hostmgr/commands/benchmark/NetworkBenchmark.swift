@@ -6,7 +6,7 @@ import libhostmgr
 
 private let startDate = Date()
 
-struct NetworkBenchmark: ParsableCommand {
+struct NetworkBenchmark: AsyncParsableCommand {
 
     typealias RemoteImage = VMRemoteImageManager.RemoteImage
 
@@ -15,21 +15,24 @@ struct NetworkBenchmark: ParsableCommand {
         abstract: "Test Network Speed"
     )
 
-    func run() throws {
-        guard let file = try VMRemoteImageManager()
-            .list()
-            .sorted(by: self.imageSizeSort)
-            .first
-        else {
+    private static let limiter = Limiter(policy: .throttle, operationsPerSecond: 1)
+
+    func run() async throws {
+        let remoteImages = try await VMRemoteImageManager().list().sorted(by: self.imageSizeSort)
+
+        guard let file = remoteImages.first else {
             throw CleanExit.message("Unable to find a remote image to use as a network benchmark")
         }
 
-        try S3Manager().streamingDownloadFile(
-            region: Configuration.shared.vmImagesRegion,
+        let manager =  libhostmgr.S3Manager(
             bucket: Configuration.shared.vmImagesBucket,
-            key: file.imageObject.key,
-            destination: URL(fileURLWithPath: "/dev/null"),
-            progressCallback: self.showProgress
+            region: Configuration.shared.vmImagesRegion.rawValue
+        )
+
+        try await manager.download(
+            object: file.imageObject,
+            to: FileManager.default.temporaryFilePath(),
+            progressCallback: self.updateProgress
         )
     }
 
@@ -37,20 +40,21 @@ struct NetworkBenchmark: ParsableCommand {
         lhs.imageObject.size < rhs.imageObject.size
     }
 
-    private func showProgress(availableBytes: Int, downloadedBytes: Int, totalBytes: Int64) {
+    private func updateProgress(_ progress: libhostmgr.FileTransferProgress) {
+        Self.limiter.perform {
+            let downloadedSize = ByteCountFormatter.string(fromByteCount: Int64(progress.current), countStyle: .file)
+            let totalSize = ByteCountFormatter.string(fromByteCount: Int64(progress.total), countStyle: .file)
 
-        // Sample only one in 100 entries
-        guard Int.random(in: 0...1000) == 0 else {
-            return
+            let secondsElapsed = Date().timeIntervalSince(startDate)
+            let perSecond = Double(progress.current) / Double(secondsElapsed)
+
+            // Don't continue unless the rate can be represented by `Int64`
+            guard perSecond.isNormal else {
+                return
+            }
+
+            let rate = ByteCountFormatter.string(fromByteCount: Int64(perSecond), countStyle: .file)
+            logger.info("Downloaded \(downloadedSize) of \(totalSize) [Rate: \(rate) per second]")
         }
-
-        let downloadedSize = ByteCountFormatter.string(fromByteCount: Int64(downloadedBytes), countStyle: .file)
-        let totalSize = ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file)
-
-        let secondsElapsed = Date().timeIntervalSince(startDate)
-        let perSecond = Double(downloadedBytes) / Double(secondsElapsed)
-        let rate = ByteCountFormatter.string(fromByteCount: Int64(perSecond), countStyle: .file)
-
-        logger.info("Downloaded \(downloadedSize) of \(totalSize) [Rate: \(rate) per second]")
     }
 }

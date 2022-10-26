@@ -26,9 +26,14 @@ extension FileManager {
     }
 
     public func createTemporaryFile(containing string: String = "") throws -> URL {
-        let file = temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        try string.write(to: file, atomically: false, encoding: .utf8)
-        return file
+        let path = temporaryFilePath()
+        try string.write(to: path, atomically: false, encoding: .utf8)
+        return path
+    }
+
+    public func temporaryFilePath() -> URL {
+        self.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString + ".tmp")
     }
 
     public func createDirectoryTree(atUrl url: URL) throws {
