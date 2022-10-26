@@ -27,6 +27,13 @@ public enum CommandPolicy: Equatable, Codable {
         }
     }
 
+    var label: String {
+        switch self {
+        case .serialExecution: return "serial-execution"
+        case .scheduled: return "schedule"
+        }
+    }
+
     private func evaluateSchedule(
         forKey key: String,
         timeInterval: TimeInterval,
@@ -87,6 +94,11 @@ public protocol FollowsCommandPolicies {
 }
 
 public extension FollowsCommandPolicies {
+
+    func key(forPolicy policy: CommandPolicy) -> String {
+        Self.commandIdentifier + "-" + policy.label
+    }
+
     /// Evaluate any command policies on this command
     ///
     /// If any policies are violated (ie – it's not time to run yet), an error will be thrown
@@ -94,8 +106,8 @@ public extension FollowsCommandPolicies {
     func evaluateCommandPolicies(stateStorageManager: StateStorageManager? = nil) throws {
         let stateStorageManager = stateStorageManager ?? FileStateStorage()
 
-        try Self.commandPolicies.forEach { policy in
-            try policy.evaluate(forKey: Self.commandIdentifier, stateStorageManager: stateStorageManager)
+        for policy in Self.commandPolicies {
+            try policy.evaluate(forKey: key(forPolicy: policy), stateStorageManager: stateStorageManager)
         }
     }
 
@@ -108,7 +120,7 @@ public extension FollowsCommandPolicies {
         var state = CommandPolicy.SerialExecutionState()
         state.heartbeat = date
 
-        try stateStorageManager.write(state, toKey: Self.commandIdentifier)
+        try stateStorageManager.write(state, toKey: key(forPolicy: .serialExecution))
     }
 
     /// Store the last run date for this job
@@ -120,6 +132,6 @@ public extension FollowsCommandPolicies {
         var state = CommandPolicy.ScheduledCommandState()
         state.lastRunAt = date
 
-        try stateStorageManager.write(state, toKey: Self.commandIdentifier)
+        try stateStorageManager.write(state, toKey: key(forPolicy: .scheduled(every: 0)))
     }
 }
