@@ -14,11 +14,10 @@ struct VMRemoteImageDownload: AsyncParsableCommand {
         abstract: "Download a given image and set it up for use"
     )
 
-    @Option(
-        name: .shortAndLong,
-        help: "The path to the image you would like to download"
+    @Argument(
+        help: "The name of the image you would like to download"
     )
-    var path: String
+    var name: String
 
     @Option(
         name: .shortAndLong,
@@ -30,10 +29,10 @@ struct VMRemoteImageDownload: AsyncParsableCommand {
         .path
 
     func run() async throws {
-        let remote = VMRemoteImageManager()
+        let remote = RemoteVMRepository()
 
-        guard let remoteImage = try await remote.getImage(forPath: path) else {
-            print("Unable to find image at path \(path)")
+        guard let remoteImage = try await remote.getImage(named: name) else {
+            print("Unable to find image named: \(name)")
             Self.exit()
         }
 

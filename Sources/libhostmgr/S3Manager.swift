@@ -11,7 +11,7 @@ public protocol S3ManagerProtocol {
         object: S3Object,
         to destination: URL,
         progressCallback: FileTransferProgressCallback?
-    ) async throws -> URL
+    ) async throws
 
     func download(object: S3Object) async throws -> Data?
 }
@@ -51,12 +51,11 @@ public struct S3Manager: S3ManagerProtocol {
         }
     }
 
-    @discardableResult
     public func download(
         object: S3Object,
         to destination: URL,
         progressCallback: FileTransferProgressCallback?
-    ) async throws -> URL {
+    ) async throws {
 
         let signedURL = try await presignedUrl(forObject: object)
 
@@ -64,7 +63,7 @@ public struct S3Manager: S3ManagerProtocol {
             return (destination, [.createIntermediateDirectories, .removePreviousFile])
         }
 
-        return try await AF
+        _ = try await AF
             .download(signedURL, method: .get, to: destinationResolver)
             .downloadProgress { progressCallback?(.progressData(from: $0)) }
             .serializingDownloadedFileURL(automaticallyCancelling: true)

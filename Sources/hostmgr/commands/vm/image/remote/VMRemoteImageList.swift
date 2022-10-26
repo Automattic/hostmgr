@@ -1,5 +1,6 @@
 import Foundation
 import ArgumentParser
+import libhostmgr
 
 struct VMRemoteImageListCommand: AsyncParsableCommand {
 
@@ -9,8 +10,8 @@ struct VMRemoteImageListCommand: AsyncParsableCommand {
     )
 
     func run() async throws {
-        let imageNames = try await VMRemoteImageManager()
-            .list()
+        let imageNames = try await RemoteVMRepository()
+            .listImages()
             .map(\.basename)
             .sorted()
 
