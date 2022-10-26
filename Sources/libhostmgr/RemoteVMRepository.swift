@@ -55,15 +55,11 @@ public struct RemoteVMRepository {
         to destination: URL,
         progressCallback: FileTransferProgressCallback? = nil
     ) async throws {
-        let temporaryURL = FileManager.default.temporaryFilePath()
-
         try await self.s3Manager.download(
             object: image.imageObject,
-            to: temporaryURL,
+            to: destination,
             progressCallback: progressCallback
         )
-
-        try FileManager.default.moveItem(at: temporaryURL, to: destination)
     }
 
     public func listImages(sortedBy strategy: RemoteVMImageSortingStrategy = .name) async throws -> [RemoteVMImage] {

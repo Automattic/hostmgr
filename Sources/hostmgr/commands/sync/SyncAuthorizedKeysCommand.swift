@@ -45,9 +45,9 @@ struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
 
     func run() async throws {
         try to(evaluateCommandPolicies(), unless: options.force)
+        logger.debug("Job schedule allows for running")
 
-        logger.debug("Downloading file from s3://\(bucket)/\(key) in \(region) to \(destination)")
-        logger.trace("Job schedule allows for running")
+        logger.info("Downloading file from s3://\(bucket)/\(key) in \(region) to \(destination)")
 
         let s3Manager = S3Manager(bucket: self.bucket, region: self.region)
 
@@ -56,24 +56,13 @@ struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
             SyncAuthorizedKeysCommand.exit()
         }
 
-        guard let bytes = try await s3Manager.download(object: object) else {
-            print("Unable to download authorized_keys file – exiting")
-            SyncAuthorizedKeysCommand.exit()
-        }
-
-        logger.trace("Downloaded \(bytes.count) bytes from S3")
-
-        /// Create the parent directory if needed
-        let parent = URL(fileURLWithPath: Configuration.shared.localAuthorizedKeys).deletingLastPathComponent()
-        try FileManager.default.createDirectoryTree(atUrl: parent)
-
-        /// Overwrite the existing file
-        try bytes.write(to: URL(fileURLWithPath: destination))
+        let url = URL(fileURLWithPath: self.destination)
+        try await s3Manager.download(object: object, to: url, progressCallback: nil)
 
         /// Fix the permissions on the file, if needed
         try FileManager.default.setAttributes([
             .posixPermissions: 0o600
-        ], ofItemAtPath: destination)
+        ], ofItemAtPath: self.destination)
 
         try recordLastRun()
     }

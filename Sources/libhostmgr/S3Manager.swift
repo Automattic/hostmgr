@@ -60,14 +60,16 @@ public struct S3Manager: S3ManagerProtocol {
         let signedURL = try await presignedUrl(forObject: object)
 
         let destinationResolver: DownloadRequest.Destination = { _, _ in
-            return (destination, [.createIntermediateDirectories, .removePreviousFile])
+            return (FileManager.default.temporaryFilePath(), [.createIntermediateDirectories, .removePreviousFile])
         }
 
-        _ = try await AF
+        let temporaryFile = try await AF
             .download(signedURL, method: .get, to: destinationResolver)
             .downloadProgress { progressCallback?(.progressData(from: $0)) }
             .serializingDownloadedFileURL(automaticallyCancelling: true)
             .value
+
+        _ = try FileManager.default.replaceItemAt(destination, withItemAt: temporaryFile)
     }
 
     public func download(object: S3Object) async throws -> Data? {
