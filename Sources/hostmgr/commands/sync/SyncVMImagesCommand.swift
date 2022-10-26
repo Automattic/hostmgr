@@ -26,14 +26,14 @@ struct SyncVMImagesCommand: AsyncParsableCommand, FollowsCommandPolicies {
 
         /// The manifest defines which images should be distributed to VM hosts
         let manifest = try await RemoteVMRepository().getManifest()
-        logger.debug("Downloaded manifest:\n\(manifest)")
+        logger.info("Downloaded manifest:\n\(manifest)")
 
         /// Candidate images are any that the manifest says *could* be installed on this VM host
         let candidateImages = try await RemoteVMRepository().listImages().filter { manifest.contains($0.basename) }
-        logger.debug("Available remote images:\n\(candidateImages)")
+        logger.info("Available remote images:\n\(candidateImages)")
 
         let localImages = try VMLocalImageManager().list()
-        logger.debug("Local Images:\(localImages)")
+        logger.info("Local Images:\(localImages)")
 
         let imagesToDownload = candidateImages.filter { !localImages.contains($0.basename) }
         let imagesToDelete = localImages
@@ -56,15 +56,14 @@ struct SyncVMImagesCommand: AsyncParsableCommand, FollowsCommandPolicies {
         let storageDirectory = Configuration.shared.vmStorageDirectory
         let destination = storageDirectory.appendingPathComponent(image.fileName)
 
-        logger.info("Downloading the VM – this will take a few minutes")
-        logger.trace("Downloading \(image.basename) to \(destination)")
+        logger.info("Downloading \(image.basename) to \(destination) – this will take a few minutes")
 
         let limiter = Limiter(policy: .throttle, operationsPerSecond: 1)
 
         try await RemoteVMRepository().download(image: image, to: destination) { progress in
             limiter.perform {
                 try? recordHeartbeat()
-                logger.trace("\(progress.decimalPercent)% complete")
+                logger.info("\(progress.decimalPercent)% complete")
             }
         }
 

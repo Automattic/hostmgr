@@ -52,8 +52,8 @@ struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
         let s3Manager = S3Manager(bucket: self.bucket, region: self.region)
 
         guard let object = try await s3Manager.lookupObject(atPath: key) else {
-            print("Unable to locate authorized_keys file – exiting")
-            SyncAuthorizedKeysCommand.exit()
+            logger.error("Unable to locate authorized_keys file – exiting")
+            throw ExitCode(rawValue: 1)
         }
 
         let url = URL(fileURLWithPath: self.destination)
