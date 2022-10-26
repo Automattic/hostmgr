@@ -4,7 +4,7 @@ import SotoS3
 import Tqdm
 import libhostmgr
 
-struct VMRemoteImageDownload: ParsableCommand {
+struct VMRemoteImageDownload: AsyncParsableCommand {
 
     struct Constants {
         static let imageName = "$IMAGENAME"
@@ -30,10 +30,10 @@ struct VMRemoteImageDownload: ParsableCommand {
         .appendingPathComponent(Constants.imageName)
         .path
 
-    func run() throws {
+    func run() async throws {
         let remote = VMRemoteImageManager()
 
-        guard let remoteImage = try remote.getImage(forPath: path) else {
+        guard let remoteImage = try await remote.getImage(forPath: path) else {
             print("Unable to find image at path \(path)")
             Self.exit()
         }
@@ -44,18 +44,20 @@ struct VMRemoteImageDownload: ParsableCommand {
         )
         let destination = URL(fileURLWithPath: newDestination)
 
-        try SystemSleepManager.disableSleepFor {
-            let progress = Tqdm(
-                description: "Downloading \(remoteImage.fileName)",
-                total: Int(remoteImage.imageObject.size),
-                unit: " bytes",
-                unitScale: true
-            )
+        let sleepManager = SystemSleepManager(reason: "Downloading \(remoteImage.fileName)")
+        sleepManager.disable()
 
-            try remote.download(image: remoteImage, to: destination) { change, _, _ in
-                progress.update(n: change)
-            }
-            progress.close()
+        let progressBar = Tqdm(
+            description: "Downloading \(remoteImage.fileName)",
+            total: Int(remoteImage.imageObject.size),
+            unit: " bytes",
+            unitScale: true
+        )
+
+        try await remote.download(image: remoteImage, to: destination) {
+            progressBar.update(n: $0.percent)
         }
+
+        progressBar.close()
     }
 }
