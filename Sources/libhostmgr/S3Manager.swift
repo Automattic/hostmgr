@@ -170,7 +170,7 @@ public struct FileTransferProgress {
     }
 
     public var decimalPercent: Double {
-        Double(current / total) * 100
+        Double(current) / Double(total) * 100
     }
 
     static func progressData(from progress: Progress) -> FileTransferProgress {
