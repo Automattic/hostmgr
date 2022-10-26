@@ -70,10 +70,28 @@ struct VMRemoteImageManager {
     private let bucket: String = Configuration.shared.vmImagesBucket
     private let region: Region = Configuration.shared.vmImagesRegion
 
+    private var s3Manager: S3ManagerProtocol {
+        libhostmgr.S3Manager(bucket: self.bucket, region: self.region.rawValue)
+    }
+
     func getManifest() throws -> [String] {
         guard
             let manifest = try S3Manager().getFileBytes(region: region, bucket: bucket, key: "manifest.txt"),
             let manifestString = String(data: manifest, encoding: .utf8)
+        else {
+            return []
+        }
+
+        return manifestString
+            .split(separator: "\n")
+            .map { String($0) }
+    }
+
+    func getManifest() async throws -> [String] {
+        guard
+            let object = try await self.s3Manager.lookupObject(atPath: "manifest.txt"),
+            let bytes = try await self.s3Manager.download(object: object),
+            let manifestString = String(data: bytes, encoding: .utf8)
         else {
             return []
         }
@@ -106,6 +124,21 @@ struct VMRemoteImageManager {
         )
     }
 
+    func getImage(forPath path: String) async throws -> RemoteImage? {
+        let basename = (path as NSString).deletingPathExtension
+        let objects = try await s3Manager.listObjects(startingWith: basename)
+
+        guard
+            objects.count == 2,
+            let imageObject = objects.first(where: { $0.key.hasSuffix(".pvmp") }),
+            let checksumObject = objects.first(where: { $0.key.hasSuffix(".sha256.txt") })
+        else {
+            return nil
+        }
+
+        return RemoteImage(imageObject: imageObject, checksumObject: checksumObject)
+    }
+
     func download(
         image: RemoteImage,
         to destination: URL,
@@ -127,16 +160,36 @@ struct VMRemoteImageManager {
         )
     }
 
+    func download(
+        image: RemoteImage,
+        to destination: URL,
+        progressCallback: libhostmgr.FileTransferProgressCallback? = nil
+    ) async throws {
+        _ = try await self.s3Manager.download(
+            object: image.imageObject,
+            to: destination,
+            progressCallback: progressCallback
+        )
+    }
+
     func list(prefix: String = "images/") throws -> [RemoteImage] {
-
-        let objects = try S3Manager().listObjects(region: region, bucket: bucket, startingWith: prefix)
-
-        let imageObjects = objects
+        let objects = try S3Manager()
+            .listObjects(region: region, bucket: bucket, startingWith: prefix)
             .compactMap(self.convertToNewS3Object)
+
+        return remoteImagesFrom(objects: objects)
+    }
+
+    func list(prefix: String = "images/") async throws -> [RemoteImage] {
+        let objects = try await self.s3Manager.listObjects(startingWith: prefix)
+        return remoteImagesFrom(objects: objects)
+    }
+
+    private func remoteImagesFrom(objects: [S3Object]) -> [RemoteImage] {
+        let imageObjects = objects
             .filter { $0.key.hasSuffix(".pvmp") }
 
         let checksums = objects
-            .compactMap(self.convertToNewS3Object)
             .filter { $0.key.hasSuffix(".sha256.txt") }
             .map(\.key)
 
