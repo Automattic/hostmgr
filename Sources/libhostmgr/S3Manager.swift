@@ -108,29 +108,19 @@ public struct S3Manager: S3ManagerProtocol {
     }
 
     private func withS3Client<T>(_ block: (SotoS3.S3) async throws -> T) async throws -> T {
-        let awsClient = getAWSClient()
+        let awsClient = AWSClient(credentialProvider: credentialProvider, httpClientProvider: .createNew)
         let s3Client = SotoS3.S3(client: awsClient, region: Region(rawValue: self.region))
         let result = try await block(s3Client)
         try await awsClient.shutdown()
         return result
     }
 
-    private func getAWSClient() -> AWSClient {
-
-        var credentialProvider: CredentialProviderFactory
-
-        print("Using \(Configuration.shared.awsConfigurationMethod!) to connect to AWS")
-
+    private var credentialProvider: CredentialProviderFactory {
         switch Configuration.shared.awsConfigurationMethod {
-        case .configurationFile:credentialProvider = .configFile()
-        case .ec2Environment: credentialProvider = .ec2
-        case .none: credentialProvider = .configFile()
+        case .configurationFile: return .configFile()
+        case .ec2Environment: return .ec2
+        case .none: return .configFile()
         }
-
-        return AWSClient(
-            credentialProvider: credentialProvider,
-            httpClientProvider: .createNew
-        )
     }
 }
 
