@@ -31,16 +31,19 @@ struct VMRemoteImageDownload: AsyncParsableCommand {
     func run() async throws {
         let remote = RemoteVMRepository()
 
-        guard let remoteImage = try await remote.getImage(named: name) else {
-            print("Unable to find image named: \(name)")
-            Self.exit()
+        guard let remoteImage = try await remote.getImage(named: self.name) else {
+            logger.error("Unable to find remote image named \(self.name)")
+            throw ExitCode(rawValue: 1)
         }
 
         let newDestination = destination.replacingOccurrences(
             of: Constants.imageName,
             with: remoteImage.fileName
         )
+
         let destination = URL(fileURLWithPath: newDestination)
+
+        logger.info("Downloading \(name) to \(destination)")
 
         let sleepManager = SystemSleepManager(reason: "Downloading \(remoteImage.fileName)")
         sleepManager.disable()
