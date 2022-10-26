@@ -3,10 +3,10 @@ import ArgumentParser
 import SotoS3
 import libhostmgr
 
-struct SyncAuthorizedKeysCommand: ParsableCommand, FollowsCommandPolicies {
+struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
 
     static let configuration = CommandConfiguration(
-        commandName: "authorized_keys",
+        commandName: Configuration.SchedulableSyncCommand.authorizedKeys.rawValue,
         abstract: "Set this machine's authorized_keys file"
     )
 
@@ -44,14 +44,21 @@ struct SyncAuthorizedKeysCommand: ParsableCommand, FollowsCommandPolicies {
         .scheduled(every: 3600)
     ]
 
-    func run() throws {
+    func run() async throws {
         try to(evaluateCommandPolicies(), unless: options.force)
 
         logger.debug("Downloading file from s3://\(bucket)/\(key) in \(region) to \(destination)")
         logger.trace("Job schedule allows for running")
 
-        guard let bytes = try S3Manager().getFileBytes(region: region, bucket: bucket, key: key) else {
-            print("Unable to sync authorized_keys file – exiting")
+        let s3Manager = libhostmgr.S3Manager(bucket: self.bucket, region: self.region.rawValue)
+
+        guard let object = try await s3Manager.lookupObject(atPath: key) else {
+            print("Unable to locate authorized_keys file – exiting")
+            SyncAuthorizedKeysCommand.exit()
+        }
+
+        guard let bytes = try await s3Manager.download(object: object) else {
+            print("Unable to download authorized_keys file – exiting")
             SyncAuthorizedKeysCommand.exit()
         }
 

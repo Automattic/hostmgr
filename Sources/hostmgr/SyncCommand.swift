@@ -2,7 +2,7 @@ import Foundation
 import ArgumentParser
 import libhostmgr
 
-struct SyncCommand: ParsableCommand {
+struct SyncCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "sync",
         abstract: "Sync remote data with this host",
@@ -18,7 +18,7 @@ struct SyncCommand: ParsableCommand {
     @OptionGroup
     var options: SharedSyncOptions
 
-    func run() throws {
+    mutating func run() async throws {
 
         if list {
             Configuration.SchedulableSyncCommand.allCases.forEach { print($0) }
@@ -29,20 +29,20 @@ struct SyncCommand: ParsableCommand {
         // to make it so it doesn't need to be installed separately
         try GenerateGitMirrorManifestTask().run()
 
-        try Configuration.shared.syncTasks.forEach { command in
-            options.force ? print("Force-running \(command.rawValue)") : print("Running \(command.rawValue)")
-            try perform(task: command, immediately: options.force)
+        for task in Configuration.shared.syncTasks {
+            options.force ? print("Force-running \(task.rawValue)") : print("Running \(task.rawValue)")
+            try await perform(task: task)
         }
     }
 
-    private func perform(task: Configuration.SchedulableSyncCommand, immediately: Bool) throws {
+    private func perform(task: Configuration.SchedulableSyncCommand) async throws {
         switch task {
         case .authorizedKeys:
             let command = SyncAuthorizedKeysCommand(options: self._options)
-            try command.run()
+            try await command.run()
         case .vmImages:
             let command = SyncVMImagesCommand(options: self._options)
-            try command.run()
+            try await command.run()
         }
     }
 }
