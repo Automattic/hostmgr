@@ -52,7 +52,7 @@ struct SyncVMImagesCommand: AsyncParsableCommand, FollowsCommandPolicies {
         try recordLastRun()
     }
 
-    private func download(image: VMRemoteImageManager.RemoteImage) async throws {
+    private func download(image: RemoteVMImage) async throws {
         let storageDirectory = Configuration.shared.vmStorageDirectory
         let destination = storageDirectory.appendingPathComponent(image.fileName)
 

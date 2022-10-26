@@ -148,7 +148,7 @@ public struct S3Object {
     public let key: String
     public let size: Int
 
-    public init(key: String, size: Int = -1) {
+    public init(key: String, size: Int) {
         self.key = key
         self.size = size
     }

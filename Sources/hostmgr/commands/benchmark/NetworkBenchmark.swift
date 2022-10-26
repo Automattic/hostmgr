@@ -8,8 +8,6 @@ private let startDate = Date()
 
 struct NetworkBenchmark: AsyncParsableCommand {
 
-    typealias RemoteImage = VMRemoteImageManager.RemoteImage
-
     static let configuration = CommandConfiguration(
         commandName: "network",
         abstract: "Test Network Speed"
@@ -36,7 +34,7 @@ struct NetworkBenchmark: AsyncParsableCommand {
         )
     }
 
-    private func imageSizeSort(_ lhs: RemoteImage, _ rhs: RemoteImage) -> Bool {
+    private func imageSizeSort(_ lhs: RemoteVMImage, _ rhs: RemoteVMImage) -> Bool {
         lhs.imageObject.size < rhs.imageObject.size
     }
 

@@ -44,28 +44,6 @@ class SystemSleepManager {
 
 struct VMRemoteImageManager {
 
-    struct RemoteImage {
-        let imageObject: S3Object
-        let checksumObject: S3Object
-
-        var imagePath: String {
-            imageObject.key
-        }
-
-        var fileName: String {
-            (imageObject.key as NSString).lastPathComponent
-        }
-
-        var basename: String {
-            (fileName as NSString).deletingPathExtension
-        }
-
-        init(imageObject: S3Object, checksumObject: S3Object) {
-            self.imageObject = imageObject
-            self.checksumObject = checksumObject
-        }
-    }
-
     private let s3Manager: S3ManagerProtocol
 
     init(s3Manager: S3ManagerProtocol? = nil) {
@@ -89,7 +67,7 @@ struct VMRemoteImageManager {
             .map { String($0) }
     }
 
-    func getImage(forPath path: String) async throws -> RemoteImage? {
+    func getImage(forPath path: String) async throws -> RemoteVMImage? {
         let basename = (path as NSString).deletingPathExtension
         let objects = try await s3Manager.listObjects(startingWith: basename)
 
@@ -101,11 +79,11 @@ struct VMRemoteImageManager {
             return nil
         }
 
-        return RemoteImage(imageObject: imageObject, checksumObject: checksumObject)
+        return RemoteVMImage(imageObject: imageObject, checksumKey: checksumObject.key)
     }
 
     func download(
-        image: RemoteImage,
+        image: RemoteVMImage,
         to destination: URL,
         progressCallback: FileTransferProgressCallback? = nil
     ) async throws {
@@ -116,12 +94,12 @@ struct VMRemoteImageManager {
         )
     }
 
-    func list(prefix: String = "images/") async throws -> [RemoteImage] {
+    func list(prefix: String = "images/") async throws -> [RemoteVMImage] {
         let objects = try await self.s3Manager.listObjects(startingWith: prefix)
         return remoteImagesFrom(objects: objects)
     }
 
-    private func remoteImagesFrom(objects: [S3Object]) -> [RemoteImage] {
+    private func remoteImagesFrom(objects: [S3Object]) -> [RemoteVMImage] {
         let imageObjects = objects
             .filter { $0.key.hasSuffix(".pvmp") }
 
@@ -133,13 +111,13 @@ struct VMRemoteImageManager {
             let filename = URL(fileURLWithPath: object.key).lastPathComponent  // filename = my-image.pvmp
             let basename = (filename as NSString).deletingPathExtension        // basename = my-image
 
-            let checksumObject = S3Object(key: "images/" + basename + ".sha256.txt")
+            let checksumKey = "images/" + basename + ".sha256.txt"
 
-            guard checksums.contains(checksumObject.key) else {
+            guard checksums.contains(checksumKey) else {
                 return nil
             }
 
-            return RemoteImage(imageObject: object, checksumObject: checksumObject)
+            return RemoteVMImage(imageObject: object, checksumKey: checksumKey)
         }
     }
 }
