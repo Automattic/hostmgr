@@ -16,6 +16,7 @@ struct logger {
         Logger.shared.info(message())
     }
 }
+// swiftlint:enable type_name
 
 extension Logger {
     static var shared = Logger(label: "com.automattic.hostmgr")
