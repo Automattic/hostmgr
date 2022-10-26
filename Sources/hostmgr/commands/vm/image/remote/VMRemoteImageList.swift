@@ -1,6 +1,5 @@
 import Foundation
 import ArgumentParser
-import SotoS3
 
 struct VMRemoteImageListCommand: AsyncParsableCommand {
 

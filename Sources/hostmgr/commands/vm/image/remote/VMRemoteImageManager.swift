@@ -1,6 +1,5 @@
 import Foundation
 import Cocoa
-import SotoS3
 import libhostmgr
 
 import IOKit.pwr_mgt
@@ -71,9 +70,9 @@ struct VMRemoteImageManager {
 
     init(s3Manager: S3ManagerProtocol? = nil) {
         let bucket: String = Configuration.shared.vmImagesBucket
-        let region: Region = Configuration.shared.vmImagesRegion
+        let region: String = Configuration.shared.vmImagesRegion
 
-        self.s3Manager = s3Manager ?? S3Manager(bucket: bucket, region: region.rawValue)
+        self.s3Manager = s3Manager ?? S3Manager(bucket: bucket, region: region)
     }
 
     func getManifest() async throws -> [String] {
@@ -142,16 +141,5 @@ struct VMRemoteImageManager {
 
             return RemoteImage(imageObject: object, checksumObject: checksumObject)
         }
-    }
-
-    private func convertToNewS3Object(_ oldS3Object: S3.Object) -> S3Object? {
-        guard
-            let key = oldS3Object.key,
-            let size = oldS3Object.size
-        else {
-            return nil
-        }
-
-        return S3Object(key: key, size: Int(size))
     }
 }

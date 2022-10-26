@@ -26,7 +26,7 @@ struct NetworkBenchmark: AsyncParsableCommand {
 
         let manager = S3Manager(
             bucket: Configuration.shared.vmImagesBucket,
-            region: Configuration.shared.vmImagesRegion.rawValue
+            region: Configuration.shared.vmImagesRegion
         )
 
         try await manager.download(

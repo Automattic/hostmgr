@@ -1,6 +1,5 @@
 import Foundation
 import ArgumentParser
-import SotoS3
 import libhostmgr
 
 struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
@@ -20,7 +19,7 @@ struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
         name: .shortAndLong,
         help: "The S3 region for the bucket"
     )
-    var region: Region = Configuration.shared.authorizedKeysRegion
+    var region: String = Configuration.shared.authorizedKeysRegion
 
     @Option(
         name: .shortAndLong,
@@ -50,7 +49,7 @@ struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
         logger.debug("Downloading file from s3://\(bucket)/\(key) in \(region) to \(destination)")
         logger.trace("Job schedule allows for running")
 
-        let s3Manager = S3Manager(bucket: self.bucket, region: self.region.rawValue)
+        let s3Manager = S3Manager(bucket: self.bucket, region: self.region)
 
         guard let object = try await s3Manager.lookupObject(atPath: key) else {
             print("Unable to locate authorized_keys file – exiting")
