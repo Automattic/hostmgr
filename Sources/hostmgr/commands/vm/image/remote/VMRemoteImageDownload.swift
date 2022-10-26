@@ -47,10 +47,11 @@ struct VMRemoteImageDownload: ParsableCommand {
         try SystemSleepManager.disableSleepFor {
             let progress = Tqdm(
                 description: "Downloading \(remoteImage.fileName)",
-                total: Int(remoteImage.size),
+                total: Int(remoteImage.imageObject.size),
                 unit: " bytes",
                 unitScale: true
             )
+
             try remote.download(image: remoteImage, to: destination) { change, _, _ in
                 progress.update(n: change)
             }

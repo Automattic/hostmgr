@@ -8,23 +8,33 @@ private let startDate = Date()
 
 struct NetworkBenchmark: ParsableCommand {
 
+    typealias RemoteImage = VMRemoteImageManager.RemoteImage
+
     static let configuration = CommandConfiguration(
         commandName: "network",
         abstract: "Test Network Speed"
     )
 
     func run() throws {
-        guard let file = try VMRemoteImageManager().list().sorted(by: { $0.size < $1.size }).first else {
+        guard let file = try VMRemoteImageManager()
+            .list()
+            .sorted(by: self.imageSizeSort)
+            .first
+        else {
             throw CleanExit.message("Unable to find a remote image to use as a network benchmark")
         }
 
         try S3Manager().streamingDownloadFile(
             region: Configuration.shared.vmImagesRegion,
             bucket: Configuration.shared.vmImagesBucket,
-            key: file.imageKey,
+            key: file.imageObject.key,
             destination: URL(fileURLWithPath: "/dev/null"),
             progressCallback: self.showProgress
         )
+    }
+
+    private func imageSizeSort(_ lhs: RemoteImage, _ rhs: RemoteImage) -> Bool {
+        lhs.imageObject.size < rhs.imageObject.size
     }
 
     private func showProgress(availableBytes: Int, downloadedBytes: Int, totalBytes: Int64) {

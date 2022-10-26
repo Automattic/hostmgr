@@ -46,31 +46,29 @@ class SystemSleepManager {
 struct VMRemoteImageManager {
 
     struct RemoteImage {
-        let imageKey: String
-        let checksumKey: String
-        let size: Int64
+        let imageObject: S3Object
+        let checksumObject: S3Object
 
         var imagePath: String {
-            imageKey
+            imageObject.key
         }
 
         var fileName: String {
-            (imageKey as NSString).lastPathComponent
+            (imageObject.key as NSString).lastPathComponent
         }
 
         var basename: String {
             (fileName as NSString).deletingPathExtension
         }
 
-        init(imageKey: String, checksumKey: String, size: Int64) {
-            self.imageKey = imageKey
-            self.checksumKey = checksumKey
-            self.size = size
+        init(imageObject: S3Object, checksumObject: S3Object) {
+            self.imageObject = imageObject
+            self.checksumObject = checksumObject
         }
     }
 
-    private let region = Configuration.shared.vmImagesRegion
-    private let bucket = Configuration.shared.vmImagesBucket
+    private let bucket: String = Configuration.shared.vmImagesBucket
+    private let region: Region = Configuration.shared.vmImagesRegion
 
     func getManifest() throws -> [String] {
         guard
@@ -88,10 +86,7 @@ struct VMRemoteImageManager {
     func getImage(forPath path: String) throws -> RemoteImage? {
 
         let basename = (path as NSString).deletingPathExtension
-
         let objects = try S3Manager().listObjects(region: region, bucket: bucket, startingWith: basename)
-
-        debugPrint(basename, objects)
 
         /// There should only be two objects — the VM image, and it's checksum file
         guard
@@ -105,7 +100,10 @@ struct VMRemoteImageManager {
             return nil
         }
 
-        return RemoteImage(imageKey: imageObjectKey, checksumKey: checksumObjectKey, size: imageObjectSize)
+        return RemoteImage(
+            imageObject: S3Object(key: imageObjectKey, size: Int(imageObjectSize)),
+            checksumObject: S3Object(key: checksumObjectKey)
+        )
     }
 
     func download(
@@ -123,7 +121,7 @@ struct VMRemoteImageManager {
         try S3Manager().streamingDownloadFile(
             region: region,
             bucket: bucket,
-            key: image.imageKey,
+            key: image.imageObject.key,
             destination: destination,
             progressCallback: progressCallback
         )
@@ -133,23 +131,37 @@ struct VMRemoteImageManager {
 
         let objects = try S3Manager().listObjects(region: region, bucket: bucket, startingWith: prefix)
 
-        let images = objects.filter { $0.key?.hasSuffix(".pvmp") ?? false }
-        let checksums = objects.filter { $0.key?.hasSuffix(".sha256.txt") ?? false }
+        let imageObjects = objects
+            .compactMap(self.convertToNewS3Object)
+            .filter { $0.key.hasSuffix(".pvmp") }
 
-        return images
-            .compactMap { $0.key }
-            .compactMap { key -> RemoteImage? in                                 // key = /images/my-image.pvmp
-                let filename = URL(fileURLWithPath: key).lastPathComponent  // filename = my-image.pvmp
-                let basename = (filename as NSString).deletingPathExtension         // basename = my-image
+        let checksums = objects
+            .compactMap(self.convertToNewS3Object)
+            .filter { $0.key.hasSuffix(".sha256.txt") }
+            .map(\.key)
 
-                guard
-                    let checksum = checksums.first(where: { $0.key?.contains(basename) ?? false })?.key,
-                    let size = images.first(where: { $0.key == key })?.size
-                else {
-                    return nil
-                }
+        return imageObjects.compactMap { object in
+            let filename = URL(fileURLWithPath: object.key).lastPathComponent  // filename = my-image.pvmp
+            let basename = (filename as NSString).deletingPathExtension        // basename = my-image
 
-                return RemoteImage(imageKey: key, checksumKey: checksum, size: size)
+            let checksumObject = S3Object(key: "images/" + basename + ".sha256.txt")
+
+            guard checksums.contains(checksumObject.key) else {
+                return nil
             }
+
+            return RemoteImage(imageObject: object, checksumObject: checksumObject)
+        }
+    }
+
+    private func convertToNewS3Object(_ oldS3Object: S3.Object) -> S3Object? {
+        guard
+            let key = oldS3Object.key,
+            let size = oldS3Object.size
+        else {
+            return nil
+        }
+
+        return S3Object(key: key, size: Int(size))
     }
 }
