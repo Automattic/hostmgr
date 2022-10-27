@@ -3,7 +3,7 @@ import XCTest
 
 class FileStateStorageManagerTests: XCTestCase {
 
-    private let stateStorageManager = FileStateStorage(
+    private let stateStorageManager = FileStateRepository(
         stateStorageDirectory: FileManager.default.temporaryDirectory
             .appendingPathComponent("hostmgr", isDirectory: true)
             .appendingPathComponent("FileStateStorageManagerTests", isDirectory: true)

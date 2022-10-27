@@ -1,6 +1,6 @@
 import Foundation
 import ArgumentParser
-import prlctl
+import libhostmgr
 
 struct VMStopCommand: ParsableCommand {
 
@@ -10,7 +10,7 @@ struct VMStopCommand: ParsableCommand {
     )
 
     @Argument(help: "The Name or ID of the VM you'd like to stop")
-    var virtualMachine: RunningVM?
+    var identifier: String?
 
     @Flag(help: "Kill the VM immediately, without waiting for it to shut down")
     var immediately: Bool = false
@@ -19,12 +19,16 @@ struct VMStopCommand: ParsableCommand {
     var all: Bool = false
 
     func run() throws {
-        try all ? shutdownAll() : virtualMachine?.shutdown()
-    }
 
-    private func shutdownAll() throws {
-        try Parallels()
-            .lookupRunningVMs()
-            .forEach { try $0.shutdown(immediately: immediately) }
+        if all {
+            try libhostmgr.stopAllRunningVMs(immediately: self.immediately)
+            Console.exit()
+        }
+
+        guard let identifier = self.identifier else {
+            throw CleanExit.helpRequest()
+        }
+
+        try libhostmgr.stopRunningVM(name: identifier, immediately: immediately)
     }
 }

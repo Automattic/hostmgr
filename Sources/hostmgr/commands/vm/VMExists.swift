@@ -1,6 +1,6 @@
 import Foundation
 import ArgumentParser
-import prlctl
+import libhostmgr
 
 struct VMExistsCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
@@ -12,17 +12,7 @@ struct VMExistsCommand: ParsableCommand {
     var name: String
 
     func run() throws {
-
-        let existingVMNames = try Parallels().lookupAllVMs().map { $0.name }
-
-        logger.debug("Existing VMs:")
-        existingVMNames.forEach { logger.debug("\t\($0)") }
-
-        guard existingVMNames.contains(name) else {
-            logger.debug("VM \(name) does not exist")
-            throw ExitCode(rawValue: 1)
-        }
-
-        logger.debug("VM \(name) exists")
+        _ = try libhostmgr.lookupParallelsVMOrExit(withIdentifier: self.name)
+        Console.success("VM \(self.name) exists")
     }
 }

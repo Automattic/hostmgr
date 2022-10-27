@@ -154,16 +154,16 @@ public struct Configuration: Codable {
 /// Accessor Helpers
 public extension Configuration {
 
-    static var shared: Configuration = (try? StateManager.getConfiguration()) ?? Configuration()
+    static var shared: Configuration = (try? ConfigurationRepository.getConfiguration()) ?? Configuration()
 
     static var isValid: Bool {
-        let configuration = try? StateManager.getConfiguration()
+        let configuration = try? ConfigurationRepository.getConfiguration()
         return configuration != nil
     }
 
     @discardableResult
     func save() throws -> Configuration {
-        return try StateManager.write(configuration: self)
+        return try ConfigurationRepository.write(configuration: self)
     }
 
     static func from(data: Data) throws -> Self {

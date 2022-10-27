@@ -10,13 +10,16 @@ struct VMRemoteImageListCommand: AsyncParsableCommand {
     )
 
     func run() async throws {
-        let imageNames = try await RemoteVMRepository()
-            .listImages()
-            .map(\.basename)
-            .sorted()
+        Console.printTable(
+            data: try await RemoteVMRepository().listImages().map(self.format),
+            columnTitles: ["Filename", "Size"]
+        )
+    }
 
-        for image in imageNames {
-            print("\(image)")
-        }
+    private func format(_ remoteImage: RemoteVMImage) -> [String] {
+        return [
+            remoteImage.fileName,
+            Format.fileBytes(remoteImage.imageObject.size)
+        ]
     }
 }

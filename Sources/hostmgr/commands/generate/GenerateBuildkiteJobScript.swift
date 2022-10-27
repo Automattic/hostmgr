@@ -1,6 +1,5 @@
 import Foundation
 import ArgumentParser
-import prlctl
 import libhostmgr
 
 struct GenerateBuildkiteJobScript: ParsableCommand {

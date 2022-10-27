@@ -1,5 +1,6 @@
 import Foundation
 import ArgumentParser
+import libhostmgr
 import prlctl
 
 struct VMDetailsCommand: ParsableCommand {
@@ -12,16 +13,24 @@ struct VMDetailsCommand: ParsableCommand {
     @Argument(
         help: "The VM to fetch details for"
     )
-    var virtualMachine: VM
+    var name: String
 
     @Flag(help: "Show the VM's IPv4 address")
     var ipv4: Bool = false
 
     func run() throws {
-        if let virtualMachine = virtualMachine.asRunningVM() {
-            if virtualMachine.hasIpV4Address {
-                print("IPv4 Address:\t\(virtualMachine.ipAddress)")
-            }
+        let parallelsVM = try libhostmgr.lookupParallelsVMOrExit(withIdentifier: self.name)
+
+        var data = [
+            ["Name:", parallelsVM.name],
+            ["UUID:", parallelsVM.uuid],
+            ["Status:", parallelsVM.status.rawValue.capitalized]
+        ]
+
+        if let runningVM = parallelsVM.asRunningVM(), runningVM.hasIpAddress {
+            data.append(["IPv4 Address", runningVM.ipAddress])
         }
+
+        Console.printTable(data: data)
     }
 }

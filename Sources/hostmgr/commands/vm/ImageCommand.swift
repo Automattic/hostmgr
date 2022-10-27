@@ -1,6 +1,5 @@
 import Foundation
 import ArgumentParser
-import prlctl
 
 struct VMImageCommand: ParsableCommand {
 
@@ -8,7 +7,6 @@ struct VMImageCommand: ParsableCommand {
         commandName: "image",
         abstract: "Allows working with VM images",
         subcommands: [
-            VMLocalImageCommand.self,
             VMRemoteImageCommand.self
         ]
     )

@@ -1,6 +1,7 @@
 import Foundation
 import Alamofire
 import SotoS3
+import CryptoKit
 
 public typealias FileTransferProgressCallback = (FileTransferProgress) -> Void
 
@@ -11,7 +12,7 @@ public protocol S3ManagerProtocol {
         object: S3Object,
         to destination: URL,
         progressCallback: FileTransferProgressCallback?
-    ) async throws
+    ) async throws -> URL
 
     func download(object: S3Object) async throws -> Data?
 }
@@ -45,31 +46,36 @@ public struct S3Manager: S3ManagerProtocol {
 
     public func lookupObject(atPath path: String) async throws -> S3Object? {
         try await withS3Client {
-            let request =  SotoS3.S3.HeadObjectRequest(bucket: bucket, key: path)
+            let request = SotoS3.S3.HeadObjectRequest(bucket: bucket, key: path)
             let result = try await $0.headObject(request)
-            return S3Object(key: path, size: Int(result.contentLength!))
+
+            guard
+                let size = result.contentLength,
+                let date = result.lastModified
+            else { return nil }
+
+            return S3Object(key: path, size: Int(size), modifiedAt: date)
         }
     }
 
+    @discardableResult
     public func download(
         object: S3Object,
         to destination: URL,
         progressCallback: FileTransferProgressCallback?
-    ) async throws {
+    ) async throws -> URL {
 
         let signedURL = try await presignedUrl(forObject: object)
 
         let destinationResolver: DownloadRequest.Destination = { _, _ in
-            return (FileManager.default.temporaryFilePath(), [.createIntermediateDirectories, .removePreviousFile])
+            (destination, [.createIntermediateDirectories, .removePreviousFile])
         }
 
-        let temporaryFile = try await AF
+        return try await AF
             .download(signedURL, method: .get, to: destinationResolver)
             .downloadProgress { progressCallback?(.progressData(from: $0)) }
             .serializingDownloadedFileURL(automaticallyCancelling: true)
             .value
-
-        _ = try FileManager.default.replaceItemAt(destination, withItemAt: temporaryFile)
     }
 
     public func download(object: S3Object) async throws -> Data? {
@@ -128,48 +134,22 @@ extension SotoS3.S3.Object {
     var toS3Object: S3Object? {
         guard
             let key = self.key,
-            let size = self.size
+            let size = self.size,
+            let date = self.lastModified
         else { return nil }
 
-        return S3Object(key: key, size: Int(size))
+        return S3Object(key: key, size: Int(size), modifiedAt: date)
     }
 }
 
-public struct S3Object {
+public struct S3Object: Equatable {
     public let key: String
     public let size: Int
+    public let modifiedAt: Date
 
-    public init(key: String, size: Int) {
+    public init(key: String, size: Int, modifiedAt: Date) {
         self.key = key
         self.size = size
-    }
-}
-
-public struct FileTransferProgress {
-    public let current: Int
-    public let total: Int
-
-    public let estimatedTimeRemaining: TimeInterval?
-
-    public init(current: Int, total: Int, estimatedTimeRemaining: TimeInterval?) {
-        self.current = current
-        self.total = total
-        self.estimatedTimeRemaining = estimatedTimeRemaining
-    }
-
-    public var percent: Int {
-        Int(decimalPercent)
-    }
-
-    public var decimalPercent: Double {
-        Double(current) / Double(total) * 100
-    }
-
-    static func progressData(from progress: Progress) -> FileTransferProgress {
-        return FileTransferProgress(
-            current: Int(progress.completedUnitCount),
-            total: Int(progress.totalUnitCount),
-            estimatedTimeRemaining: progress.estimatedTimeRemaining
-        )
+        self.modifiedAt = modifiedAt
     }
 }

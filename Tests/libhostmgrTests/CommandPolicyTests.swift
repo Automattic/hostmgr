@@ -8,7 +8,7 @@ struct TestCommand: FollowsCommandPolicies {
 
 class CommandPolicyTests: XCTestCase {
 
-    private let stateStorageManager = InMemoryStorageManager()
+    private let stateStorageManager = InMemoryStateRepository()
     private let testKey = "foo"
 
     override func setUpWithError() throws {

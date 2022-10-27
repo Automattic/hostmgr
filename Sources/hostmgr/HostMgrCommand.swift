@@ -5,7 +5,7 @@ import libhostmgr
 @main
 struct Hostmgr: AsyncParsableCommand {
 
-    private static var appVersion = "0.14.2"
+    private static var appVersion = "0.15.0-beta.4"
 
     static var configuration = CommandConfiguration(
         abstract: "A utility for managing VM hosts",
@@ -23,8 +23,7 @@ struct Hostmgr: AsyncParsableCommand {
 
     mutating func run() async throws {
         Logger.initializeLoggingSystem()
-
-        logger.trace("Starting Up")
+        Logger.shared.trace("Starting Up")
 
         guard Configuration.isValid else {
             print("Invalid configuration – exiting")
@@ -52,7 +51,7 @@ struct InitCommand: ParsableCommand {
     )
 
     func run() throws {
-        if StateManager.configurationFileExists {
+        if ConfigurationRepository.configurationFileExists {
             if !confirm("A configuration file already exists – would you like to continue?") {
                 return
             }

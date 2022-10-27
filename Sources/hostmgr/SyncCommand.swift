@@ -30,7 +30,6 @@ struct SyncCommand: AsyncParsableCommand {
         try GenerateGitMirrorManifestTask().run()
 
         for task in Configuration.shared.syncTasks {
-            options.force ? print("Force-running \(task.rawValue)") : print("Running \(task.rawValue)")
             try await perform(task: task)
         }
     }

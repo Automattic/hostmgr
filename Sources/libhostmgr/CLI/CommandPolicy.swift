@@ -11,7 +11,7 @@ public enum CommandPolicy: Equatable, Codable {
     case serialExecution
 
     /// Evaluate the policy, throwing an error if we're violating one
-    internal func evaluate(forKey key: String, stateStorageManager: StateStorageManager) throws {
+    internal func evaluate(forKey key: String, stateStorageManager: StateRepository) throws {
         switch self {
         case let .scheduled(timeInterval):
             try evaluateSchedule(
@@ -37,7 +37,7 @@ public enum CommandPolicy: Equatable, Codable {
     private func evaluateSchedule(
         forKey key: String,
         timeInterval: TimeInterval,
-        stateStorageManager: StateStorageManager
+        stateStorageManager: StateRepository
     ) throws {
         let state: ScheduledCommandState = try stateStorageManager.read(fromKey: key) ?? .default
         let nextRunTime = state.lastRunAt + timeInterval
@@ -49,7 +49,7 @@ public enum CommandPolicy: Equatable, Codable {
 
     private func evaluateSerialQueueLock(
         forKey key: String,
-        stateStorageManager: StateStorageManager
+        stateStorageManager: StateRepository
     ) throws {
         let state: SerialExecutionState = try stateStorageManager.read(fromKey: key) ?? .default
 
@@ -103,19 +103,23 @@ public extension FollowsCommandPolicies {
     ///
     /// If any policies are violated (ie – it's not time to run yet), an error will be thrown
     /// that will cause the program to exit.
-    func evaluateCommandPolicies(stateStorageManager: StateStorageManager? = nil) throws {
-        let stateStorageManager = stateStorageManager ?? FileStateStorage()
+    func evaluateCommandPolicies(stateStorageManager: StateRepository? = nil) throws {
+        let stateStorageManager = stateStorageManager ?? FileStateRepository()
 
         for policy in Self.commandPolicies {
             try policy.evaluate(forKey: key(forPolicy: policy), stateStorageManager: stateStorageManager)
+
+            if policy == .serialExecution {
+                startBackgroundHeartbeat()
+            }
         }
     }
 
     /// Store a "heartbeat" time – the last time the job did work
     ///
     /// If it freezes, we'll use the last heartbeat time to decide whether to start up a new instance of the job.
-    func recordHeartbeat(date: Date = Date(), stateStorageManager: StateStorageManager? = nil) throws {
-        let stateStorageManager = stateStorageManager ?? FileStateStorage()
+    func recordHeartbeat(date: Date = Date(), stateStorageManager: StateRepository? = nil) throws {
+        let stateStorageManager = stateStorageManager ?? FileStateRepository()
 
         var state = CommandPolicy.SerialExecutionState()
         state.heartbeat = date
@@ -123,11 +127,28 @@ public extension FollowsCommandPolicies {
         try stateStorageManager.write(state, toKey: key(forPolicy: .serialExecution))
     }
 
+    func startBackgroundHeartbeat() {
+        DispatchQueue.global().async {
+            while true {
+                Thread.sleep(forTimeInterval: 1)
+
+                do {
+                    try recordHeartbeat()
+                } catch {
+                    Console.crash(
+                        message: error.localizedDescription,
+                        reason: .unableToImportVM
+                    )
+                }
+            }
+        }
+    }
+
     /// Store the last run date for this job
     ///
     /// We'll use it to schedule the task to run periodically.
-    func recordLastRun(date: Date = Date(), stateStorageManager: StateStorageManager? = nil) throws {
-        let stateStorageManager = stateStorageManager ?? FileStateStorage()
+    func recordLastRun(date: Date = Date(), stateStorageManager: StateRepository? = nil) throws {
+        let stateStorageManager = stateStorageManager ?? FileStateRepository()
 
         var state = CommandPolicy.ScheduledCommandState()
         state.lastRunAt = date

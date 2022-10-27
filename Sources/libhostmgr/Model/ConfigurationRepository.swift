@@ -1,6 +1,6 @@
 import Foundation
 
-public struct StateManager {
+public struct ConfigurationRepository {
 
     private static var configurationDirectory: URL {
         switch ProcessInfo.processInfo.processorArchitecture {
