@@ -1,10 +1,9 @@
 import Foundation
 import ArgumentParser
-import SotoS3
 import Tqdm
 import libhostmgr
 
-struct VMRemoteImageDownload: ParsableCommand {
+struct VMRemoteImageDownload: AsyncParsableCommand {
 
     struct Constants {
         static let imageName = "$IMAGENAME"
@@ -15,11 +14,10 @@ struct VMRemoteImageDownload: ParsableCommand {
         abstract: "Download a given image and set it up for use"
     )
 
-    @Option(
-        name: .shortAndLong,
-        help: "The path to the image you would like to download"
+    @Argument(
+        help: "The name of the image you would like to download"
     )
-    var path: String
+    var name: String
 
     @Option(
         name: .shortAndLong,
@@ -30,31 +28,37 @@ struct VMRemoteImageDownload: ParsableCommand {
         .appendingPathComponent(Constants.imageName)
         .path
 
-    func run() throws {
-        let remote = VMRemoteImageManager()
+    func run() async throws {
+        let remote = RemoteVMRepository()
 
-        guard let remoteImage = try remote.getImage(forPath: path) else {
-            print("Unable to find image at path \(path)")
-            Self.exit()
+        guard let remoteImage = try await remote.getImage(named: self.name) else {
+            logger.error("Unable to find remote image named \(self.name)")
+            throw ExitCode(rawValue: 1)
         }
 
         let newDestination = destination.replacingOccurrences(
             of: Constants.imageName,
             with: remoteImage.fileName
         )
+
         let destination = URL(fileURLWithPath: newDestination)
 
-        try SystemSleepManager.disableSleepFor {
-            let progress = Tqdm(
-                description: "Downloading \(remoteImage.fileName)",
-                total: Int(remoteImage.size),
-                unit: " bytes",
-                unitScale: true
-            )
-            try remote.download(image: remoteImage, to: destination) { change, _, _ in
-                progress.update(n: change)
-            }
-            progress.close()
+        logger.info("Downloading \(name) to \(destination)")
+
+        let sleepManager = SystemSleepManager(reason: "Downloading \(remoteImage.fileName)")
+        sleepManager.disable()
+
+        let progressBar = Tqdm(
+            description: "Downloading \(remoteImage.fileName)",
+            total: Int(remoteImage.imageObject.size),
+            unit: " bytes",
+            unitScale: true
+        )
+
+        try await remote.download(image: remoteImage, to: destination) {
+            progressBar.update(n: $0.percent)
         }
+
+        progressBar.close()
     }
 }

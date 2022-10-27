@@ -1,12 +1,11 @@
 import Foundation
 import ArgumentParser
-import SotoS3
 import libhostmgr
 
-struct SyncAuthorizedKeysCommand: ParsableCommand, FollowsCommandPolicies {
+struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
 
     static let configuration = CommandConfiguration(
-        commandName: "authorized_keys",
+        commandName: Configuration.SchedulableSyncCommand.authorizedKeys.rawValue,
         abstract: "Set this machine's authorized_keys file"
     )
 
@@ -20,7 +19,7 @@ struct SyncAuthorizedKeysCommand: ParsableCommand, FollowsCommandPolicies {
         name: .shortAndLong,
         help: "The S3 region for the bucket"
     )
-    var region: Region = Configuration.shared.authorizedKeysRegion
+    var region: String = Configuration.shared.authorizedKeysRegion
 
     @Option(
         name: .shortAndLong,
@@ -44,30 +43,26 @@ struct SyncAuthorizedKeysCommand: ParsableCommand, FollowsCommandPolicies {
         .scheduled(every: 3600)
     ]
 
-    func run() throws {
+    func run() async throws {
         try to(evaluateCommandPolicies(), unless: options.force)
+        logger.debug("Job schedule allows for running")
 
-        logger.debug("Downloading file from s3://\(bucket)/\(key) in \(region) to \(destination)")
-        logger.trace("Job schedule allows for running")
+        logger.info("Downloading file from s3://\(bucket)/\(key) in \(region) to \(destination)")
 
-        guard let bytes = try S3Manager().getFileBytes(region: region, bucket: bucket, key: key) else {
-            print("Unable to sync authorized_keys file – exiting")
-            SyncAuthorizedKeysCommand.exit()
+        let s3Manager = S3Manager(bucket: self.bucket, region: self.region)
+
+        guard let object = try await s3Manager.lookupObject(atPath: key) else {
+            logger.error("Unable to locate authorized_keys file – exiting")
+            throw ExitCode(rawValue: 1)
         }
 
-        logger.trace("Downloaded \(bytes.count) bytes from S3")
-
-        /// Create the parent directory if needed
-        let parent = URL(fileURLWithPath: Configuration.shared.localAuthorizedKeys).deletingLastPathComponent()
-        try FileManager.default.createDirectoryTree(atUrl: parent)
-
-        /// Overwrite the existing file
-        try bytes.write(to: URL(fileURLWithPath: destination))
+        let url = URL(fileURLWithPath: self.destination)
+        try await s3Manager.download(object: object, to: url, progressCallback: nil)
 
         /// Fix the permissions on the file, if needed
         try FileManager.default.setAttributes([
             .posixPermissions: 0o600
-        ], ofItemAtPath: destination)
+        ], ofItemAtPath: self.destination)
 
         try recordLastRun()
     }

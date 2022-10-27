@@ -1,14 +1,13 @@
 import Foundation
 import ArgumentParser
-import SotoS3
 import prlctl
 import libhostmgr
 
-struct SyncVMImagesCommand: ParsableCommand, FollowsCommandPolicies {
+struct SyncVMImagesCommand: AsyncParsableCommand, FollowsCommandPolicies {
 
     static let configuration = CommandConfiguration(
-        commandName: "vm_images",
-        abstract: "Sync this machine's VM images with those avaiable remotely"
+        commandName: Configuration.SchedulableSyncCommand.vmImages.rawValue,
+        abstract: "Sync this machine's VM images with those available remotely"
     )
 
     @OptionGroup
@@ -22,19 +21,19 @@ struct SyncVMImagesCommand: ParsableCommand, FollowsCommandPolicies {
         .scheduled(every: 3600)
     ]
 
-    func run() throws {
+    func run() async throws {
         try to(evaluateCommandPolicies(), unless: options.force)
 
         /// The manifest defines which images should be distributed to VM hosts
-        let manifest = try VMRemoteImageManager().getManifest()
-        logger.debug("Downloaded manifest:\n\(manifest)")
+        let manifest = try await RemoteVMRepository().getManifest()
+        logger.info("Downloaded manifest:\n\(manifest)")
 
         /// Candidate images are any that the manifest says *could* be installed on this VM host
-        let candidateImages = try VMRemoteImageManager().list().filter { manifest.contains($0.basename) }
-        logger.debug("Available remote images:\n\(candidateImages)")
+        let candidateImages = try await RemoteVMRepository().listImages().filter { manifest.contains($0.basename) }
+        logger.info("Available remote images:\n\(candidateImages)")
 
         let localImages = try VMLocalImageManager().list()
-        logger.debug("Local Images:\(localImages)")
+        logger.info("Local Images:\(localImages)")
 
         let imagesToDownload = candidateImages.filter { !localImages.contains($0.basename) }
         let imagesToDelete = localImages
@@ -46,27 +45,25 @@ struct SyncVMImagesCommand: ParsableCommand, FollowsCommandPolicies {
         logger.info("Deleting local images:\(imagesToDelete)")
         try VMLocalImageManager().delete(images: imagesToDelete)
 
-        try imagesToDownload.forEach {
-            try download(image: $0)
+        for image in imagesToDownload {
+            try await download(image: image)
         }
 
         try recordLastRun()
     }
 
-    private func download(image: VMRemoteImageManager.RemoteImage) throws {
+    private func download(image: RemoteVMImage) async throws {
         let storageDirectory = Configuration.shared.vmStorageDirectory
         let destination = storageDirectory.appendingPathComponent(image.fileName)
 
-        logger.info("Downloading the VM – this will take a few minutes")
-        logger.trace("Downloading \(image.basename) to \(destination)")
+        logger.info("Downloading \(image.basename) to \(destination) – this will take a few minutes")
 
         let limiter = Limiter(policy: .throttle, operationsPerSecond: 1)
 
-        try VMRemoteImageManager().download(image: image, to: destination) { _, downloaded, total in
+        try await RemoteVMRepository().download(image: image, to: destination) { progress in
             limiter.perform {
                 try? recordHeartbeat()
-                let percent = String(format: "%.2f", Double(downloaded) / Double(total) * 100)
-                logger.trace("\(percent)% complete")
+                logger.info("\(progress.decimalPercent)% complete")
             }
         }
 
@@ -87,6 +84,5 @@ struct SyncVMImagesCommand: ParsableCommand, FollowsCommandPolicies {
         logger.info("Imported Complete")
         logger.info("\tName:\t\(vmToImport.name)")
         logger.info("\tUUID:\t\(vmToImport.uuid)")
-
     }
 }

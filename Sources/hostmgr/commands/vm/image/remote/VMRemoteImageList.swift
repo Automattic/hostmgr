@@ -1,18 +1,22 @@
 import Foundation
 import ArgumentParser
-import SotoS3
+import libhostmgr
 
-struct VMRemoteImageListCommand: ParsableCommand {
+struct VMRemoteImageListCommand: AsyncParsableCommand {
 
     static let configuration = CommandConfiguration(
         commandName: "list",
         abstract: "List VM images that are available for download from the server"
     )
 
-    func run() throws {
-        let imageManager = VMRemoteImageManager()
-        try imageManager.list().forEach {
-            print($0)
+    func run() async throws {
+        let imageNames = try await RemoteVMRepository()
+            .listImages()
+            .map(\.basename)
+            .sorted()
+
+        for image in imageNames {
+            print("\(image)")
         }
     }
 }

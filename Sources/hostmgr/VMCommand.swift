@@ -2,7 +2,7 @@ import Foundation
 import ArgumentParser
 import prlctl
 
-struct VMCommand: ParsableCommand {
+struct VMCommand: AsyncParsableCommand {
 
     static let configuration = CommandConfiguration(
         commandName: "vm",

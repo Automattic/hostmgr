@@ -49,10 +49,10 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertEqual("authorized-keys-bucket", configuration.authorizedKeysBucket)
         XCTAssertEqual("authorized-keys-path", configuration.localAuthorizedKeys)
         XCTAssertEqual(123456, configuration.authorizedKeysSyncInterval)
-        XCTAssertEqual(.useast2, configuration.authorizedKeysRegion)
+        XCTAssertEqual("us-east-2", configuration.authorizedKeysRegion)
 
         XCTAssertEqual("vm-images-bucket", configuration.vmImagesBucket)
-        XCTAssertEqual(.useast2, configuration.vmImagesRegion)
+        XCTAssertEqual("us-east-2", configuration.vmImagesRegion)
         XCTAssertEqual("image-storage-dir", configuration.localImageStorageDirectory)
 
         XCTAssertEqual("git-mirror-storage-dir", configuration.localGitMirrorStorageDirectory)

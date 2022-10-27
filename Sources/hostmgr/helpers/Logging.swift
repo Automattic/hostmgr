@@ -12,6 +12,10 @@ struct logger {
         Logger.shared.trace(message())
     }
 
+    static func error(_ message :@autoclosure () -> Logger.Message) {
+        Logger.shared.error(message())
+    }
+
     static func info(_ message:  @autoclosure () -> Logger.Message) {
         Logger.shared.info(message())
     }

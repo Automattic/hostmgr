@@ -1,5 +1,4 @@
 import ArgumentParser
-import SotoS3
 import Logging
 import libhostmgr
 
@@ -66,12 +65,10 @@ struct InitCommand: ParsableCommand {
             currentValue: Configuration.shared.vmImagesBucket
         )
 
-        let vmImagesRegion = prompt(
+        Configuration.shared.vmImagesRegion = prompt(
             "Which AWS region contains the \(Configuration.shared.vmImagesBucket) bucket?",
-            currentValue: Configuration.shared.vmImagesRegion.rawValue
-        ) { Region(awsRegionName: $0) != nil }
-
-        Configuration.shared.vmImagesRegion = Region(awsRegionName: vmImagesRegion)!
+            currentValue: Configuration.shared.vmImagesRegion
+        )
 
         print("== Authorized Keys Sync ==\n")
 
@@ -80,12 +77,10 @@ struct InitCommand: ParsableCommand {
             currentValue: Configuration.shared.authorizedKeysBucket
         )
 
-        let authorizedKeysRegion = prompt(
+        Configuration.shared.authorizedKeysRegion = prompt(
             "Which AWS region contains the \(Configuration.shared.authorizedKeysBucket) bucket?",
-            currentValue: Configuration.shared.authorizedKeysRegion.rawValue
-        ) { Region(awsRegionName: $0) != nil }
-
-        Configuration.shared.authorizedKeysRegion = Region(awsRegionName: authorizedKeysRegion)!
+            currentValue: Configuration.shared.authorizedKeysRegion
+        )
 
         Configuration.shared.gitMirrorBucket = prompt(
             "Which S3 bucket would you like to use as the data source for the git mirror server?",
