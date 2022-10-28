@@ -19,6 +19,15 @@
       }
     },
     {
+      "identity" : "console-kit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/vapor/console-kit",
+      "state" : {
+        "revision" : "a7e67a1719933318b5ab7eaaed355cde020465b1",
+        "version" : "4.5.0"
+      }
+    },
+    {
       "identity" : "dotenv",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftpackages/DotEnv.git",
