@@ -1,6 +1,5 @@
 import Foundation
 import ArgumentParser
-import Tqdm
 import libhostmgr
 
 struct VMRemoteImageDownload: AsyncParsableCommand {

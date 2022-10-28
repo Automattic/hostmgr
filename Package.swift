@@ -13,7 +13,6 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.1.4"),
         .package(url: "https://github.com/soto-project/soto.git", from: "6.0.0"),
         .package(url: "https://github.com/jkmassel/prlctl.git", from: "1.17.0"),
-        .package(url: "https://github.com/ebraraktas/swift-tqdm.git", from: "0.1.2"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
         .package(url: "https://github.com/jkmassel/kcpassword-swift.git", from: "1.0.0"),
         .package(url: "https://github.com/swiftpackages/DotEnv.git", from: "3.0.0"),
@@ -29,7 +28,6 @@ let package = Package(
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "prlctl", package: "prlctl"),
-                .product(name: "Tqdm", package: "swift-tqdm"),
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "kcpassword", package: "kcpassword-swift"),
                 .target(name: "libhostmgr"),

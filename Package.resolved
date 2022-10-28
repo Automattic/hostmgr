@@ -179,15 +179,6 @@
         "revision" : "b7667f3e266af621e5cc9c77e74cacd8e8c00cb4",
         "version" : "0.2.5"
       }
-    },
-    {
-      "identity" : "swift-tqdm",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ebraraktas/swift-tqdm.git",
-      "state" : {
-        "revision" : "71f0a47e1c1149cc486be2e436d7369e90ca4449",
-        "version" : "0.1.2"
-      }
     }
   ],
   "version" : 2
