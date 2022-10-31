@@ -171,7 +171,9 @@ extension Console {
 
 // MARK: Table Support
 extension Console {
-    public typealias Table = [[String]]
+
+    public typealias TableRow = [String]
+    public typealias Table = [TableRow]
 
     func columnCounts(for table: Table) -> [Int] {
         transpose(matrix: table).map { $0.map(\.count).max() ?? 0 }
@@ -182,7 +184,7 @@ extension Console {
             return matrix
         }
 
-        var newTable = [[String]](repeating: [String](repeating: "", count: matrix.count), count: numberOfColumns)
+        var newTable = Table(repeating: TableRow(repeating: "", count: matrix.count), count: numberOfColumns)
 
         for (rowIndex, row) in matrix.enumerated() {
             for (colIndex, col) in row.enumerated() {
