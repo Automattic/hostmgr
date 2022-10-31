@@ -110,8 +110,31 @@ public struct S3Manager: S3ManagerProtocol {
     private func withS3Client<T>(_ block: (SotoS3.S3) async throws -> T) async throws -> T {
         let awsClient = AWSClient(credentialProvider: credentialProvider, httpClientProvider: .createNew)
         let s3Client = SotoS3.S3(client: awsClient, region: Region(rawValue: self.region))
-        let result = try await block(s3Client)
-        try await awsClient.shutdown()
+
+        // The following code `try await` the given operation to execute with a
+        // `SotoS3.S3` client created ad hoc and, once done, shuts down that
+        // client.
+        //
+        // If something goes wrong while running the block, we still need to
+        // shutdown the client, else the error from the block will be lost and
+        // the program will fail with something like:
+        //
+        // SotoCore/AWSClient.swift:110: Assertion failed:
+        //   AWSClient not shut down before the deinit.
+        //   Please call client.syncShutdown() when no longer needed.
+        //
+        // It would be good to use `defer`, but it doesn't yet support asycn.
+        // See https://forums.swift.org/t/async-rethrows-and-defer/58356.
+        //
+        // So, we use a `do catch` where in the catch we first shutdown the
+        // client and then bubble up the error.
+        let result: T
+        do {
+            result = try await block(s3Client)
+        } catch {
+            try await awsClient.shutdown()
+            throw error
+        }
         return result
     }
 
