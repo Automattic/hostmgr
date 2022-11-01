@@ -281,7 +281,6 @@ public func cloneVM(
         )
     }
 
-
     return stoppedVM
 }
 

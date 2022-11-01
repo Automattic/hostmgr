@@ -6,7 +6,6 @@ struct VMRemoteImageCommand: ParsableCommand {
         commandName: "remote",
         abstract: "Commands to work with remote images",
         subcommands: [
-            VMRemoteImageListCommand.self,
             VMRemoteImageDownload.self
         ]
     )
