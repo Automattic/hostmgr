@@ -12,7 +12,10 @@ struct VMExistsCommand: ParsableCommand {
     var name: String
 
     func run() throws {
-        _ = try libhostmgr.lookupParallelsVMOrExit(withIdentifier: self.name)
-        Console.success("VM \(self.name) exists")
+        guard let localVM = try LocalVMRepository().lookupVM(withName: self.name) else {
+            Console.crash(message: "There is no local VM named \(self.name)", reason: .fileNotFound)
+        }
+
+        Console.success("VM \(localVM.basename) exists")
     }
 }

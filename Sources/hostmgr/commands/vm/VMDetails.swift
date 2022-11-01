@@ -1,7 +1,6 @@
 import Foundation
 import ArgumentParser
 import libhostmgr
-import prlctl
 
 struct VMDetailsCommand: ParsableCommand {
 

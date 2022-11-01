@@ -128,18 +128,20 @@ public extension FollowsCommandPolicies {
     }
 
     func startBackgroundHeartbeat() {
-        DispatchQueue.global().async {
-            while true {
-                Thread.sleep(forTimeInterval: 1)
+        DispatchQueue.global().async(execute: self.heartbeat)
+    }
 
-                do {
-                    try recordHeartbeat()
-                } catch {
-                    Console.crash(
-                        message: error.localizedDescription,
-                        reason: .unableToImportVM
-                    )
-                }
+    private func heartbeat() {
+        while true {
+            Thread.sleep(forTimeInterval: 1)
+
+            do {
+                try recordHeartbeat()
+            } catch {
+                Console.crash(
+                    message: error.localizedDescription,
+                    reason: .heartbeatRecordingFailed
+                )
             }
         }
     }

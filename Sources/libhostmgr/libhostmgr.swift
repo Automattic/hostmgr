@@ -5,13 +5,13 @@ import prlctl
 ///
 /// This method is the preferred way to install a remote image on a VM Host.
 public func fetchRemoteImage(name: String) async throws {
-    _ = try await downloadRemoteImage(name: name)
+    try await downloadRemoteImage(name: name)
     try await importVM(name: name)
 
     Console.success("VM \(name) is ready")
 }
 
-/// Downloads a single remote image file and places it in the image storage directory
+/// Downloads a remote image with the given `name` and places it in the image storage directory
 ///
 /// Does not import or register the image – this method only handles download.
 @discardableResult
@@ -23,15 +23,15 @@ public func downloadRemoteImage(
         Console.crash(message: "Unable to find remote image: \(name)", reason: .unableToFindRemoteImage)
     }
 
-    return try await download(remoteImage: remoteImage)
+    return try await downloadRemoteImage(remoteImage)
 }
 
 /// Downloads the given remote VM image to the given directory
 ///
 /// Does not import or register the images – this method only handles download.
 @discardableResult
-public func download(
-    remoteImage: RemoteVMImage,
+public func downloadRemoteImage(
+    _ remoteImage: RemoteVMImage,
     remoteRepository: RemoteVMRepository = RemoteVMRepository(),
     storageDirectory: URL = Configuration.shared.vmStorageDirectory
 ) async throws -> URL {
@@ -64,17 +64,19 @@ public func download(
     return destination
 }
 
+/// Convert a Parallels `pvmp` VM image package into a VM that's ready for use
+///
 public func unpackVM(name: String) async throws {
 
     guard let localVM = try LocalVMRepository().lookupVM(withName: name) else {
-        Console.crash(message: "VM \(name) could not be found", reason: .fileNotFound)
+        Console.crash(message: "Local VM \(name) could not be found", reason: .fileNotFound)
     }
 
     guard let importedVirtualMachine = try Parallels().importVM(at: localVM.path) else {
-        Console.crash(message: "Unable to import VM: \(localVM.path)", reason: .unableToImportVM)
+        Console.crash(message: "Unable to import VM at: \(localVM.path)", reason: .unableToImportVM)
     }
 
-    guard let package = importedVirtualMachine.asPackagedVM() else {
+    guard localVM.state == .packaged, let package = importedVirtualMachine.asPackagedVM() else {
         Console.crash(message: "VM \(name) is not a packaged VM", reason: .invalidVMStatus)
     }
 
@@ -106,20 +108,16 @@ public func importVM(name: String) async throws -> StoppedVM {
     try FileManager.default.copyItem(at: sourceVM.path, to: destination)
     Console.info("Created temporary VM at \(destination)")
 
-    guard let importedVirtualMachine = try Parallels().importVM(at: destination) else {
+    guard let importedVirtualMachine = try Parallels().importVM(at: destination)?.asStoppedVM() else {
         Console.crash(message: "Unable to import VM: \(destination)", reason: .unableToImportVM)
     }
 
     Console.success("Successfully Imported \(importedVirtualMachine.name) with UUID \(importedVirtualMachine.uuid)")
 
-    guard let stoppedVM = importedVirtualMachine.asStoppedVM() else {
-        Console.crash(message: "Unable to import VM: \(destination)", reason: .unableToImportVM)
-    }
-
-    return stoppedVM
+    return importedVirtualMachine
 }
 
-/// Deletes local VM image files from the disk. Does not unregister them.
+/// Deletes local VM image files from the disk
 ///
 public func deleteLocalImages(
     list: [LocalVMImage],
@@ -142,23 +140,7 @@ public func deleteLocalImages(
     Console.success("Deletion Complete")
 }
 
-public func importLocalVMs(list: [LocalVMImage]) async throws {
-
-    // Don't print anything to the log if there are no images to download
-    guard !list.isEmpty else {
-        return
-    }
-
-    Console.printList(list.map(\.filename), title: "Registering \(list.count) local images with Parallels:")
-
-    for image in list {
-        try await importVM(name: image.basename)
-    }
-
-    Console.success("Import Complete")
-}
-
-/// Calculates a list of  images that don't exist on the local machine and should
+/// Calculates a list of images that don't exist on the local machine and should
 /// be downloaded (according to the remote manifest)
 public func listAvailableRemoteImages(
     sortedBy strategy: RemoteVMRepository.RemoteVMImageSortingStrategy = .newest,
@@ -186,28 +168,6 @@ public func listLocalImagesToDelete(
     return localImages
         .filter(excludingItemsIn: manifest)
         .filter(excludingItemsIn: Configuration.shared.protectedImages)
-}
-
-/// Calculates a list of local image files that are present on-disk, but not registered with Parallels
-@available(*, deprecated)
-public func listLocalImagesThatNeedToBeRegistered(
-    localRepository: LocalVMRepository = LocalVMRepository()
-) async throws -> [LocalVMImage] {
-    let localImages = try localRepository.list()
-    let registeredVMs = try Parallels().lookupAllVMs()
-
-    return localImages.filter(excludingItemsIn: registeredVMs.map(\.name))
-}
-
-@available(*, deprecated)
-public func listParallelsVMsMissingLocalImages(
-    localRepository: LocalVMRepository = LocalVMRepository(),
-    parallelsRepository: ParallelsVMRepository = ParallelsVMRepository()
-) throws -> [VM] {
-    let parallelsVMs = try parallelsRepository.lookupVMs()
-    let localImages = try localRepository.list()
-
-    return parallelsVMs.filter(excludingItemsIn: localImages.map(\.basename))
 }
 
 // MARK: Virtual Machine Control
@@ -241,54 +201,6 @@ public func startVM(_ parallelsVM: StoppedVM) async throws {
         Console.success("Booted \(parallelsVM.name) \(Format.time(elapsed))")
         continuation.resume(with: .success(()))
     }
-}
-
-@available(*, deprecated)
-public func cloneVM(
-    _ parallelsVM: StoppedVM,
-    cloneName: String,
-    options: [StoppedVM.VMOption] = []
-) async throws -> StoppedVM {
-    let startDate = Date()
-
-    if try Parallels().lookupVM(named: cloneName) != nil {
-        Console.crash(
-            message: "Unable to clone \(parallelsVM.name) to \(cloneName) – there's already a VM with that name",
-            reason: .parallelsVirtualMachineAlreadyExists
-        )
-    }
-
-    try parallelsVM.clone(as: cloneName, fast: true)
-
-    let _: Void = try await withCheckedThrowingContinuation { continuation in
-        do {
-            try waitForVMToExist(withName: cloneName)
-        } catch {
-            continuation.resume(with: .failure(error))
-        }
-
-        let elapsed = Date().timeIntervalSince(startDate)
-        Console.success("\(cloneName) cloned from \(parallelsVM.name) \(Format.time(elapsed))")
-        continuation.resume(with: .success(()))
-    }
-
-    let clone = try lookupParallelsVMOrExit(withIdentifier: cloneName)
-
-    guard let stoppedVM = clone.asStoppedVM() else {
-        Console.crash(
-            message: "Cloned VM `\(clone.name)` is not stopped",
-            reason: .parallelsVirtualMachineIsNotStopped
-        )
-    }
-
-    return stoppedVM
-}
-
-@available(*, deprecated)
-public func unregisterInvalidVMs(
-    parallelsRepository: ParallelsVMRepositoryProtocol = ParallelsVMRepository()
-) throws {
-    try unregister(parallelsRepository.lookupInvalidVMs())
 }
 
 public func stopAllRunningVMs(
@@ -333,22 +245,6 @@ public func stopRunningVM(
     Console.success("Shutdown Complete")
 }
 
-@available(*, deprecated)
-public func unregister(_ list: [VMProtocol]) throws {
-
-    // Don't print anything to the log if there are no images to download
-    guard !list.isEmpty else {
-        return
-    }
-
-    Console.printList(list.map(\.name), title: "Unregistering \(list.count) Parallels Virtual Machines:")
-
-    for parallelsVM in list {
-        try unregisterVM(withIdentifier: parallelsVM.uuid)
-        try parallelsVM.delete()
-    }
-}
-
 public func unregisterVM(withIdentifier identifier: String) throws {
     let virtualMachine = try lookupParallelsVMOrExit(withIdentifier: identifier)
     try virtualMachine.unregister()
@@ -363,10 +259,4 @@ func waitForVMStartup(_ parallelsVirtualMachine: StoppedVM) throws {
         .lookupRunningVMs()
         .filter { $0.uuid == parallelsVirtualMachine.uuid && $0.hasIpV4Address }
         .isEmpty
-}
-
-func waitForVMToExist(withName name: String) throws {
-    repeat {
-        usleep(100)
-    } while try Parallels().lookupVM(named: name) == nil
 }

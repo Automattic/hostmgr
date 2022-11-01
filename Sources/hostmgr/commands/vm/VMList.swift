@@ -22,7 +22,7 @@ struct VMListCommand: AsyncParsableCommand {
         }
     }
 
-    @Option
+    @Option(help: "Filter VMs by location – can be 'remote', 'local', or 'all'.")
     var location: Location = Location.all
 
     func run() async throws {

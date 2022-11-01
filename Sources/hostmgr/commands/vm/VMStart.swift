@@ -1,7 +1,6 @@
 import Foundation
 import ArgumentParser
 import libhostmgr
-import prlctl
 
 struct VMStartCommand: AsyncParsableCommand {
 
@@ -16,16 +15,6 @@ struct VMStartCommand: AsyncParsableCommand {
     @Flag(help: "Wait for the machine to finish starting up?")
     var wait: Bool = false
 
-    @Option(
-        help: "Hypervisor Type"
-    )
-    var hypervisorType: StoppedVM.HypervisorType = .apple
-
-    @Option(
-        help: "Networking Type"
-    )
-    var networkingType: StoppedVM.NetworkType = .bridged
-
     func run() async throws {
         let importedVM = try await libhostmgr.importVM(name: name)
 
@@ -39,15 +28,15 @@ struct VMStartCommand: AsyncParsableCommand {
             ["Total System Memory", Format.memoryBytes(ProcessInfo().physicalMemory)],
             ["VM System Memory", Format.memoryBytes(vmAvailableMemory)],
             ["VM CPU Cores", "\(cpuCoreCount)"],
-            ["Hypervisor Type", "\(self.hypervisorType)"],
-            ["Networking Type", "\(self.networkingType)"]
+            ["Hypervisor Type", "apple"],
+            ["Networking Type", "bridged"]
         ])
 
         try [
             .memorySize(Int(vmAvailableMemory / 1024 / 1024)),
             .cpuCount(ProcessInfo().physicalProcessorCount),
-            .hypervisorType(self.hypervisorType),
-            .networkType(self.networkingType),
+            .hypervisorType(.apple),
+            .networkType(.bridged),
             .isolateVM(.on),
             .sharedCamera(.off)
         ].forEach { try importedVM.set($0) }
@@ -63,6 +52,3 @@ struct VMStartCommand: AsyncParsableCommand {
         try await libhostmgr.startVM(importedVM)
     }
 }
-
-extension StoppedVM.NetworkType: ExpressibleByArgument {}
-extension StoppedVM.HypervisorType: ExpressibleByArgument {}

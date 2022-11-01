@@ -23,7 +23,7 @@ struct NetworkBenchmark: AsyncParsableCommand {
         Console.heading("Starting Benchmark")
 
         for remoteImage in remoteImages {
-            let path = try await libhostmgr.download(remoteImage: remoteImage)
+            let path = try await libhostmgr.downloadRemoteImage(remoteImage)
             try FileManager.default.removeItem(at: path)
         }
     }
