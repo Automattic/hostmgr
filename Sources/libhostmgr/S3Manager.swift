@@ -3,7 +3,7 @@ import Alamofire
 import SotoS3
 import CryptoKit
 
-public typealias FileTransferProgressCallback = (FileTransferProgress) -> Void
+public typealias FileTransferProgressCallback = (Progress) -> Void
 
 public protocol S3ManagerProtocol {
     func listObjects(startingWith prefix: String?) async throws -> [S3Object]
@@ -73,7 +73,7 @@ public struct S3Manager: S3ManagerProtocol {
 
         return try await AF
             .download(signedURL, method: .get, to: destinationResolver)
-            .downloadProgress { progressCallback?(.progressData(from: $0)) }
+            .downloadProgress { progressCallback?($0) }
             .serializingDownloadedFileURL(automaticallyCancelling: true)
             .value
     }

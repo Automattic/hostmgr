@@ -44,13 +44,12 @@ public struct Format {
     }
 
     public static func percentage(_ number: NSNumber) -> String {
-        return NumberFormatter.localizedString(from: number, number: .percent)
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .percent
+        formatter.roundingMode = .down
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
 
-//        let formatter = NumberFormatter()
-//        formatter.alwaysShowsDecimalSeparator = true
-//        formatter.roundingMode = .down
-//        formatter.minimumFractionDigits = 2
-//        formatter.maximumFractionDigits = 2
-//        return formatter.string(from: number)!
+        return formatter.string(for: number)!
     }
 }
