@@ -18,7 +18,7 @@ struct VMFetchCommand: AsyncParsableCommand {
 
         guard try LocalVMRepository().lookupVM(withName: name) == nil else {
             Console.exit(
-                message:"VM is present locally",
+                message: "VM is present locally",
                 style: .success
             )
         }

@@ -17,4 +17,3 @@ public enum ExitCode: Int32, Error {
     /// CommandPolicy Failures
     case heartbeatRecordingFailed
 }
-
