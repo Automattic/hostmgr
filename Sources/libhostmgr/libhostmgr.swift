@@ -198,7 +198,6 @@ public func startVM(name: String) async throws {
     }
 
     let destination = FileManager.default.temporaryFilePath(named: name + ".tmp.pvm")
-
     try FileManager.default.removeItemIfExists(at: destination)
     try FileManager.default.copyItem(at: sourceVM.path, to: destination)
     Console.info("Created temporary VM at \(destination)")
@@ -209,37 +208,14 @@ public func startVM(name: String) async throws {
 
     Console.success("Successfully Imported \(parallelsVM.name) with UUID \(parallelsVM.uuid)")
 
-    Console.info("Applying VM Settings")
-
-    // Always leave 4GB available to the VM host – the VM can have the rest
-    let vmAvailableMemory = ProcessInfo().physicalMemory - (4096 * 1024 * 1024)
-    let cpuCoreCount = ProcessInfo().physicalProcessorCount
-
-    Console.printTable(data: [
-        ["Total System Memory", Format.memoryBytes(ProcessInfo().physicalMemory)],
-        ["VM System Memory", Format.memoryBytes(vmAvailableMemory)],
-        ["VM CPU Cores", "\(cpuCoreCount)"],
-        ["Hypervisor Type", "apple"],
-        ["Networking Type", "bridged"]
-    ])
-
-    try [
-        .memorySize(Int(vmAvailableMemory / 1024 / 1024)),
+    try applyVMSettings([
+        .memorySize(Int(ProcessInfo().physicalMemory - 4096)),  // This is a hack, we should make this configurable
         .cpuCount(ProcessInfo().physicalProcessorCount),
         .hypervisorType(.apple),
         .networkType(.shared),
         .isolateVM(.on),
         .sharedCamera(.off)
-    ].forEach { try parallelsVM.set($0) }
-
-    // These are optional, and it's possible they've already been removed, so they may fail
-    do {
-        try parallelsVM.set(.withoutSoundDevice())
-        try parallelsVM.set(.withoutCDROMDevice())
-    } catch {
-        Console.warn("Unable to remove device: \(error.localizedDescription)")
-    }
-
+    ], to: parallelsVM)
     try parallelsVM.start()
 
     let _: Void = try await withCheckedThrowingContinuation { continuation in
@@ -304,4 +280,32 @@ func waitForVMStartup(_ parallelsVirtualMachine: StoppedVM) throws {
         .lookupRunningVMs()
         .filter { $0.uuid == parallelsVirtualMachine.uuid && $0.hasIpV4Address }
         .isEmpty
+}
+
+func applyVMSettings(_ settings: [StoppedVM.VMOption], to parallelsVM: StoppedVM) throws {
+    Console.info("Applying VM Settings")
+
+    // Always leave 4GB available to the VM host – the VM can have the rest
+    let dedicatedMemoryForVM = ProcessInfo().physicalMemory - 4096 // This is a hack, we should make this configurable
+    let cpuCoreCount = ProcessInfo().physicalProcessorCount
+
+    Console.printTable(data: [
+        ["Total System Memory", Format.memoryBytes(ProcessInfo().physicalMemory)],
+        ["VM System Memory", Format.memoryBytes(dedicatedMemoryForVM)],
+        ["VM CPU Cores", "\(cpuCoreCount)"],
+        ["Hypervisor Type", "apple"],
+        ["Networking Type", "bridged"]
+    ])
+
+    for setting in settings {
+        try parallelsVM.set(setting)
+    }
+
+    // These are optional, and it's possible they've already been removed, so they may fail
+    do {
+        try parallelsVM.set(.withoutSoundDevice())
+        try parallelsVM.set(.withoutCDROMDevice())
+    } catch {
+        Console.warn("Unable to remove device: \(error.localizedDescription)")
+    }
 }
