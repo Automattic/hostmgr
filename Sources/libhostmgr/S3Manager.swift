@@ -135,6 +135,13 @@ public struct S3Manager: S3ManagerProtocol {
             try await awsClient.shutdown()
             throw error
         }
+
+        // We need to shutdown the client also when `block` run successfully.
+        //
+        // This duplication with the call above will disappear once Swift will
+        // give us a way to call `defer`.
+        try await awsClient.shutdown()
+
         return result
     }
 
