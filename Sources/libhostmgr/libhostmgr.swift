@@ -227,7 +227,7 @@ public func startVM(name: String) async throws {
         .memorySize(Int(vmAvailableMemory / 1024 / 1024)),
         .cpuCount(ProcessInfo().physicalProcessorCount),
         .hypervisorType(.apple),
-        .networkType(.bridged),
+        .networkType(.shared),
         .isolateVM(.on),
         .sharedCamera(.off)
     ].forEach { try parallelsVM.set($0) }
