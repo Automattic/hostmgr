@@ -245,13 +245,6 @@ public func stopRunningVM(
     Console.success("Shutdown Complete")
 }
 
-public func unregisterVM(withIdentifier identifier: String) throws {
-    let virtualMachine = try lookupParallelsVMOrExit(withIdentifier: identifier)
-    try virtualMachine.unregister()
-
-    Console.success("Unregistered \(virtualMachine.name)")
-}
-
 func waitForVMStartup(_ parallelsVirtualMachine: StoppedVM) throws {
     repeat {
         usleep(100)
