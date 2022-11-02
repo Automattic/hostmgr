@@ -108,6 +108,14 @@ extension FileManager {
     public func createFile(at url: URL, contents: Data) throws {
         createFile(atPath: url.path, contents: contents)
     }
+
+    public func removeItemIfExists(at url: URL) throws {
+        guard fileExists(at: url) else {
+            return
+        }
+
+        try removeItem(at: url)
+    }
 }
 
 extension URL {

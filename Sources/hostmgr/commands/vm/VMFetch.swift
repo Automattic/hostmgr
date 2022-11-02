@@ -16,11 +16,17 @@ struct VMFetchCommand: AsyncParsableCommand {
 
     func run() async throws {
 
-        guard try LocalVMRepository().lookupVM(withName: name) == nil else {
-            Console.exit(
-                message: "VM is present locally",
-                style: .success
-            )
+        if let localVM = try LocalVMRepository().lookupVM(withName: name) {
+            if localVM.state == .packaged {
+                try await libhostmgr.unpackVM(name: localVM.basename)
+                return
+            } else {
+                Console.exit(
+                    message: "VM is present locally",
+                    style: .success
+                )
+            }
+
         }
 
         try await libhostmgr.fetchRemoteImage(name: self.name)
