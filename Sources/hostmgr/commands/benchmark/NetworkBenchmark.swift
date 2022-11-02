@@ -27,32 +27,16 @@ struct NetworkBenchmark: AsyncParsableCommand {
             region: Configuration.shared.vmImagesRegion
         )
 
+        let progressBar = Console.startFileDownload(file.imageObject)
+
         try await manager.download(
             object: file.imageObject,
             to: FileManager.default.temporaryFilePath(),
-            progressCallback: self.updateProgress
+            progressCallback: progressBar.update
         )
     }
 
     private func imageSizeSort(_ lhs: RemoteVMImage, _ rhs: RemoteVMImage) -> Bool {
         lhs.imageObject.size < rhs.imageObject.size
-    }
-
-    private func updateProgress(_ progress: FileTransferProgress) {
-        Self.limiter.perform {
-            let downloadedSize = ByteCountFormatter.string(fromByteCount: Int64(progress.current), countStyle: .file)
-            let totalSize = ByteCountFormatter.string(fromByteCount: Int64(progress.total), countStyle: .file)
-
-            let secondsElapsed = Date().timeIntervalSince(startDate)
-            let perSecond = Double(progress.current) / Double(secondsElapsed)
-
-            // Don't continue unless the rate can be represented by `Int64`
-            guard perSecond.isNormal else {
-                return
-            }
-
-            let rate = ByteCountFormatter.string(fromByteCount: Int64(perSecond), countStyle: .file)
-            logger.info("Downloaded \(downloadedSize) of \(totalSize) [Rate: \(rate) per second]")
-        }
     }
 }

@@ -1,6 +1,5 @@
 import Foundation
 import ArgumentParser
-import Tqdm
 import libhostmgr
 
 struct VMRemoteImageDownload: AsyncParsableCommand {
@@ -48,17 +47,10 @@ struct VMRemoteImageDownload: AsyncParsableCommand {
         let sleepManager = SystemSleepManager(reason: "Downloading \(remoteImage.fileName)")
         sleepManager.disable()
 
-        let progressBar = Tqdm(
-            description: "Downloading \(remoteImage.fileName)",
-            total: Int(remoteImage.imageObject.size),
-            unit: " bytes",
-            unitScale: true
-        )
+        let progressBar = Console.startImageDownload(remoteImage)
 
         try await remote.download(image: remoteImage, to: destination) {
-            progressBar.update(n: $0.percent)
+            progressBar.update($0)
         }
-
-        progressBar.close()
     }
 }

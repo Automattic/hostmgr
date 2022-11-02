@@ -110,8 +110,38 @@ public struct S3Manager: S3ManagerProtocol {
     private func withS3Client<T>(_ block: (SotoS3.S3) async throws -> T) async throws -> T {
         let awsClient = AWSClient(credentialProvider: credentialProvider, httpClientProvider: .createNew)
         let s3Client = SotoS3.S3(client: awsClient, region: Region(rawValue: self.region))
-        let result = try await block(s3Client)
+
+        // The following code `try await` the given operation to execute with a
+        // `SotoS3.S3` client created ad hoc and, once done, shuts down that
+        // client.
+        //
+        // If something goes wrong while running the block, we still need to
+        // shutdown the client, else the error from the block will be lost and
+        // the program will fail with something like:
+        //
+        // SotoCore/AWSClient.swift:110: Assertion failed:
+        //   AWSClient not shut down before the deinit.
+        //   Please call client.syncShutdown() when no longer needed.
+        //
+        // It would be good to use `defer`, but it doesn't yet support asycn.
+        // See https://forums.swift.org/t/async-rethrows-and-defer/58356.
+        //
+        // So, we use a `do catch` where in the catch we first shutdown the
+        // client and then bubble up the error.
+        let result: T
+        do {
+            result = try await block(s3Client)
+        } catch {
+            try await awsClient.shutdown()
+            throw error
+        }
+
+        // We need to shutdown the client also when `block` run successfully.
+        //
+        // This duplication with the call above will disappear once Swift will
+        // give us a way to call `defer`.
         try await awsClient.shutdown()
+
         return result
     }
 
@@ -146,30 +176,65 @@ public struct S3Object {
 }
 
 public struct FileTransferProgress {
-    public let current: Int
-    public let total: Int
+    public typealias Percentage = Decimal
 
-    public let estimatedTimeRemaining: TimeInterval?
+    let current: Int
+    let total: Int
 
-    public init(current: Int, total: Int, estimatedTimeRemaining: TimeInterval?) {
+    public init(current: Int, total: Int) {
         self.current = current
         self.total = total
-        self.estimatedTimeRemaining = estimatedTimeRemaining
     }
 
-    public var percent: Int {
-        Int(decimalPercent)
+    public var percent: Percentage {
+        Decimal(Double(self.current) / Double(self.total) * 100.0)
     }
 
-    public var decimalPercent: Double {
-        Double(current) / Double(total) * 100
+    public var downloadedData: String {
+        ByteCountFormatter.string(fromByteCount: Int64(current), countStyle: .file)
+    }
+
+    public var totalData: String {
+        ByteCountFormatter.string(fromByteCount: Int64(total), countStyle: .file)
+    }
+
+    public func dataRate(timeIntervalSinceStart interval: TimeInterval) -> String {
+        let bytesPerSecond = Double(current) / interval
+
+        // Don't continue unless the rate can be represented by `Int64`
+        guard bytesPerSecond.isNormal else {
+            return ByteCountFormatter.string(fromByteCount: 0, countStyle: .file)
+        }
+
+        return ByteCountFormatter.string(fromByteCount: Int64(bytesPerSecond), countStyle: .file)
+    }
+
+    public func estimatedTimeRemaining(timeIntervalSinceStart interval: TimeInterval) -> TimeInterval {
+        let bytesPerSecond = Double(current) / interval
+
+        // Don't continue unless the rate makes some kind of sense
+        guard bytesPerSecond.isNormal else {
+            return .infinity
+        }
+
+        let totalNumberOfSeconds = Double(total) / bytesPerSecond
+
+        return totalNumberOfSeconds - interval
+    }
+
+    public var formattedPercentage: String {
+        let formatter = NumberFormatter()
+        formatter.alwaysShowsDecimalSeparator = true
+        formatter.roundingMode = .down
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        return formatter.string(from: percent as NSDecimalNumber)!
     }
 
     static func progressData(from progress: Progress) -> FileTransferProgress {
         return FileTransferProgress(
             current: Int(progress.completedUnitCount),
-            total: Int(progress.totalUnitCount),
-            estimatedTimeRemaining: progress.estimatedTimeRemaining
+            total: Int(progress.totalUnitCount)
         )
     }
 }

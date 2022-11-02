@@ -19,6 +19,15 @@
       }
     },
     {
+      "identity" : "console-kit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/vapor/console-kit",
+      "state" : {
+        "revision" : "a7e67a1719933318b5ab7eaaed355cde020465b1",
+        "version" : "4.5.0"
+      }
+    },
+    {
       "identity" : "dotenv",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftpackages/DotEnv.git",
@@ -169,15 +178,6 @@
       "state" : {
         "revision" : "b7667f3e266af621e5cc9c77e74cacd8e8c00cb4",
         "version" : "0.2.5"
-      }
-    },
-    {
-      "identity" : "swift-tqdm",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ebraraktas/swift-tqdm.git",
-      "state" : {
-        "revision" : "71f0a47e1c1149cc486be2e436d7369e90ca4449",
-        "version" : "0.1.2"
       }
     }
   ],

@@ -60,10 +60,12 @@ struct SyncVMImagesCommand: AsyncParsableCommand, FollowsCommandPolicies {
 
         let limiter = Limiter(policy: .throttle, operationsPerSecond: 1)
 
+        let progressBar = Console.startImageDownload(image)
         try await RemoteVMRepository().download(image: image, to: destination) { progress in
+            progressBar.update(progress)
+
             limiter.perform {
                 try? recordHeartbeat()
-                logger.info("\(progress.decimalPercent)% complete")
             }
         }
 
