@@ -209,7 +209,7 @@ public func startVM(name: String) async throws {
     Console.success("Successfully Imported \(parallelsVM.name) with UUID \(parallelsVM.uuid)")
 
     try applyVMSettings([
-        .memorySize(Int(ProcessInfo().physicalMemory - 4096)),  // This is a hack, we should make this configurable
+        .memorySize(Int(ProcessInfo().physicalMemory / 1024 / 1024) - 4096),  // We should make this configurable
         .cpuCount(ProcessInfo().physicalProcessorCount),
         .hypervisorType(.apple),
         .networkType(.shared),
@@ -286,7 +286,7 @@ func applyVMSettings(_ settings: [StoppedVM.VMOption], to parallelsVM: StoppedVM
     Console.info("Applying VM Settings")
 
     // Always leave 4GB available to the VM host – the VM can have the rest
-    let dedicatedMemoryForVM = ProcessInfo().physicalMemory - 4096 // This is a hack, we should make this configurable
+    let dedicatedMemoryForVM = ProcessInfo().physicalMemory - (4096 * 1024 * 1024) // We should make this configurable
     let cpuCoreCount = ProcessInfo().physicalProcessorCount
 
     Console.printTable(data: [
