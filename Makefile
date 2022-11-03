@@ -12,7 +12,7 @@ build-release:
 	@echo "--- Building Release"
 	swift build -c release
 
-release: build-release
+release: lint build-release
 	@echo "--- Tagging Release"
 	git tag $(RELEASE_VERSION)
 	git push origin $(RELEASE_VERSION)
