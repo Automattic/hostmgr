@@ -7,7 +7,7 @@ struct SyncCommand: AsyncParsableCommand {
         commandName: "sync",
         abstract: "Sync remote data with this host",
         subcommands: [
-            SyncAuthorizedKeysCommand.self,
+            SyncAuthorizedKeysCommand.self
         ]
     )
 }
