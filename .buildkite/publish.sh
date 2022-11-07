@@ -9,6 +9,7 @@ swift build -c release --arch arm64 --arch x86_64
 BUILDDIR=.build/artifacts/release
 mkdir -p $BUILDDIR
 
+cp Resources/libswift_Concurrency.dylib $BUILDDIR/libswift_Concurrency.dylib 
 cp .build/apple/Products/Release/hostmgr $BUILDDIR/hostmgr
 tar -czf hostmgr.tar.gz -C $BUILDDIR .
 mv hostmgr.tar.gz .build/artifacts/hostmgr.tar.gz

@@ -216,7 +216,8 @@ public func startVM(name: String) async throws {
         .isolateVM(.on),
         .sharedCamera(.off)
     ], to: parallelsVM)
-    try parallelsVM.start()
+
+    try parallelsVM.start(wait: false)
 
     let _: Void = try await withCheckedThrowingContinuation { continuation in
         do {

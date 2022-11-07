@@ -21,7 +21,7 @@
     {
       "identity" : "console-kit",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/vapor/console-kit",
+      "location" : "https://github.com/vapor/console-kit.git",
       "state" : {
         "revision" : "a7e67a1719933318b5ab7eaaed355cde020465b1",
         "version" : "4.5.0"
@@ -59,8 +59,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/jkmassel/prlctl.git",
       "state" : {
-        "revision" : "909a33afc1116ff1a21256b1c77752cb482ccffd",
-        "version" : "1.21.0"
+        "revision" : "8c4726953f8578d3c71124f382913a11eba20b1d",
+        "version" : "1.22.0"
       }
     },
     {
