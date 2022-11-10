@@ -2,7 +2,7 @@ import Foundation
 import Alamofire
 import SotoS3
 
-public typealias FileTransferProgressCallback = (FileTransferProgress) -> Void
+public typealias FileTransferProgressCallback = (Progress) -> Void
 
 public protocol S3ManagerProtocol {
     func listObjects(startingWith prefix: String?) async throws -> [S3Object]
@@ -63,17 +63,11 @@ public struct S3Manager: S3ManagerProtocol {
             return (FileManager.default.temporaryFilePath(), [.createIntermediateDirectories, .removePreviousFile])
         }
 
-        let startDate = Date()
-
-        let temporaryFile = try await AF
+        try await AF
             .download(signedURL, method: .get, to: destinationResolver)
-            .downloadProgress {
-                progressCallback?(.progressData(from: $0, withStartDate: startDate))
-            }
+            .downloadProgress { progressCallback?($0) }
             .serializingDownloadedFileURL(automaticallyCancelling: true)
             .value
-
-        _ = try FileManager.default.replaceItemAt(destination, withItemAt: temporaryFile)
     }
 
     public func download(object: S3Object) async throws -> Data? {
