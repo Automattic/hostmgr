@@ -5,11 +5,13 @@ public struct RemoteVMRepository {
     public enum RemoteVMImageSortingStrategy {
         case name
         case size
+        case newest
 
         var sortMethod: (RemoteVMImage, RemoteVMImage) -> Bool {
             switch self {
             case .name: return sortByName
             case .size: return sortBySize
+            case .newest: return sortByDateDescending
             }
         }
 
@@ -19,6 +21,10 @@ public struct RemoteVMRepository {
 
         func sortBySize(_ lhs: RemoteVMImage, _ rhs: RemoteVMImage) -> Bool {
             lhs.imageObject.size < rhs.imageObject.size
+        }
+
+        func sortByDateDescending(_ lhs: RemoteVMImage, _ rhs: RemoteVMImage) -> Bool {
+            lhs.imageObject.modifiedAt > rhs.imageObject.modifiedAt
         }
     }
 
@@ -50,14 +56,25 @@ public struct RemoteVMRepository {
     }
 
     /// Downloads a remote image using atomic writes to avoid conflict with existing files or other processes
+    ///
+    @discardableResult
     public func download(
         image: RemoteVMImage,
-        to destination: URL,
-        progressCallback: FileTransferProgressCallback? = nil
-    ) async throws {
-        try await self.s3Manager.download(
+        progressCallback: @escaping FileTransferProgressCallback
+    ) async throws -> URL {
+
+        let destination = Configuration.shared.vmStorageDirectory
+
+        // Download the checksum file first
+        _ = try await self.s3Manager.download(
+            object: image.checksumObject,
+            to: destination.appendingPathComponent(image.checksumFileName),
+            progressCallback: nil
+        )
+
+        return try await self.s3Manager.download(
             object: image.imageObject,
-            to: destination,
+            to: destination.appendingPathComponent(image.fileName),
             progressCallback: progressCallback
         )
     }

@@ -118,6 +118,13 @@ extension FileManager {
     }
 }
 
+extension Date {
+    /// Required until we only support macOS 12
+    static var now: Date {
+        return Date()
+    }
+}
+
 extension URL {
     public static var tempFilePath: URL {
         FileManager.default.temporaryFilePath()
