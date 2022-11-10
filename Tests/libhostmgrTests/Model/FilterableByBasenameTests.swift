@@ -9,6 +9,12 @@ final class FilterableByBasenameTests: XCTestCase {
         "images/three"
     ].map { RemoteVMImage.with(key: $0) }
 
+    private let localImages = [
+        "/images/one.pvmp",
+        "/images/two.pvmp",
+        "/images/three.pvmp"
+    ].compactMap(LocalVMImage.with)
+
     func testThatRemoteVMImagesAreFilteredCorrectlyWhenIncludingItems() throws {
         XCTAssertEqual(
             remoteImages.filter(includingItemsIn: ["one", "three"]),
@@ -16,10 +22,24 @@ final class FilterableByBasenameTests: XCTestCase {
         )
     }
 
+    func testThatLocalVMImagesAreFilteredCorrectlyWhenIncludingItems() throws {
+        XCTAssertEqual(
+            localImages.filter(includingItemsIn: ["one", "three"]),
+            [localImages.first!, localImages.last!]
+        )
+    }
+
     func testThatRemoteVMImagesAreFilteredCorrectlyWhenExcludingItems() throws {
         XCTAssertEqual(
             remoteImages.filter(excludingItemsIn: ["one", "three"]),
             [remoteImages[1]]
+        )
+    }
+
+    func testThatLocalVMImagesAreFilteredCorrectlyWhenExcludingItems() throws {
+        XCTAssertEqual(
+            localImages.filter(excludingItemsIn: ["one", "three"]),
+            [localImages[1]]
         )
     }
 }

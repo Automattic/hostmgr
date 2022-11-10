@@ -13,3 +13,9 @@ extension RemoteVMImage {
         )
     }
 }
+
+extension LocalVMImage {
+    static func with(path: String) -> LocalVMImage? {
+        LocalVMImage(path: URL(fileURLWithPath: path))
+    }
+}
