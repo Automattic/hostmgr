@@ -22,7 +22,11 @@ struct GenerateGitMirrorManifestTask {
 
         let manifest = generateTextManifest(fromPaths: paths)
 
-        try FileManager.default.createDirectoryTree(atUrl: Configuration.shared.gitMirrorDirectory)
+        try FileManager.default.createDirectory(
+            at: Configuration.shared.gitMirrorDirectory,
+            withIntermediateDirectories: true
+        )
+
         let manifestPath = Configuration.shared.gitMirrorDirectory.appendingPathComponent("manifest")
         try manifest.data(using: .utf8)?
             .write(to: manifestPath, options: .atomicWrite)
