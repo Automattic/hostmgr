@@ -81,29 +81,49 @@ public struct Console {
     }
 }
 
-public struct ProgressBar {
+public class ProgressBar {
 
     private let terminal = Terminal()
     private let startDate = Date()
+
+    private var lastUpdateAt: Int = 0
 
     init(title: String) {
         terminal.info(title)
         terminal.print() // Deliberately empty string
     }
 
-    public static func start(title: String) -> Self {
+    public static func start(title: String) -> ProgressBar {
         return ProgressBar(title: title)
     }
 
+    public func update(_ progress: Progress) {
+        let progress = FileTransferProgress(
+            completed: Int(progress.completedUnitCount),
+            total: Int(progress.totalUnitCount),
+            startDate: startDate
+        )
+
+        self.update(progress)
+    }
+
     public func update(_ progress: FileTransferProgress) {
+        // Only update progress once per second
+        let now = Int(Date().timeIntervalSince1970)
+        guard now > lastUpdateAt else {
+            return
+        }
+
+        let rate = Format.fileBytes(progress.dataRate)
+        let remaining = Format.time(progress.estimatedTimeRemaining)
+        let percentage = Format.percentage(progress.fractionComplete)
+
+        // Erase the old progress line and overwrite it
         terminal.clear(lines: 1)
+        terminal.print("\(percentage) [\(rate)/s, \((remaining))]")
 
-        let elapsedTime = Date().timeIntervalSince(startDate)
-
-        let rate = progress.dataRate(timeIntervalSinceStart: elapsedTime)
-        let remaining = progress.estimatedTimeRemaining(timeIntervalSinceStart: elapsedTime)
-
-        terminal.print("\(progress.formattedPercentage)% [\(rate)/s, \(Format.time(remaining))]")
+        // Make sure we don't update again this second
+        self.lastUpdateAt = now
     }
 }
 
