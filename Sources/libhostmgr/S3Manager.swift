@@ -61,7 +61,7 @@ public struct S3Manager: S3ManagerProtocol {
         let signedURL = try await presignedUrl(forObject: object)
 
         let destinationResolver: DownloadRequest.Destination = { _, _ in
-            return (FileManager.default.temporaryFilePath(), [.createIntermediateDirectories, .removePreviousFile])
+            (destination, [.createIntermediateDirectories, .removePreviousFile])
         }
 
         return try await AF
