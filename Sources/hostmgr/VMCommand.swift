@@ -12,12 +12,7 @@ struct VMCommand: AsyncParsableCommand {
             VMStartCommand.self,
             VMStopCommand.self,
             VMDetailsCommand.self,
-            VMDeleteCommand.self,
-            VMCloneCommand.self,
-            VMCleanCommand.self,
-            VMImportCommand.self,
-            VMImageCommand.self,
-            VMExistsCommand.self
+            VMCleanCommand.self
         ]
     )
 }
