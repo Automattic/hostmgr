@@ -39,7 +39,7 @@ public struct S3Manager: S3ManagerProtocol {
                 return []
             }
 
-            return objects.compactMap { $0.toS3Object }
+            return objects.compactMap { S3Object.from($0) }
         }
     }
 
@@ -47,7 +47,8 @@ public struct S3Manager: S3ManagerProtocol {
         try await withS3Client {
             let request =  SotoS3.S3.HeadObjectRequest(bucket: bucket, key: path)
             let result = try await $0.headObject(request)
-            return S3Object(key: path, size: Int(result.contentLength!))
+
+            return .from(result, withKey: path)
         }
     }
 
@@ -153,23 +154,39 @@ public struct S3Manager: S3ManagerProtocol {
     }
 }
 
-extension SotoS3.S3.Object {
-    var toS3Object: S3Object? {
-        guard
-            let key = self.key,
-            let size = self.size
-        else { return nil }
-
-        return S3Object(key: key, size: Int(size))
-    }
-}
-
-public struct S3Object {
+public struct S3Object: Equatable {
     public let key: String
     public let size: Int
+    public let modifiedAt: Date
 
-    public init(key: String, size: Int) {
+    public init(key: String, size: Int, modifiedAt: Date) {
         self.key = key
         self.size = size
+        self.modifiedAt = modifiedAt
+    }
+
+    static func from(_ object: SotoS3.S3.Object) -> S3Object? {
+        guard
+            let key = object.key,
+            let size = object.size,
+            let date = object.lastModified
+        else { return nil }
+
+        return S3Object(key: key, size: Int(size), modifiedAt: date)
+    }
+
+    static func from(_ result: SotoS3.S3.HeadObjectOutput, withKey key: String) -> S3Object? {
+        guard
+            let size = result.contentLength,
+            let date = result.lastModified
+        else {
+            return nil
+        }
+
+        return S3Object(
+            key: key,
+            size: Int(size),
+            modifiedAt: date
+        )
     }
 }
