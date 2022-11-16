@@ -16,6 +16,9 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
         scriptBuilder.addDependency(atPath: "~/.circ")
         scriptBuilder.addEnvironmentVariable(named: "BUILDKITE", value: "true")
         scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_")
+        // We only have one environment variable called IMAGE_ID, but there is
+        // no method to copy individual env vars.
+        scriptBuilder.copyEnvironmentVariables(prefixedBy: "IMAGE_ID")
         scriptBuilder.addCommand("buildkite-agent bootstrap")
 
         // Manually specify the build path to keep them nice and clean in the output
