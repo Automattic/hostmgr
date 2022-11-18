@@ -1,4 +1,6 @@
 import XCTest
+import TSCBasic
+
 @testable import libhostmgr
 
 final class FoundationExtensionTests: XCTestCase {
@@ -24,5 +26,22 @@ final class FoundationExtensionTests: XCTestCase {
 
     func testThatDirectoryExistsReturnsFalseForInvalidPath() throws {
         XCTAssertFalse(FileManager.default.fileExists(at: URL(fileURLWithPath: UUID().uuidString)))
+    }
+
+    // MARK: ProcessInfo Extensions
+    func testThatProcessorArchitectureIsValid() throws {
+        let process = Process(args: "/usr/bin/uname", "-m")
+        try process.launch()
+        let arch = try process.waitUntilExit().utf8Output().trimmingWhitespace
+
+        XCTAssertEqual(ProcessorArchitecture(rawValue: arch), ProcessInfo.processInfo.processorArchitecture)
+    }
+
+    func testThatPhysicalProcessorCountIsValid() throws {
+        let process = Process(args: "/usr/sbin/sysctl", "-n", "hw.physicalcpu")
+        try process.launch()
+        let count = try process.waitUntilExit().utf8Output().trimmingWhitespace
+
+        XCTAssertEqual(Int(count), ProcessInfo.processInfo.physicalProcessorCount)
     }
 }
