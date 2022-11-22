@@ -28,3 +28,7 @@ extension LocalVMImage {
         LocalVMImage(path: URL(fileURLWithPath: path))
     }
 }
+
+func getPathForEnvFile(named key: String) -> URL {
+    Bundle.module.url(forResource: key, withExtension: "env")!
+}

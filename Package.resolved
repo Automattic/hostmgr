@@ -10,15 +10,6 @@
       }
     },
     {
-      "identity" : "dotenv",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/swiftpackages/DotEnv.git",
-      "state" : {
-        "revision" : "1f15bb9de727d694af1d003a1a5d7a553752850f",
-        "version" : "3.0.0"
-      }
-    },
-    {
       "identity" : "kcpassword-swift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/jkmassel/kcpassword-swift.git",
@@ -70,15 +61,6 @@
       "state" : {
         "revision" : "5d66f7ba25daf4f94100e7022febf3c75e37a6c7",
         "version" : "1.4.2"
-      }
-    },
-    {
-      "identity" : "swift-nio",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-nio.git",
-      "state" : {
-        "revision" : "124119f0bb12384cef35aa041d7c3a686108722d",
-        "version" : "2.40.0"
       }
     },
     {
