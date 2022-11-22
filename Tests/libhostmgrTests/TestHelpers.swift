@@ -1,5 +1,6 @@
 import Foundation
 @testable import libhostmgr
+@testable import tinys3
 
 extension RemoteVMImage {
     static func with(
@@ -7,9 +8,11 @@ extension RemoteVMImage {
         size: Int = Int.random(in: 0...Int.max),
         checksumKey: String = UUID().uuidString
     ) -> RemoteVMImage {
-        RemoteVMImage(
-            imageObject: S3Object(key: key, size: size, modifiedAt: Date.distantPast),
-            checksumKey: checksumKey
+        let image = S3Object(key: key, size: size, eTag: "", lastModifiedAt: Date.distantPast, storageClass: "")
+        let checksum = S3Object(key: checksumKey, size: 64, eTag: "", lastModifiedAt: Date.distantPast, storageClass: "")
+        return RemoteVMImage(
+            imageObject: image,
+            checksumObject: checksum
         )
     }
 }

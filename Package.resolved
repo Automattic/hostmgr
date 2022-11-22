@@ -1,24 +1,6 @@
 {
   "pins" : [
     {
-      "identity" : "alamofire",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/Alamofire/Alamofire.git",
-      "state" : {
-        "revision" : "8dd85aee02e39dd280c75eef88ffdb86eed4b07b",
-        "version" : "5.6.2"
-      }
-    },
-    {
-      "identity" : "async-http-client",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/swift-server/async-http-client.git",
-      "state" : {
-        "revision" : "03b3e7b34153299e9b4c4b5c2a6ac790a582a3ac",
-        "version" : "1.12.0"
-      }
-    },
-    {
       "identity" : "console-kit",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/vapor/console-kit.git",
@@ -34,15 +16,6 @@
       "state" : {
         "revision" : "1f15bb9de727d694af1d003a1a5d7a553752850f",
         "version" : "3.0.0"
-      }
-    },
-    {
-      "identity" : "jmespath.swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/adam-fowler/jmespath.swift.git",
-      "state" : {
-        "revision" : "4513d319c4aaa6c3b2ac18e1e6566a803515ad91",
-        "version" : "1.0.2"
       }
     },
     {
@@ -73,24 +46,6 @@
       }
     },
     {
-      "identity" : "soto",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/soto-project/soto.git",
-      "state" : {
-        "revision" : "30bc0b8bdd5f096032b159d02784bef0da29a016",
-        "version" : "6.2.0"
-      }
-    },
-    {
-      "identity" : "soto-core",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/soto-project/soto-core.git",
-      "state" : {
-        "revision" : "f8a8db612a6bca7a05f69e975464f7a841f43617",
-        "version" : "6.1.3"
-      }
-    },
-    {
       "identity" : "swift-argument-parser",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-argument-parser",
@@ -118,6 +73,15 @@
       }
     },
     {
+      "identity" : "swift-crypto",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-crypto.git",
+      "state" : {
+        "revision" : "f652300628eb2003449e627f1f394a27ea2af9a8",
+        "version" : "2.2.0"
+      }
+    },
+    {
       "identity" : "swift-log",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-log.git",
@@ -127,57 +91,12 @@
       }
     },
     {
-      "identity" : "swift-metrics",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-metrics.git",
-      "state" : {
-        "revision" : "53be78637ecd165d1ddedc4e20de69b8f43ec3b7",
-        "version" : "2.3.2"
-      }
-    },
-    {
       "identity" : "swift-nio",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-nio.git",
       "state" : {
         "revision" : "bc4c55b9f9584f09eb971d67d956e28d08caa9d0",
         "version" : "2.43.1"
-      }
-    },
-    {
-      "identity" : "swift-nio-extras",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-nio-extras.git",
-      "state" : {
-        "revision" : "6c84d247754ad77487a6f0694273b89b83efd056",
-        "version" : "1.14.0"
-      }
-    },
-    {
-      "identity" : "swift-nio-http2",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-nio-http2.git",
-      "state" : {
-        "revision" : "00576e6f1efa5c46dca2ca3081dc56dd233b402d",
-        "version" : "1.23.0"
-      }
-    },
-    {
-      "identity" : "swift-nio-ssl",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-nio-ssl.git",
-      "state" : {
-        "revision" : "4fb7ead803e38949eb1d6fabb849206a72c580f3",
-        "version" : "2.23.0"
-      }
-    },
-    {
-      "identity" : "swift-nio-transport-services",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-nio-transport-services.git",
-      "state" : {
-        "revision" : "c0d9a144cfaec8d3d596aadde3039286a266c15c",
-        "version" : "1.15.0"
       }
     },
     {
@@ -196,6 +115,15 @@
       "state" : {
         "revision" : "0b77e67c484e532444ceeab60119b8536f8cd648",
         "version" : "0.3.0"
+      }
+    },
+    {
+      "identity" : "tinys3",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/jkmassel/tinys3.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "4ea2aa2664676dc11b950e8966d54dd8cea949ba"
       }
     }
   ],

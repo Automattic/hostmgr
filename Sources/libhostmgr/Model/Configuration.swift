@@ -1,5 +1,4 @@
 import Foundation
-import SotoS3
 import ArgumentParser
 
 public struct Configuration: Codable {
@@ -57,7 +56,7 @@ public struct Configuration: Codable {
 
     /// VM Remote Image Settings
     public var vmImagesBucket: String = ""
-    public var vmImagesRegion: String = SotoS3.Region.useast1.rawValue
+    public var vmImagesRegion: String = "us-east-1"
 
     /// Images that are protected from deletion (useful for local work, or for a fallback image)
     public var protectedImages: [String] = []
@@ -66,7 +65,7 @@ public struct Configuration: Codable {
     /// authorized_keys file sync
     public var authorizedKeysSyncInterval = Defaults.defaultAuthorizedKeysRefreshInterval
     public var authorizedKeysBucket = ""
-    public var authorizedKeysRegion: String = SotoS3.Region.useast1.rawValue
+    public var authorizedKeysRegion: String = "us-east-1"
     public var localAuthorizedKeys = Defaults.defaultLocalAuthorizedKeysFilePath
 
     /// git repo mirroring
@@ -112,7 +111,7 @@ public struct Configuration: Codable {
         )
 
         vmImagesBucket = try values.decode(String.self, forKey: .vmImagesBucket)
-        vmImagesRegion = try values.decode(Region.self, forKey: .vmImagesRegion).rawValue
+        vmImagesRegion = try values.decode(String.self, forKey: .vmImagesRegion)
 
         protectedImages = values.decode(
             forKey: .protectedImages,
@@ -124,7 +123,7 @@ public struct Configuration: Codable {
 
         authorizedKeysSyncInterval = values.decode(forKey: .authorizedKeysSyncInterval, defaultingTo: 3600)
         authorizedKeysBucket = try values.decode(String.self, forKey: .authorizedKeysBucket)
-        authorizedKeysRegion = try values.decode(Region.self, forKey: .authorizedKeysRegion).rawValue
+        authorizedKeysRegion = try values.decode(String.self, forKey: .authorizedKeysRegion)
         localAuthorizedKeys = values.decode(
             forKey: .localAuthorizedKeys,
             defaultingTo: Defaults.defaultLocalAuthorizedKeysFilePath

@@ -16,8 +16,9 @@ public func fetchRemoteImage(name: String) async throws {
 @discardableResult
 public func downloadRemoteImage(
     name: String,
-    remoteRepository: RemoteVMRepository = RemoteVMRepository()
+    remoteRepository: RemoteVMRepository? = nil
 ) async throws -> URL {
+    let remoteRepository = try remoteRepository ?? RemoteVMRepository()
     guard let remoteImage = try await remoteRepository.getImage(named: name) else {
         Console.crash(message: "Unable to find remote image: \(name)", reason: .unableToFindRemoteImage)
     }
@@ -31,7 +32,7 @@ public func downloadRemoteImage(
 @discardableResult
 public func downloadRemoteImage(
     _ remoteImage: RemoteVMImage,
-    remoteRepository: RemoteVMRepository = RemoteVMRepository(),
+    remoteRepository: RemoteVMRepository? = nil,
     storageDirectory: URL = Configuration.shared.vmStorageDirectory
 ) async throws -> URL {
 
@@ -53,6 +54,8 @@ public func downloadRemoteImage(
     }
 
     let progressBar = Console.startImageDownload(remoteImage)
+
+    let remoteRepository = try remoteRepository ?? RemoteVMRepository()
     let destination = try await remoteRepository.download(
         image: remoteImage,
         progressCallback: progressBar.update
@@ -143,8 +146,9 @@ public func deleteLocalImages(
 public func listAvailableRemoteImages(
     sortedBy strategy: RemoteVMRepository.RemoteVMImageSortingStrategy = .newest,
     localRepository: LocalVMRepository = LocalVMRepository(),
-    remoteRepository: RemoteVMRepository = RemoteVMRepository()
+    remoteRepository: RemoteVMRepository? = nil
 ) async throws -> [RemoteVMImage] {
+    let remoteRepository = try remoteRepository ?? RemoteVMRepository()
     let manifest = try await remoteRepository.getManifest()
     let remoteImages = try await remoteRepository.listImages(sortedBy: strategy)
     let localImages = try localRepository.list()
@@ -158,8 +162,9 @@ public func listAvailableRemoteImages(
 ///
 public func listLocalImagesToDelete(
     localRepository: LocalVMRepository = LocalVMRepository(),
-    remoteRepository: RemoteVMRepository = RemoteVMRepository()
+    remoteRepository: RemoteVMRepository? = nil
 ) async throws -> [LocalVMImage] {
+    let remoteRepository = try remoteRepository ?? RemoteVMRepository()
     let manifest = try await remoteRepository.getManifest()
     let localImages = try localRepository.list()
 
