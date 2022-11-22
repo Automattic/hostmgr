@@ -4,7 +4,7 @@ import XCTest
 final class RemoteVMImageTests: XCTestCase {
 
     private let testSubject = RemoteVMImage(
-        imageObject: S3Object(key: "foo/bar.txt", size: 1234),
+        imageObject: S3Object(key: "foo/bar.txt", size: 1234, modifiedAt: Date.distantPast),
         checksumKey: "foo/bar.sha1.txt"
     )
 

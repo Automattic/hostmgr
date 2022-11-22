@@ -12,7 +12,7 @@ let package = Package(
         // Dependencies declare other packages that this package depends on.
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.1.4"),
         .package(url: "https://github.com/soto-project/soto.git", from: "6.0.0"),
-        .package(url: "https://github.com/jkmassel/prlctl.git", from: "1.17.0"),
+        .package(url: "https://github.com/jkmassel/prlctl.git", from: "1.21.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
         .package(url: "https://github.com/jkmassel/kcpassword-swift.git", from: "1.0.0"),
         .package(url: "https://github.com/swiftpackages/DotEnv.git", from: "3.0.0"),
@@ -41,6 +41,7 @@ let package = Package(
                 .product(name: "TSCBasic", package: "swift-tools-support-core"),
                 .product(name: "Alamofire", package: "Alamofire"),
                 .product(name: "ConsoleKit", package: "console-kit"),
+                .product(name: "prlctl", package: "prlctl"),
             ]
         ),
         .testTarget(
