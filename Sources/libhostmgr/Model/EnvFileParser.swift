@@ -7,8 +7,8 @@ struct EnvFile {
         try EnvFileParser(string: String(contentsOf: url)).parse()
     }
 
-    static func from(_ string: String) -> EnvFile {
-        EnvFileParser(string: string).parse()
+    static func from(_ string: String) throws -> EnvFile {
+        try EnvFileParser(string: string).parse()
     }
 
     subscript(key: String) -> String? {
@@ -33,8 +33,8 @@ class EnvFileParser {
         self.string = string
     }
 
-    func parse() -> EnvFile {
-        let pairs = self.string
+    func parse() throws -> EnvFile {
+        let pairs = try self.string
             .components(separatedBy: "\n")
             .compactMap(convertLineToKeyValuePair)
             .reduce(into: [String: String]()) { $0[$1.0] = $1.1 }
@@ -42,8 +42,8 @@ class EnvFileParser {
         return EnvFile(configuration: pairs)
     }
 
-    func convertLineToKeyValuePair(_ line: String) -> (String, String)? {
-        let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
+    func convertLineToKeyValuePair(_ line: String) throws -> (String, String)? {
+        let trimmedLine = line.trimmingWhitespace
         if trimmedLine.isEmpty {
             return nil
         }
@@ -54,14 +54,26 @@ class EnvFileParser {
 
         let startOfValueIndex = line.index(separatorIndex, offsetBy: 1)
 
-        let key = String(line[..<separatorIndex]).trimmingCharacters(in: .whitespacesAndNewlines)
-        var value = String(line[startOfValueIndex...]).trimmingCharacters(in: .whitespacesAndNewlines)
+        let key = String(line[..<separatorIndex]).trimmingWhitespace
+        let value = String(line[startOfValueIndex...]).trimmingWhitespace
 
-        // Trim quotes if needed
-        if value.hasPrefix("\"") && value.hasSuffix("\"") {
-            value = String(value.dropFirst().dropLast())
+        if let quotedValue = try extractQuotedPortionOfValue(value) {
+            return (key, quotedValue)
+        }
+
+        if let indexOfCommentMarker = value.firstIndex(of: "#") {
+            return (key, String(value[..<indexOfCommentMarker]).trimmingWhitespace)
         }
 
         return (key, value)
+    }
+
+    func extractQuotedPortionOfValue(_ value: String) throws -> String? {
+        let expression = try NSRegularExpression(pattern: #"^"(?<string>.*)""#)
+        guard let match = expression.firstMatch(in: value, range: NSMakeRange(0, value.count)) else {
+            return nil
+        }
+
+        return (value as NSString).substring(with: match.range(withName: "string"))
     }
 }

@@ -36,6 +36,10 @@ final class EnvFileParserTests: XCTestCase {
         XCTAssertEqual("\"foo", self.envFile["STRING_WITH_LEADING_QUOTE"])
     }
 
+    func testThatQuotedStringsWithEmbeddedQuoteHasQuotePreserved() throws {
+        XCTAssertEqual("foo\"bar", self.envFile["UNQUOTED_STRING_WITH_EMBEDDED_QUOTE"])
+    }
+
     func testThatQuotedStringsWithTrailingQuoteHasQuotePreserved() throws {
         XCTAssertEqual("foo\"", self.envFile["STRING_WITH_TRAILING_QUOTE"])
     }
@@ -54,6 +58,18 @@ final class EnvFileParserTests: XCTestCase {
 
     func testThatQuotedValueWithEqualSignIsParsedCorrectly() throws {
         XCTAssertEqual("foo=bar", self.envFile["QUOTED_STRING_WITH_EQUAL_SIGN"])
+    }
+
+    func testThatEmbeddedNewlineIsParsedCorrectly() throws {
+        XCTAssertEqual("foo\\nbar", self.envFile["QUOTED_STRING_WITH_NEWLINE"])
+    }
+
+    func testThatQuotedCommentedStringIgnoresComment() throws {
+        XCTAssertEqual("foo", self.envFile["COMMENTED_QUOTED_STRING"])
+    }
+
+    func testThatUnquotedCommentedStringIgnoresComment() throws {
+        XCTAssertEqual("foo", self.envFile["COMMENTED_UNQUOTED_STRING"])
     }
 
     func testThatKeysWithoutEqualSignAreIgnored() throws {
