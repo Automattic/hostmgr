@@ -15,7 +15,6 @@ let package = Package(
         .package(url: "https://github.com/jkmassel/prlctl.git", from: "1.22.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
         .package(url: "https://github.com/jkmassel/kcpassword-swift.git", from: "1.0.0"),
-        .package(url: "https://github.com/swiftpackages/DotEnv.git", from: "3.0.0"),
         .package(url: "https://github.com/apple/swift-tools-support-core", from: "0.2.5"),
         .package(url: "https://github.com/vapor/console-kit.git", .upToNextMajor(from: "4.5.0")),
     ],
@@ -45,11 +44,11 @@ let package = Package(
             name: "libhostmgrTests",
             dependencies: [
                 "libhostmgr",
-                .product(name: "DotEnv", package: "DotEnv"),
             ],
             resources: [
                 .copy("resources/configurations/0.6.0.json"),
                 .copy("resources/configurations/defaults.json"),
+                .copy("resources/dotenv-fixtures.env"),
                 .copy("resources/buildkite-environment-variables-basic-expected-output.txt"),
                 .copy("resources/buildkite-environment-variables-basic.env"),
                 .copy("resources/buildkite-environment-variables-with-code-quotes.env"),
