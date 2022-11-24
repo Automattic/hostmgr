@@ -124,6 +124,34 @@ extension URL {
     }
 }
 
+extension NSRange {
+    public static func forString(_ string: String) -> NSRange {
+        NSRange(string.startIndex..<string.endIndex, in: string)
+    }
+}
+
+extension NSRegularExpression {
+    public var captureGroupNames: [String] {
+        let regex = try! NSRegularExpression(pattern: #"\?{1}\<(\w+)>"#)
+        return regex.matches(in: self.pattern, range: .forString(self.pattern))
+            .compactMap { Range($0.range(at: 1), in: self.pattern) }
+            .map { String(self.pattern[$0]) }
+    }
+
+    public func namedMatches(in string: String) -> [String: String] {
+        var matches = [String: String]()
+        for captureGroupName in self.captureGroupNames {
+            for match in self.matches(in: string, range: NSRange.forString(string)) {
+                let range = match.range(withName: captureGroupName)
+                if let range = Range(range, in: string) {
+                    matches[captureGroupName] = String(string[range])
+                }
+            }
+        }
+        return matches
+    }
+}
+
 public func to(_ callback: @autoclosure () throws -> Void, if conditional: Bool) rethrows {
     guard conditional == true else {
         return

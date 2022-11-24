@@ -16,6 +16,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
         .package(url: "https://github.com/jkmassel/kcpassword-swift.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-tools-support-core", from: "0.2.5"),
+        .package(url: "https://github.com/envoy/Embassy.git", from: "4.1.4"),
         .package(url: "https://github.com/vapor/console-kit.git", .upToNextMajor(from: "4.5.0")),
     ],
     targets: [
@@ -27,6 +28,7 @@ let package = Package(
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "kcpassword", package: "kcpassword-swift"),
+                .product(name: "Embassy", package: "Embassy"),
                 .target(name: "libhostmgr"),
             ]
         ),

@@ -11,13 +11,14 @@ struct Hostmgr: AsyncParsableCommand {
         abstract: "A utility for managing VM hosts",
         version: appVersion,
         subcommands: [
-            VMCommand.self,
+            BenchmarkCommand.self,
+            ConfigCommand.self,
+            ServeCommand.self,
             SyncCommand.self,
             InitCommand.self,
             RunCommand.self,
             SetCommand.self,
-            BenchmarkCommand.self,
-            ConfigCommand.self
+            VMCommand.self,
         ]
     )
 

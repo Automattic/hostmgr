@@ -25,4 +25,20 @@ final class FoundationExtensionTests: XCTestCase {
     func testThatDirectoryExistsReturnsFalseForInvalidPath() throws {
         XCTAssertFalse(FileManager.default.fileExists(at: URL(fileURLWithPath: UUID().uuidString)))
     }
+
+    // MARK: NSRegularExpression Extensions
+    func testThatRegularExpressionNamedMatchesCanBeFound() throws {
+        let names = try NSRegularExpression(pattern: "^/s3/(?<bucketName>[^/]*)/(?<path>.*)").captureGroupNames
+        XCTAssertEqual(["bucketName", "path"], names)
+    }
+
+    func testThatRegularExpressionNamedMatchesReturnEmptyArrayWhenNotFound() throws {
+        let names = try NSRegularExpression(pattern: "^/s3/([^/]*)/(.*)").captureGroupNames
+        XCTAssertTrue(names.isEmpty)
+    }
+
+    func testThatRegularExpressionNamedMatchesCanBeFoundInString() throws {
+        let exp = try NSRegularExpression(pattern: "^/s3/(?<bucketName>[^/]*)")
+        XCTAssertEqual(["bucketName": "my-bucket-name"], exp.namedMatches(in: "/s3/my-bucket-name/"))
+    }
 }

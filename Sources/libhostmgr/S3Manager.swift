@@ -3,6 +3,8 @@ import CryptoKit
 import tinys3
 
 public typealias FileTransferProgressCallback = (Progress) -> Void
+public typealias HeaderCallback = ([String: String]) -> Void
+public typealias DataCallback = (Data) -> Void
 
 public protocol S3ManagerProtocol {
     func listObjects(startingWith prefix: String?) async throws -> [S3Object]
@@ -21,7 +23,7 @@ public struct S3Manager: S3ManagerProtocol {
     private let bucket: String
     private let region: String
 
-    private let s3Client: S3Client
+    public let s3Client: S3Client
 
     public init(bucket: String, region: String, credentials: AWSCredentials, endpoint: S3Endpoint) throws {
         self.bucket = bucket
@@ -49,5 +51,20 @@ public struct S3Manager: S3ManagerProtocol {
     public func download(object: S3Object) async throws -> Data? {
         let tempURL = try await s3Client.download(objectWithKey: object.key, inBucket: self.bucket)
         return try Data(contentsOf: tempURL)
+    }
+
+    public func stream(
+        object: S3Object,
+        headersCallback: @escaping HeaderCallback,
+        dataCallback: @escaping DataCallback,
+        progressCallback: ProgressCallback?
+    ) async throws -> URL {
+        try await s3Client.stream(
+            objectWithKey: object.key,
+            inBucket: self.bucket,
+            progressCallback: progressCallback,
+            headersCallback: headersCallback,
+            dataCallback: dataCallback
+        )
     }
 }
