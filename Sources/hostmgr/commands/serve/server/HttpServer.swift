@@ -37,7 +37,7 @@ struct HttpServer {
         let path = String(describing: pathValue)
 
         guard let route = self.router.route(for: path) else {
-            responseCoordinator.sendServerError()
+            responseCoordinator.sendNotFoundError()
             return
         }
 

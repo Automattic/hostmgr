@@ -79,6 +79,7 @@ struct HttpResponseCoordinator {
 
     func sendNotFoundError() {
         self.sendHeaders(statusCode: 404)
+        self.sendString(HTTPURLResponse.localizedString(forStatusCode: 404))
         self.finalizeResponse()
     }
 
