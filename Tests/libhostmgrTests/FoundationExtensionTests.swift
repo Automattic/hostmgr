@@ -14,12 +14,12 @@ final class FoundationExtensionTests: XCTestCase {
     }
 
     func testThatDirectoryExistsReturnsTrueForValidDirectory() throws {
-        XCTAssertTrue(try FileManager.default.directoryExists(at: FileManager.default.homeDirectoryForCurrentUser))
+        XCTAssertTrue(FileManager.default.directoryExists(at: FileManager.default.homeDirectoryForCurrentUser))
     }
 
     func testThatDirectoryExistsReturnsFalseForValidFile() throws {
         let path = try FileManager.default.createTemporaryFile(containing: "")
-        XCTAssertFalse(try FileManager.default.directoryExists(at: path))
+        XCTAssertFalse(FileManager.default.directoryExists(at: path))
     }
 
     func testThatDirectoryExistsReturnsFalseForInvalidPath() throws {
