@@ -101,25 +101,4 @@ struct HttpStreamingFileResponse: StreamableHttpResponse {
             dataCallback(data)
         }
     }
-
-    struct StreamingFileReader {
-
-        private let fileHandle: FileHandle
-        private let bufferSize: Int
-
-        init(url: URL, bufferSize: Int = 16384) throws {
-            self.fileHandle = try FileHandle(forReadingFrom: url)
-            self.bufferSize = bufferSize
-        }
-
-        func stream() -> Data? {
-            let chunk = self.fileHandle.readData(ofLength: self.bufferSize)
-
-            if chunk.isEmpty {
-                return nil
-            }
-
-            return chunk
-        }
-    }
 }
