@@ -72,6 +72,14 @@ extension FileManager {
         return values.fileSize!
     }
 
+    func deleteFileIfExists(at url: URL) throws {
+        guard fileExists(at: url) else {
+            return
+        }
+
+        try removeItem(at: url)
+    }
+
     /// returns total allocated size of a the directory including its subFolders or not
     func directorySize(of url: URL) throws -> Int {
         guard

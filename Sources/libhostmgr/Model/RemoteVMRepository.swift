@@ -43,7 +43,7 @@ public actor RemoteVMRepository {
         }
     }
 
-    init(s3Manager: S3ManagerProtocol? = nil) throws {
+    private init(s3Manager: S3ManagerProtocol? = nil) throws {
         let bucket: String = Configuration.shared.vmImagesBucket
         let region: String = Configuration.shared.vmImagesRegion
         let credentials = try AWSCredentials.fromUserConfiguration()!
@@ -81,22 +81,27 @@ public actor RemoteVMRepository {
         progressCallback: @escaping FileTransferProgressCallback
     ) async throws -> URL {
 
-        let destination = Configuration.shared.vmStorageDirectory
+        let checksumDestination = Configuration.shared.vmStorageDirectory.appendingPathComponent(image.checksumFileName)
+        let imageDestination = Configuration.shared.vmStorageDirectory.appendingPathComponent(image.fileName)
+
+        // If we have any already-downloaded files, delete them before starting
+        try FileManager.default.deleteFileIfExists(at: checksumDestination)
+        try FileManager.default.deleteFileIfExists(at: imageDestination)
 
         // Download the checksum file first
         _ = try await self.s3Manager.download(
             key: image.checksumObject.key,
-            to: destination.appendingPathComponent(image.checksumFileName),
+            to: checksumDestination,
             progressCallback: nil
         )
 
         try await self.s3Manager.download(
             key: image.imageObject.key,
-            to: destination.appendingPathComponent(image.fileName),
+            to: imageDestination,
             progressCallback: progressCallback
         )
 
-        return destination.appendingPathExtension(image.fileName)
+        return imageDestination
     }
 
     public func listImages(sortedBy strategy: RemoteVMImageSortingStrategy = .name) async throws -> [RemoteVMImage] {

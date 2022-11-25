@@ -28,7 +28,7 @@ struct FileStateRepository: StateRepository {
         let destination = stateStorageDirectory.appendingPathComponent(key)
 
         guard
-            try FileManager.default.directoryExists(at: stateStorageDirectory),
+            FileManager.default.directoryExists(at: stateStorageDirectory),
             FileManager.default.fileExists(at: destination)
         else {
             return nil
@@ -62,7 +62,7 @@ struct FileStateRepository: StateRepository {
     }
 
     public func deleteAll() throws {
-        guard try FileManager.default.directoryExists(at: stateStorageDirectory) else {
+        guard FileManager.default.directoryExists(at: stateStorageDirectory) else {
             return
         }
 
