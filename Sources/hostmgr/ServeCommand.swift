@@ -12,6 +12,7 @@ struct ServeCommand: AsyncParsableCommand {
 
     func run() async throws {
         let router = try HttpRouter([
+            .init(pattern: "^/s3/(?<bucketName>[^/]*)/$", endpoint: ListGitMirrorsEndpoint()),
             .init(pattern: "^/s3/(?<bucketName>[^/]*)/(?<path>.*)/$", endpoint: ListGitMirrorsEndpoint()),
             .init(pattern: "^/s3/(?<bucketName>[^/]*)/(?<path>.*)", endpoint: FetchGitMirrorEndpoint()),
         ])
