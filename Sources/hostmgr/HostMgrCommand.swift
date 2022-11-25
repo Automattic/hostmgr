@@ -5,7 +5,7 @@ import libhostmgr
 @main
 struct Hostmgr: AsyncParsableCommand {
 
-    private static var appVersion = "0.15.13"
+    private static var appVersion = "0.16.0"
 
     static var configuration = CommandConfiguration(
         abstract: "A utility for managing VM hosts",
