@@ -27,6 +27,8 @@ struct FetchGitMirrorEndpoint: HttpEndpoint {
         )
 
         do {
+            try await StatsRepository().recordResourceUsage(for: path, category: .gitMirror)
+
             if FileManager.default.fileExists(at: self.destination(with: path)) {
                 return HttpStreamingFileResponse(responseCode: 200, filePath: self.destination(with: path))
             }

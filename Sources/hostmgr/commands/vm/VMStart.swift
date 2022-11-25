@@ -17,5 +17,6 @@ struct VMStartCommand: AsyncParsableCommand {
 
     func run() async throws {
         try await libhostmgr.startVM(name: self.name)
+        try await StatsRepository().recordResourceUsage(for: self.name, category: .virtualMachine)
     }
 }
