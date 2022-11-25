@@ -40,10 +40,10 @@ extension ProcessInfo {
 
 extension FileManager {
     public func fileExists(at url: URL) -> Bool {
-        fileExists(atPath: url.path)
+        fileExists(atPath: url.path) && !directoryExists(at: url)
     }
 
-    public func directoryExists(at url: URL) throws -> Bool {
+    public func directoryExists(at url: URL) -> Bool {
         var isDir: ObjCBool = true
         return fileExists(atPath: url.path, isDirectory: &isDir) && isDir.boolValue
     }
