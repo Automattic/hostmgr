@@ -277,7 +277,7 @@ public func stopRunningVM(
 
 func waitForVMStartup(_ parallelsVirtualMachine: StoppedVM) throws {
     repeat {
-        usleep(100)
+        usleep(100_000)
     } while try Parallels()
         .lookupRunningVMs()
         .filter { $0.uuid == parallelsVirtualMachine.uuid && $0.hasIpV4Address }
