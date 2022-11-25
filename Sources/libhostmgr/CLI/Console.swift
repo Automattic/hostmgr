@@ -99,16 +99,6 @@ public class ProgressBar {
     }
 
     public func update(_ progress: Progress) {
-        let progress = FileTransferProgress(
-            completed: Int(progress.completedUnitCount),
-            total: Int(progress.totalUnitCount),
-            startDate: startDate
-        )
-
-        self.update(progress)
-    }
-
-    public func update(_ progress: FileTransferProgress) {
 
         // Only update progress once per second
         let now = Int(Date().timeIntervalSince1970)
@@ -116,9 +106,21 @@ public class ProgressBar {
             return
         }
 
-        let rate = Format.fileBytes(progress.dataRate)
-        let remaining = Format.time(progress.estimatedTimeRemaining)
-        let percentage = Format.percentage(progress.fractionComplete)
+        let percentage = Format.percentage(progress.fractionCompleted)
+
+        guard let throughput = progress.throughput, let estimatedTimeRemaining = progress.estimatedTimeRemaining else {
+            // Erase the old progress line and overwrite it
+            terminal.clear(lines: 1)
+            terminal.print("\(percentage)")
+
+            // Make sure we don't update again this second
+            self.lastUpdateAt = now
+
+            return
+        }
+
+        let rate = Format.fileBytes(throughput)
+        let remaining = Format.time(estimatedTimeRemaining)
 
         // Erase the old progress line and overwrite it
         terminal.clear(lines: 1)

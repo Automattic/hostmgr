@@ -39,6 +39,10 @@ public struct Format {
         return formatter.localizedString(fromTimeInterval: interval)
     }
 
+    public static func percentage(_ number: Double) -> String {
+        return percentage(NSDecimalNumber(floatLiteral: number))
+    }
+
     public static func percentage(_ number: Decimal) -> String {
         return percentage(NSDecimalNumber(decimal: number))
     }

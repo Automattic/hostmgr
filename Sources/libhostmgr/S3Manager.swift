@@ -44,7 +44,11 @@ public struct S3Manager: S3ManagerProtocol {
         to destination: URL,
         progressCallback: FileTransferProgressCallback?
     ) async throws {
-        let tempUrl = try await s3Client.download(objectWithKey: key, inBucket: self.bucket)
+        let tempUrl = try await s3Client.download(
+            objectWithKey: key,
+            inBucket: self.bucket,
+            progressCallback: progressCallback
+        )
         try FileManager.default.moveItem(at: tempUrl, to: destination)
     }
 
