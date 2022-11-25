@@ -1,7 +1,7 @@
 import Foundation
 import tinys3
 
-public struct RemoteVMRepository {
+public actor RemoteVMRepository {
 
     public enum RemoteVMImageSortingStrategy {
         case name
@@ -31,7 +31,19 @@ public struct RemoteVMRepository {
 
     private let s3Manager: S3ManagerProtocol
 
-    public init(s3Manager: S3ManagerProtocol? = nil) throws {
+    private static var _shared: RemoteVMRepository!
+
+    public static var shared: RemoteVMRepository {
+        get throws {
+            if _shared == nil {
+                _shared = try RemoteVMRepository()
+            }
+
+            return _shared
+        }
+    }
+
+    init(s3Manager: S3ManagerProtocol? = nil) throws {
         let bucket: String = Configuration.shared.vmImagesBucket
         let region: String = Configuration.shared.vmImagesRegion
         let credentials = try AWSCredentials.fromUserConfiguration()!
@@ -67,7 +79,7 @@ public struct RemoteVMRepository {
     public func download(
         image: RemoteVMImage,
         progressCallback: @escaping FileTransferProgressCallback
-    ) async throws -> URL{
+    ) async throws -> URL {
 
         let destination = Configuration.shared.vmStorageDirectory
 

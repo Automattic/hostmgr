@@ -2,7 +2,7 @@ import Foundation
 import ArgumentParser
 import libhostmgr
 
-struct VMDetailsCommand: ParsableCommand {
+struct VMDetailsCommand: AsyncParsableCommand {
 
     static let configuration = CommandConfiguration(
         commandName: "details",
@@ -17,8 +17,8 @@ struct VMDetailsCommand: ParsableCommand {
     @Flag(help: "Show the VM's IPv4 address")
     var ipv4: Bool = false
 
-    func run() throws {
-        let parallelsVM = try libhostmgr.lookupParallelsVMOrExit(withIdentifier: self.name)
+    func run() async throws {
+        let parallelsVM = try await libhostmgr.lookupParallelsVMOrExit(withIdentifier: self.name)
 
         var data = [
             ["Name:", parallelsVM.name],

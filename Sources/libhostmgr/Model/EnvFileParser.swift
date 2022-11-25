@@ -18,7 +18,7 @@ struct EnvFile {
     /// Apply the values in the `.env` file to the environment
     func apply() {
         var environmentCopy = ProcessInfo.processInfo.environment
-        for (key,value) in self.configuration {
+        for (key, value) in self.configuration {
             environmentCopy[key] = value
         }
         Process().environment = environmentCopy

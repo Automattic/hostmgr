@@ -29,11 +29,11 @@ struct VMListCommand: AsyncParsableCommand {
         var data = Console.Table()
 
         if self.location.includesLocal {
-            data.append(contentsOf: try LocalVMRepository().list().map(self.format))
+            data.append(contentsOf: try await LocalVMRepository.shared.list().map(self.format))
         }
 
         if self.location.includesRemote {
-            data.append(contentsOf: try await RemoteVMRepository().listImages().map(self.format))
+            data.append(contentsOf: try await RemoteVMRepository.shared.listImages().map(self.format))
         }
 
         Console.printTable(

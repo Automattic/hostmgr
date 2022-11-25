@@ -18,7 +18,7 @@ public actor StatsRepository {
                 self.version,
                 self.name,
                 self.category.rawValue,
-                ISO8601DateFormatter().string(from: self.date),
+                ISO8601DateFormatter().string(from: self.date)
             ].joined(separator: "+").padding(toLength: 127, withPad: " ", startingAt: 0) + "\n"
         }
 
@@ -55,7 +55,7 @@ public actor StatsRepository {
 
     private let usageFile: URL
 
-    public init(usageFile: URL = URL(fileURLWithPath:"/usr/local/var/hostmgr/usage")) {
+    public init(usageFile: URL = URL(fileURLWithPath: "/usr/local/var/hostmgr/usage")) {
         self.usageFile = usageFile
     }
 

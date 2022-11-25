@@ -6,7 +6,7 @@ struct HttpServer {
     private let loop: SelectorEventLoop
     private let router: HttpRouter
 
-    init(router: HttpRouter) throws{
+    init(router: HttpRouter) throws {
         self.loop = try SelectorEventLoop(selector: try KqueueSelector())
         self.router = router
     }
@@ -22,7 +22,11 @@ struct HttpServer {
         startResponse: @escaping HttpResponseCoordinator.StartResponseCallback,
         sendBody: @escaping HttpResponseCoordinator.SendBodyDataCallback
     ) {
-        let loop = env["embassy.event_loop"] as! EventLoop
+        guard let loop = env["embassy.event_loop"] as? EventLoop else {
+            print("Unable to initialize server event loop")
+            abort()
+        }
+
         let responseCoordinator = HttpResponseCoordinator(start: startResponse, send: sendBody, eventLoop: loop)
 
         guard let pathValue = env["PATH_INFO"] else {

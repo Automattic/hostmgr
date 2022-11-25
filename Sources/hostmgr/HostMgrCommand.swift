@@ -18,7 +18,7 @@ struct Hostmgr: AsyncParsableCommand {
             InitCommand.self,
             RunCommand.self,
             SetCommand.self,
-            VMCommand.self,
+            VMCommand.self
         ]
     )
 

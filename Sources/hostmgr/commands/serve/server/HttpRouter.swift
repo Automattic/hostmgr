@@ -17,7 +17,7 @@ struct HttpRoute {
 
     // Does this route match the given `path`?
     func matches(path: String) -> Bool {
-        self.pattern.numberOfMatches(in: path, range: NSMakeRange(0, path.count)) == 1
+        self.pattern.numberOfMatches(in: path, range: NSRange(location: 0, length: path.count)) == 1
     }
 
     // Extract any named parameters from the path
@@ -37,7 +37,7 @@ struct HttpRouter {
         self.routes = try literalRoutes.map(HttpRoute.init)
     }
 
-    func route(for path:  String) -> HttpRoute? {
+    func route(for path: String) -> HttpRoute? {
        return routes.first { $0.matches(path: path) }
     }
 }

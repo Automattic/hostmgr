@@ -10,7 +10,7 @@ public struct LocalVMImage: Equatable, FilterableByBasename {
     let path: URL
 
     private static let validVMExtensions = [
-        "pvmp",  // Packaged VM
+        "pvmp", // Packaged VM
         "pvm"   // VM Image
     ]
 

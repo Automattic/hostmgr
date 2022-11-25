@@ -20,27 +20,24 @@ public enum LocalVMImageSortingStrategy {
     }
 }
 
-public protocol LocalVMRepositoryProtocol {
-    func list(sortedBy strategy: LocalVMImageSortingStrategy) throws -> [LocalVMImage]
-}
+public actor LocalVMRepository {
 
-public struct LocalVMRepository: LocalVMRepositoryProtocol {
+    let imageDirectory: URL
+    let fileManager: FileManager = FileManager()
 
-    private let imageDirectory: URL
-    private let fileManager: FileManager
+    public static let shared = LocalVMRepository()
 
-    public init(imageDirectory: URL = Configuration.shared.vmStorageDirectory, fileManager: FileManager = .default) {
+    init(imageDirectory: URL = Configuration.shared.vmStorageDirectory) {
         self.imageDirectory = imageDirectory
-        self.fileManager = fileManager
     }
 
     /// A list of VM images present on disk
     public func list(sortedBy strategy: LocalVMImageSortingStrategy = .name) throws -> [LocalVMImage] {
-        guard try fileManager.directoryExists(at: imageDirectory) else {
+        guard self.fileManager.directoryExists(at: imageDirectory) else {
             return []
         }
 
-        return try fileManager
+        return try self.fileManager
             .contentsOfDirectory(atPath: imageDirectory.path)
             .map { URL(fileURLWithPath: $0, relativeTo: self.imageDirectory) }
             .compactMap(LocalVMImage.init)

@@ -10,10 +10,10 @@ struct VMCleanCommand: AsyncParsableCommand {
     )
 
     func run() async throws {
-        try libhostmgr.resetVMStorage()
+        try await libhostmgr.resetVMStorage()
 
         // Clean up no-longer-needed local images
         let deleteList = try await libhostmgr.listLocalImagesToDelete()
-        try libhostmgr.deleteLocalImages(list: deleteList)
+        try await libhostmgr.deleteLocalImages(list: deleteList)
     }
 }

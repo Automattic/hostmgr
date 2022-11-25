@@ -16,7 +16,7 @@ struct VMFetchCommand: AsyncParsableCommand {
 
     func run() async throws {
 
-        if let localVM = try LocalVMRepository().lookupVM(withName: name) {
+        if let localVM = try await LocalVMRepository.shared.lookupVM(withName: name) {
             if localVM.state == .packaged {
                 try await libhostmgr.unpackVM(name: localVM.basename)
                 return

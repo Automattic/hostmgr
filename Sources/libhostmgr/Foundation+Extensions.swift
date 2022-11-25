@@ -132,10 +132,15 @@ extension NSRange {
 
 extension NSRegularExpression {
     public var captureGroupNames: [String] {
-        let regex = try! NSRegularExpression(pattern: #"\?{1}\<(\w+)>"#)
-        return regex.matches(in: self.pattern, range: .forString(self.pattern))
-            .compactMap { Range($0.range(at: 1), in: self.pattern) }
-            .map { String(self.pattern[$0]) }
+        do {
+            let regex = try NSRegularExpression(pattern: #"\?{1}\<(\w+)>"#)
+
+            return regex.matches(in: self.pattern, range: .forString(self.pattern))
+                .compactMap { Range($0.range(at: 1), in: self.pattern) }
+                .map { String(self.pattern[$0]) }
+        } catch { // We can only do this because it's a hard-coded regex – we know it'll compile
+            return []
+        }
     }
 
     public func namedMatches(in string: String) -> [String: String] {
