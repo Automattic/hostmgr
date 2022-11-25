@@ -165,7 +165,9 @@ public func listAvailableRemoteImages(
 
 /// Calculates a list of local images that should be deleted because they're not part of the remote manifest
 ///
-public func listLocalImagesToDelete(localRepository: LocalVMRepository = LocalVMRepository.shared) async throws -> [LocalVMImage] {
+public func listLocalImagesToDelete(
+    localRepository: LocalVMRepository = LocalVMRepository.shared
+) async throws -> [LocalVMImage] {
     let manifest = try await RemoteVMRepository.shared.getManifest()
     let localImages = try await localRepository.list()
 

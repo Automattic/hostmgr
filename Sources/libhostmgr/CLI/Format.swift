@@ -40,7 +40,7 @@ public struct Format {
     }
 
     public static func percentage(_ number: Double) -> String {
-        return percentage(NSDecimalNumber(floatLiteral: number))
+        return percentage(NSDecimalNumber(value: number))
     }
 
     public static func percentage(_ number: Decimal) -> String {
