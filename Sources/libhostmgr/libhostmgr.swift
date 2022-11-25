@@ -224,6 +224,7 @@ public func startVM(name: String) async throws {
             try waitForVMStartup(parallelsVM)
         } catch {
             continuation.resume(with: .failure(error))
+            return
         }
 
         let elapsed = Date().timeIntervalSince(startDate)
