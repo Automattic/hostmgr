@@ -16,12 +16,8 @@ public func fetchRemoteImage(name: String) async throws {
 ///
 /// Does not import or register the image – this method only handles download.
 @discardableResult
-public func downloadRemoteImage(
-    name: String,
-    remoteRepository: RemoteVMRepository? = nil
-) async throws -> URL {
-    let remoteRepository = try remoteRepository ?? RemoteVMRepository()
-    guard let remoteImage = try await remoteRepository.getImage(named: name) else {
+public func downloadRemoteImage(name: String) async throws -> URL {
+    guard let remoteImage = try await RemoteVMRepository.shared.getImage(named: name) else {
         Console.crash(message: "Unable to find remote image: \(name)", reason: .unableToFindRemoteImage)
     }
 
@@ -34,7 +30,6 @@ public func downloadRemoteImage(
 @discardableResult
 public func downloadRemoteImage(
     _ remoteImage: RemoteVMImage,
-    remoteRepository: RemoteVMRepository? = nil,
     storageDirectory: URL = Configuration.shared.vmStorageDirectory
 ) async throws -> URL {
 
@@ -57,8 +52,7 @@ public func downloadRemoteImage(
 
     let progressBar = Console.startImageDownload(remoteImage)
 
-    let remoteRepository = try remoteRepository ?? RemoteVMRepository()
-    let destination = try await remoteRepository.download(
+    let destination = try await RemoteVMRepository.shared.download(
         image: remoteImage,
         progressCallback: progressBar.update
     )
@@ -76,7 +70,7 @@ public func unpackVM(name: String) async throws {
         Console.crash(message: "Local VM \(name) could not be found", reason: .fileNotFound)
     }
 
-    guard let importedVirtualMachine = try await Parallels().importVM(at: localVM.path) else {
+    guard let importedVirtualMachine = try await parallels.importVM(at: localVM.path) else {
         Console.crash(message: "Unable to import VM at: \(localVM.path)", reason: .unableToImportVM)
     }
 
@@ -86,13 +80,17 @@ public func unpackVM(name: String) async throws {
 
     Console.info("Unpacking \(package.name) – this will take a few minutes")
     do {
-        let unpackedVM = try package.unpack()
+        try await parallels.unpackVM(withHandle: name)
+
+        guard let unpackedVM = try await parallels.lookupVM(named: package.uuid) else {
+            Console.crash(message: "Unable to find VM named: \(name)", reason: .unableToImportVM)
+        }
 
         // If we simply rename the `.pvmp` file, the underlying `pvm` file may retain its original name. We should
         // update the file on disk to reference this name
         if name != unpackedVM.name {
             Console.info("Fixing Parallels VM Label")
-            try unpackedVM.rename(to: name)
+            try await parallels.renameVM(withHandle: unpackedVM.uuid, to: name)
             Console.success("Parallels VM Label Fixed")
         }
 
@@ -154,12 +152,10 @@ public func deleteLocalImages(
 /// be downloaded (according to the remote manifest)
 public func listAvailableRemoteImages(
     sortedBy strategy: RemoteVMRepository.RemoteVMImageSortingStrategy = .newest,
-    localRepository: LocalVMRepository = LocalVMRepository.shared,
-    remoteRepository: RemoteVMRepository? = nil
+    localRepository: LocalVMRepository = LocalVMRepository.shared
 ) async throws -> [RemoteVMImage] {
-    let remoteRepository = try remoteRepository ?? RemoteVMRepository()
-    let manifest = try await remoteRepository.getManifest()
-    let remoteImages = try await remoteRepository.listImages(sortedBy: strategy)
+    let manifest = try await RemoteVMRepository.shared.getManifest()
+    let remoteImages = try await RemoteVMRepository.shared.listImages(sortedBy: strategy)
     let localImages = try await localRepository.list()
 
     return remoteImages
@@ -169,12 +165,8 @@ public func listAvailableRemoteImages(
 
 /// Calculates a list of local images that should be deleted because they're not part of the remote manifest
 ///
-public func listLocalImagesToDelete(
-    localRepository: LocalVMRepository = LocalVMRepository.shared,
-    remoteRepository: RemoteVMRepository? = nil
-) async throws -> [LocalVMImage] {
-    let remoteRepository = try remoteRepository ?? RemoteVMRepository()
-    let manifest = try await remoteRepository.getManifest()
+public func listLocalImagesToDelete(localRepository: LocalVMRepository = LocalVMRepository.shared) async throws -> [LocalVMImage] {
+    let manifest = try await RemoteVMRepository.shared.getManifest()
     let localImages = try await localRepository.list()
 
     return localImages
