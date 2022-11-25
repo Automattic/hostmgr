@@ -150,6 +150,14 @@ extension NSRegularExpression {
         }
         return matches
     }
+
+    func firstMatch(named name: String, in string: String) -> String? {
+        guard let match = self.matches(in: string, range: .forString(string)).first else {
+            return nil
+        }
+
+        return (string as NSString).substring(with: match.range(withName: name))
+    }
 }
 
 public func to(_ callback: @autoclosure () throws -> Void, if conditional: Bool) rethrows {

@@ -75,4 +75,8 @@ final class EnvFileParserTests: XCTestCase {
     func testThatKeysWithoutEqualSignAreIgnored() throws {
         XCTAssertNil(self.envFile["IGNORED_STRING_WITH_NO_EQUAL_SIGN"])
     }
+
+    func testThatQuotedStringWithEmojiIsParsedCorrectly() throws {
+        XCTAssertEqual("🛠 foo", self.envFile["QUOTED_STRING_WITH_EMOJI"])
+    }
 }
