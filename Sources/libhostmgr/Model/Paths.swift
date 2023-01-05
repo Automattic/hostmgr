@@ -4,8 +4,8 @@ public struct Paths {
 
     private static var homebrewRoot: URL {
         switch ProcessInfo.processInfo.processorArchitecture {
-        case .arm64: return URL(fileURLWithPath: "/opt/homebrew/", isDirectory: true)
-        case .x64: return URL(fileURLWithPath: "/usr/local/", isDirectory: true)
+        case .arm64: return URL(fileURLWithPath: "/opt/homebrew", isDirectory: true)
+        case .x64: return URL(fileURLWithPath: "/usr/local", isDirectory: true)
         }
     }
 

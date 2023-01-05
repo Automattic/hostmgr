@@ -52,7 +52,7 @@ final class PathsTests: XCTestCase {
             return
         }
 
-        XCTAssertEqual(URL(fileURLWithPath: sample), path, file: file, line: line)
+        XCTAssertEqual(sample, path.path, file: file, line: line)
     }
 
 }
