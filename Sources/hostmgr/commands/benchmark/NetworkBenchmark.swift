@@ -1,6 +1,5 @@
 import Foundation
 import ArgumentParser
-import prlctl
 import Logging
 import libhostmgr
 
@@ -13,30 +12,19 @@ struct NetworkBenchmark: AsyncParsableCommand {
         abstract: "Test Network Speed"
     )
 
-    private static let limiter = Limiter(policy: .throttle, operationsPerSecond: 1)
-
     func run() async throws {
         let remoteImages = try await RemoteVMRepository().listImages(sortedBy: .size)
 
-        guard let file = remoteImages.last else {
-            throw CleanExit.message("Unable to find a remote image to use as a network benchmark")
+        guard !remoteImages.isEmpty else {
+            Console.error("Unable to find a remote image to use as a network benchmark")
+            throw ExitCode(rawValue: -1)
         }
 
-        let manager = S3Manager(
-            bucket: Configuration.shared.vmImagesBucket,
-            region: Configuration.shared.vmImagesRegion
-        )
+        Console.heading("Starting Benchmark")
 
-        let progressBar = Console.startFileDownload(file.imageObject)
-
-        try await manager.download(
-            object: file.imageObject,
-            to: FileManager.default.temporaryFilePath(),
-            progressCallback: progressBar.update
-        )
-    }
-
-    private func imageSizeSort(_ lhs: RemoteVMImage, _ rhs: RemoteVMImage) -> Bool {
-        lhs.imageObject.size < rhs.imageObject.size
+        for remoteImage in remoteImages {
+            let path = try await libhostmgr.downloadRemoteImage(remoteImage)
+            try FileManager.default.removeItem(at: path)
+        }
     }
 }
