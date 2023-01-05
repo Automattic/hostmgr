@@ -11,14 +11,6 @@ final class ConfigurationTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            Configuration().localImageStorageDirectory,
-            Configuration.Defaults.defaultLocalImageStorageDirectory
-        )
-        XCTAssertEqual(
-            Configuration().localGitMirrorStorageDirectory,
-            Configuration.Defaults.defaultLocalGitMirrorStorageDirectory
-        )
-        XCTAssertEqual(
             Configuration().gitMirrorPort,
             Configuration.Defaults.defaultGitMirrorPort
         )
@@ -29,11 +21,6 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertEqual(
             Configuration().awsConfigurationMethod,
             Configuration.Defaults.defaultAWSConfigurationMethod
-        )
-
-        XCTAssertEqual(
-            Configuration().localAuthorizedKeys,
-            Configuration.Defaults.defaultLocalAuthorizedKeysFilePath
         )
     }
 
@@ -47,35 +34,17 @@ final class ConfigurationTests: XCTestCase {
         let data = getJSONDataForResource(named: "0.6.0")
         let configuration = try Configuration.from(data: data)
         XCTAssertEqual("authorized-keys-bucket", configuration.authorizedKeysBucket)
-        XCTAssertEqual("authorized-keys-path", configuration.localAuthorizedKeys)
         XCTAssertEqual(123456, configuration.authorizedKeysSyncInterval)
         XCTAssertEqual("us-east-2", configuration.authorizedKeysRegion)
 
         XCTAssertEqual("vm-images-bucket", configuration.vmImagesBucket)
         XCTAssertEqual("us-east-2", configuration.vmImagesRegion)
-        XCTAssertEqual("image-storage-dir", configuration.localImageStorageDirectory)
 
-        XCTAssertEqual("git-mirror-storage-dir", configuration.localGitMirrorStorageDirectory)
         XCTAssertEqual("git-mirror-bucket", configuration.gitMirrorBucket)
         XCTAssertEqual(123456, configuration.gitMirrorPort)
 
         XCTAssertEqual(["foo-bar-baz"], configuration.protectedImages)
         XCTAssertEqual([.vmImages], configuration.syncTasks)
-    }
-
-    func testThatConfigurationWithoutLocalImageStorageDirectoryUsesDefault() throws {
-        let data = getJSONDataForResource(named: "defaults")
-        let configuration = try Configuration.from(data: data)
-        XCTAssertEqual(Configuration.Defaults.defaultLocalImageStorageDirectory, configuration.vmStorageDirectory.path)
-    }
-
-    func testThatConfigurationWithoutLocalGitMirrorStorageDirectoryUsesDefault() throws {
-        let data = getJSONDataForResource(named: "defaults")
-        let configuration = try Configuration.from(data: data)
-        XCTAssertEqual(
-            Configuration.Defaults.defaultLocalGitMirrorStorageDirectory,
-            configuration.gitMirrorDirectory.path
-        )
     }
 
     func testThatConfigurationWithoutLocalGitMirrorPortUsesDefault() throws {

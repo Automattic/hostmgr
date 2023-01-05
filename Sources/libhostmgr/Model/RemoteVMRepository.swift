@@ -60,21 +60,20 @@ public struct RemoteVMRepository {
     @discardableResult
     public func download(
         image: RemoteVMImage,
-        progressCallback: @escaping FileTransferProgressCallback
+        progressCallback: @escaping FileTransferProgressCallback,
+        destinationDirectory: URL
     ) async throws -> URL {
-
-        let destination = Configuration.shared.vmStorageDirectory
 
         // Download the checksum file first
         _ = try await self.s3Manager.download(
             object: image.checksumObject,
-            to: destination.appendingPathComponent(image.checksumFileName),
+            to: destinationDirectory.appendingPathComponent(image.checksumFileName),
             progressCallback: nil
         )
 
         return try await self.s3Manager.download(
             object: image.imageObject,
-            to: destination.appendingPathComponent(image.fileName),
+            to: destinationDirectory.appendingPathComponent(image.fileName),
             progressCallback: progressCallback
         )
     }
