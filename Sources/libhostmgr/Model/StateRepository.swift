@@ -1,26 +1,17 @@
 import Foundation
 
-public protocol StateStorageManager {
+public protocol StateRepository {
     func read<T: Codable>(fromKey key: String) throws -> T?
     func write<T: Codable>(_ object: T, toKey key: String) throws
     func delete(key: String) throws
     func deleteAll() throws
 }
 
-struct FileStateStorage: StateStorageManager {
+struct FileStateRepository: StateRepository {
 
     let stateStorageDirectory: URL
 
-    public init() {
-        switch ProcessInfo.processInfo.processorArchitecture {
-        case .arm64:
-            self.init(stateStorageDirectory: URL(fileURLWithPath: "/opt/homebrew/var/hostmgr/state"))
-        case .x64:
-            self.init(stateStorageDirectory: URL(fileURLWithPath: "/usr/local/var/hostmgr/state"))
-        }
-    }
-
-    init(stateStorageDirectory: URL) {
+    init(stateStorageDirectory: URL = Paths.stateRoot) {
         self.stateStorageDirectory = stateStorageDirectory
     }
 
@@ -70,7 +61,7 @@ struct FileStateStorage: StateStorageManager {
     }
 }
 
-class InMemoryStorageManager: StateStorageManager {
+class InMemoryStateRepository: StateRepository {
     private var internalStorage = [String: Data]()
 
     func read<T>(fromKey key: String) throws -> T? where T: Decodable, T: Encodable {

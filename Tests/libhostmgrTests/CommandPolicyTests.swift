@@ -8,7 +8,7 @@ struct TestCommand: FollowsCommandPolicies {
 
 class CommandPolicyTests: XCTestCase {
 
-    private let stateStorageManager = InMemoryStorageManager()
+    private let stateRepository = InMemoryStateRepository()
     private let testKey = "foo"
 
     override func setUpWithError() throws {
@@ -16,7 +16,7 @@ class CommandPolicyTests: XCTestCase {
     }
 
     override func tearDownWithError() throws {
-        try stateStorageManager.deleteAll()
+        try stateRepository.deleteAll()
     }
 
     // MARK: Evaluation
@@ -46,17 +46,17 @@ class CommandPolicyTests: XCTestCase {
 
     // MARK: Schedule Tests
     func testThatScheduleDoesNotThrowForFirstRun() throws {
-        try CommandPolicy.scheduled(every: 30).evaluate(forKey: #function, stateStorageManager: stateStorageManager)
+        try CommandPolicy.scheduled(every: 30).evaluate(forKey: #function, stateRepository: stateRepository)
     }
 
     func testThatScheduleDoesNotThrowWhenTimeToRun() throws {
         try setLastRun(to: Date().addingTimeInterval(-45), forKey: #function)
-        try CommandPolicy.scheduled(every: 30).evaluate(forKey: #function, stateStorageManager: stateStorageManager)
+        try CommandPolicy.scheduled(every: 30).evaluate(forKey: #function, stateRepository: stateRepository)
     }
 
     func testThatScheduleDoesNotThrowForDistantPast() throws {
         try setLastRun(to: .distantPast, forKey: #function)
-        try CommandPolicy.scheduled(every: 30).evaluate(forKey: #function, stateStorageManager: stateStorageManager)
+        try CommandPolicy.scheduled(every: 30).evaluate(forKey: #function, stateRepository: stateRepository)
     }
 
     func testThatScheduleThrowsForNotTimeYet() throws {
@@ -66,7 +66,7 @@ class CommandPolicyTests: XCTestCase {
 
         XCTAssertThrowsError(try policy.evaluate(
             forKey: #function,
-            stateStorageManager: stateStorageManager)
+            stateRepository: stateRepository)
         ) { error in
             XCTAssertTrue(error is CommandPolicyViolation)
         }
@@ -74,12 +74,12 @@ class CommandPolicyTests: XCTestCase {
 
     // MARK: Serial Execution Tests
     func testThatSerialExecutionDoesNotThrowForMissingLock() throws {
-        try CommandPolicy.serialExecution.evaluate(forKey: #function, stateStorageManager: stateStorageManager)
+        try CommandPolicy.serialExecution.evaluate(forKey: #function, stateRepository: stateRepository)
     }
 
     func testThatSerialExecutionDoesNotThrowForExpiredLock() throws {
         try setLastHeartbeat(to: Date().addingTimeInterval(-61), forKey: #function)
-        try CommandPolicy.serialExecution.evaluate(forKey: #function, stateStorageManager: stateStorageManager)
+        try CommandPolicy.serialExecution.evaluate(forKey: #function, stateRepository: stateRepository)
     }
 
     func testThatSerialExecutionThrowsForActiveLock() throws {
@@ -88,7 +88,7 @@ class CommandPolicyTests: XCTestCase {
         let policy = CommandPolicy.serialExecution
         XCTAssertThrowsError(try policy.evaluate(
             forKey: #function,
-            stateStorageManager: stateStorageManager)
+            stateRepository: stateRepository)
         ) { error in
             XCTAssertTrue(error is CommandPolicyViolation)
         }
@@ -96,10 +96,10 @@ class CommandPolicyTests: XCTestCase {
 
     // MARK: Helpers
     private func setLastRun(to date: Date, forKey key: String) throws {
-        try stateStorageManager.write(CommandPolicy.ScheduledCommandState(lastRunAt: date), toKey: key)
+        try stateRepository.write(CommandPolicy.ScheduledCommandState(lastRunAt: date), toKey: key)
     }
 
     private func setLastHeartbeat(to date: Date, forKey key: String) throws {
-        try stateStorageManager.write(CommandPolicy.SerialExecutionState(heartbeat: date), toKey: key)
+        try stateRepository.write(CommandPolicy.SerialExecutionState(heartbeat: date), toKey: key)
     }
 }

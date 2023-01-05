@@ -1,44 +1,44 @@
 import XCTest
 @testable import libhostmgr
 
-class FileStateStorageManagerTests: XCTestCase {
+class FileStateRepositoryTests: XCTestCase {
 
-    private let stateStorageManager = FileStateStorage(
+    private let stateRepository = FileStateRepository(
         stateStorageDirectory: FileManager.default.temporaryDirectory
             .appendingPathComponent("hostmgr", isDirectory: true)
-            .appendingPathComponent("FileStateStorageManagerTests", isDirectory: true)
+            .appendingPathComponent("FileStateRepositoryTests", isDirectory: true)
     )
 
     override func tearDownWithError() throws {
-        try stateStorageManager.deleteAll()
+        try stateRepository.deleteAll()
     }
 
     func testThatDirectoryStructureIsBuiltForStateOnSave() throws {
-        try stateStorageManager.write("Hello", toKey: #function)
+        try stateRepository.write("Hello", toKey: #function)
 
-        let destination = stateStorageManager.stateStorageDirectory.appendingPathComponent(#function)
+        let destination = stateRepository.stateStorageDirectory.appendingPathComponent(#function)
         XCTAssertTrue(FileManager.default.fileExists(at: destination))
     }
 
     func testThatFileIsRemovedForStateOnRemove() throws {
-        try stateStorageManager.write("Hello", toKey: #function)
+        try stateRepository.write("Hello", toKey: #function)
 
-        let destination = stateStorageManager.stateStorageDirectory.appendingPathComponent(#function)
-        try stateStorageManager.delete(key: #function)
+        let destination = stateRepository.stateStorageDirectory.appendingPathComponent(#function)
+        try stateRepository.delete(key: #function)
         XCTAssertFalse(FileManager.default.fileExists(at: destination))
     }
 
     func testThatKeyCanBeRead() throws {
         let expectedString = UUID().uuidString
-        try stateStorageManager.write(expectedString, toKey: #function)
-        XCTAssertEqual(expectedString, try stateStorageManager.read(fromKey: #function))
+        try stateRepository.write(expectedString, toKey: #function)
+        XCTAssertEqual(expectedString, try stateRepository.read(fromKey: #function))
     }
 
     func testThatKeyCanBeUpdated() throws {
-        try stateStorageManager.write("Initial Value", toKey: #function)
+        try stateRepository.write("Initial Value", toKey: #function)
 
         let expectedString = UUID().uuidString
-        try stateStorageManager.write(expectedString, toKey: #function)
-        XCTAssertEqual(expectedString, try stateStorageManager.read(fromKey: #function))
+        try stateRepository.write(expectedString, toKey: #function)
+        XCTAssertEqual(expectedString, try stateRepository.read(fromKey: #function))
     }
 }
