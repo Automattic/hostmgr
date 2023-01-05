@@ -27,7 +27,6 @@ let package = Package(
             name: "hostmgr",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "prlctl", package: "prlctl"),
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "kcpassword", package: "kcpassword-swift"),
                 .target(name: "libhostmgr"),
