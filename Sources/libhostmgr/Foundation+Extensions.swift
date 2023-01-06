@@ -86,11 +86,11 @@ extension FileManager {
     }
 
     public func displayName(at url: URL) -> String {
-        displayName(atPath: url.path)
+        self.displayName(atPath: url.path)
     }
 
     public func createFile(at url: URL, contents: Data) throws {
-        createFile(atPath: url.path, contents: contents)
+        self.createFile(atPath: url.path, contents: contents)
     }
 
     public func removeItemIfExists(at url: URL) throws {
@@ -98,7 +98,11 @@ extension FileManager {
             return
         }
 
-        try removeItem(at: url)
+        try self.removeItem(at: url)
+    }
+
+    public func setAttributes(_ attributes: [FileAttributeKey: Any], ofItemAt path: URL) throws {
+        try self.setAttributes(attributes, ofItemAtPath: path.path)
     }
 }
 

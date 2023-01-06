@@ -6,7 +6,6 @@ struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
 
     struct Constants {
         static let s3Key = "authorized_keys"
-        static let destination = Configuration.shared.localAuthorizedKeys
     }
 
     static let configuration = CommandConfiguration(
@@ -25,6 +24,8 @@ struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
     ]
 
     func run() async throws {
+        let destination = Paths.authorizedKeysFilePath
+
         try to(evaluateCommandPolicies(), unless: options.force)
 
         Console.heading("Syncing Authorized Keys")
@@ -43,15 +44,15 @@ struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
 
         try await s3Manager.download(
             object: object,
-            to: URL(fileURLWithPath: Constants.destination),
+            to: destination,
             progressCallback: progressBar.update
         )
 
         /// Fix the permissions on the file, if needed
-        Console.info("Setting file permissions on \(Constants.destination)")
+        Console.info("Setting file permissions on \(destination)")
         try FileManager.default.setAttributes([
             .posixPermissions: 0o600
-        ], ofItemAtPath: Constants.destination)
+        ], ofItemAt: destination)
         Console.success("Authorized Key Sync Complete")
 
         try recordLastRun()

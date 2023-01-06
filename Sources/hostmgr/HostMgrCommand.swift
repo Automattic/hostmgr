@@ -52,7 +52,7 @@ struct InitCommand: ParsableCommand {
     )
 
     func run() throws {
-        if StateManager.configurationFileExists {
+        if ConfigurationRepository.configurationFileExists {
             if !confirm("A configuration file already exists – would you like to continue?") {
                 return
             }

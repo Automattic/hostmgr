@@ -18,16 +18,16 @@ struct GenerateGitMirrorManifestCommand: ParsableCommand {
 struct GenerateGitMirrorManifestTask {
     func run() throws {
         let paths = FileManager.default
-            .subpaths(at: Configuration.shared.gitMirrorDirectory)
+            .subpaths(at: Paths.gitMirrorStorageDirectory)
 
         let manifest = generateTextManifest(fromPaths: paths)
 
         try FileManager.default.createDirectory(
-            at: Configuration.shared.gitMirrorDirectory,
+            at: Paths.gitMirrorStorageDirectory,
             withIntermediateDirectories: true
         )
 
-        let manifestPath = Configuration.shared.gitMirrorDirectory.appendingPathComponent("manifest")
+        let manifestPath = Paths.gitMirrorStorageDirectory.appendingPathComponent("manifest")
         try manifest.data(using: .utf8)?
             .write(to: manifestPath, options: .atomicWrite)
     }
