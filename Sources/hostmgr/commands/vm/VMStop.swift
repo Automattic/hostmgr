@@ -20,7 +20,7 @@ struct VMStopCommand: ParsableCommand {
 
     func run() throws {
 
-        if all {
+        guard all == false else {
             try libhostmgr.stopAllRunningVMs(immediately: self.immediately)
             Console.exit()
         }
