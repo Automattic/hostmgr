@@ -26,7 +26,7 @@ struct VMStopCommand: ParsableCommand {
         }
 
         // In the case of invalid input like this, show the help text
-        guard let identifier = self.identifier else {
+        guard let identifier else {
             throw CleanExit.helpRequest()
         }
 
