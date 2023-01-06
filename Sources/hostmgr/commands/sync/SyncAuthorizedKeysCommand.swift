@@ -4,7 +4,7 @@ import libhostmgr
 
 struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
 
-    struct Constants {
+    enum Constants {
         static let s3Key = "authorized_keys"
     }
 
