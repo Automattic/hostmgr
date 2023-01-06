@@ -32,7 +32,7 @@ public func downloadRemoteImage(
 public func downloadRemoteImage(
     _ remoteImage: RemoteVMImage,
     remoteRepository: RemoteVMRepository = RemoteVMRepository(),
-    storageDirectory: URL = Configuration.shared.vmStorageDirectory
+    storageDirectory: URL = Paths.vmImageStorageDirectory
 ) async throws -> URL {
 
     // If this is the first run, the storage directory may not exist, so we'll create it just in case
@@ -55,7 +55,8 @@ public func downloadRemoteImage(
     let progressBar = Console.startImageDownload(remoteImage)
     let destination = try await remoteRepository.download(
         image: remoteImage,
-        progressCallback: progressBar.update
+        progressCallback: progressBar.update,
+        destinationDirectory: storageDirectory
     )
 
     Console.success("Download Complete")

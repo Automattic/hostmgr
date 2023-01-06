@@ -31,7 +31,7 @@ struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
         name: .shortAndLong,
         help: "The path to your authorized_keys file on disk (defaults to ~/.ssh/authorized_keys)"
     )
-    var destination: String = Configuration.shared.localAuthorizedKeys
+    var destination: String = Paths.authorizedKeysFilePath.path
 
     @OptionGroup
     var options: SharedSyncOptions

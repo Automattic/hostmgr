@@ -29,7 +29,7 @@ public struct LocalVMRepository: LocalVMRepositoryProtocol {
     private let imageDirectory: URL
     private let fileManager: FileManager
 
-    public init(imageDirectory: URL = Configuration.shared.vmStorageDirectory, fileManager: FileManager = .default) {
+    public init(imageDirectory: URL = Paths.vmImageStorageDirectory, fileManager: FileManager = .default) {
         self.imageDirectory = imageDirectory
         self.fileManager = fileManager
     }
