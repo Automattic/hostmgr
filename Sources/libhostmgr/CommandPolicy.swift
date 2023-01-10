@@ -11,18 +11,18 @@ public enum CommandPolicy: Equatable, Codable {
     case serialExecution
 
     /// Evaluate the policy, throwing an error if we're violating one
-    internal func evaluate(forKey key: String, stateStorageManager: StateStorageManager) throws {
+    internal func evaluate(forKey key: String, stateRepository: StateRepository) throws {
         switch self {
         case let .scheduled(timeInterval):
             try evaluateSchedule(
                 forKey: key,
                 timeInterval: timeInterval,
-                stateStorageManager: stateStorageManager
+                stateRepository: stateRepository
             )
         case .serialExecution:
             try evaluateSerialQueueLock(
                 forKey: key,
-                stateStorageManager: stateStorageManager
+                stateRepository: stateRepository
             )
         }
     }
@@ -37,9 +37,9 @@ public enum CommandPolicy: Equatable, Codable {
     private func evaluateSchedule(
         forKey key: String,
         timeInterval: TimeInterval,
-        stateStorageManager: StateStorageManager
+        stateRepository: StateRepository
     ) throws {
-        let state: ScheduledCommandState = try stateStorageManager.read(fromKey: key) ?? .default
+        let state: ScheduledCommandState = try stateRepository.read(fromKey: key) ?? .default
         let nextRunTime = state.lastRunAt + timeInterval
 
         if nextRunTime > Date() {
@@ -49,9 +49,9 @@ public enum CommandPolicy: Equatable, Codable {
 
     private func evaluateSerialQueueLock(
         forKey key: String,
-        stateStorageManager: StateStorageManager
+        stateRepository: StateRepository
     ) throws {
-        let state: SerialExecutionState = try stateStorageManager.read(fromKey: key) ?? .default
+        let state: SerialExecutionState = try stateRepository.read(fromKey: key) ?? .default
 
         if state.heartbeat.timeIntervalSinceNow > -60 {
             throw CommandPolicyViolation.alreadyRunning
@@ -103,35 +103,35 @@ public extension FollowsCommandPolicies {
     ///
     /// If any policies are violated (ie – it's not time to run yet), an error will be thrown
     /// that will cause the program to exit.
-    func evaluateCommandPolicies(stateStorageManager: StateStorageManager? = nil) throws {
-        let stateStorageManager = stateStorageManager ?? FileStateStorage()
+    func evaluateCommandPolicies(stateRepository: StateRepository? = nil) throws {
+        let stateRepository = stateRepository ?? FileStateRepository()
 
         for policy in Self.commandPolicies {
-            try policy.evaluate(forKey: key(forPolicy: policy), stateStorageManager: stateStorageManager)
+            try policy.evaluate(forKey: key(forPolicy: policy), stateRepository: stateRepository)
         }
     }
 
     /// Store a "heartbeat" time – the last time the job did work
     ///
     /// If it freezes, we'll use the last heartbeat time to decide whether to start up a new instance of the job.
-    func recordHeartbeat(date: Date = Date(), stateStorageManager: StateStorageManager? = nil) throws {
-        let stateStorageManager = stateStorageManager ?? FileStateStorage()
+    func recordHeartbeat(date: Date = Date(), stateRepository: StateRepository? = nil) throws {
+        let stateRepository = stateRepository ?? FileStateRepository()
 
         var state = CommandPolicy.SerialExecutionState()
         state.heartbeat = date
 
-        try stateStorageManager.write(state, toKey: key(forPolicy: .serialExecution))
+        try stateRepository.write(state, toKey: key(forPolicy: .serialExecution))
     }
 
     /// Store the last run date for this job
     ///
     /// We'll use it to schedule the task to run periodically.
-    func recordLastRun(date: Date = Date(), stateStorageManager: StateStorageManager? = nil) throws {
-        let stateStorageManager = stateStorageManager ?? FileStateStorage()
+    func recordLastRun(date: Date = Date(), stateRepository: StateRepository? = nil) throws {
+        let stateRepository = stateRepository ?? FileStateRepository()
 
         var state = CommandPolicy.ScheduledCommandState()
         state.lastRunAt = date
 
-        try stateStorageManager.write(state, toKey: key(forPolicy: .scheduled(every: 0)))
+        try stateRepository.write(state, toKey: key(forPolicy: .scheduled(every: 0)))
     }
 }
