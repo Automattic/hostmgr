@@ -4,34 +4,14 @@ import libhostmgr
 
 struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
 
+    enum Constants {
+        static let s3Key = "authorized_keys"
+    }
+
     static let configuration = CommandConfiguration(
         commandName: Configuration.SchedulableSyncCommand.authorizedKeys.rawValue,
         abstract: "Set this machine's authorized_keys file"
     )
-
-    @Option(
-        name: .shortAndLong,
-        help: "The S3 bucket containing the `authorized_keys` file"
-    )
-    var bucket: String = Configuration.shared.authorizedKeysBucket
-
-    @Option(
-        name: .shortAndLong,
-        help: "The S3 region for the bucket"
-    )
-    var region: String = Configuration.shared.authorizedKeysRegion
-
-    @Option(
-        name: .shortAndLong,
-        help: "The S3 path to the authorized_keys file"
-    )
-    var key: String = "authorized_keys"
-
-    @Option(
-        name: .shortAndLong,
-        help: "The path to your authorized_keys file on disk (defaults to ~/.ssh/authorized_keys)"
-    )
-    var destination: String = Paths.authorizedKeysFilePath.path
 
     @OptionGroup
     var options: SharedSyncOptions
@@ -44,25 +24,36 @@ struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
     ]
 
     func run() async throws {
+        let destination = Paths.authorizedKeysFilePath
+
         try to(evaluateCommandPolicies(), unless: options.force)
-        logger.debug("Job schedule allows for running")
 
-        logger.info("Downloading file from s3://\(bucket)/\(key) in \(region) to \(destination)")
+        Console.heading("Syncing Authorized Keys")
 
-        let s3Manager = S3Manager(bucket: self.bucket, region: self.region)
+        let s3Manager = S3Manager(
+            bucket: Configuration.shared.authorizedKeysBucket,
+            region: Configuration.shared.authorizedKeysRegion
+        )
 
-        guard let object = try await s3Manager.lookupObject(atPath: key) else {
-            logger.error("Unable to locate authorized_keys file – exiting")
+        guard let object = try await s3Manager.lookupObject(atPath: Constants.s3Key) else {
+            Console.error("Unable to locate authorized_keys file – exiting")
             throw ExitCode(rawValue: 1)
         }
 
-        let url = URL(fileURLWithPath: self.destination)
-        try await s3Manager.download(object: object, to: url, progressCallback: nil)
+        let progressBar = Console.startFileDownload(object)
+
+        try await s3Manager.download(
+            object: object,
+            to: destination,
+            progressCallback: progressBar.update
+        )
 
         /// Fix the permissions on the file, if needed
+        Console.info("Setting file permissions on \(destination)")
         try FileManager.default.setAttributes([
             .posixPermissions: 0o600
-        ], ofItemAtPath: self.destination)
+        ], ofItemAt: destination)
+        Console.success("Authorized Key Sync Complete")
 
         try recordLastRun()
     }

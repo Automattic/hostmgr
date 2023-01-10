@@ -1,21 +1,19 @@
 import Foundation
 import ArgumentParser
-import prlctl
+import libhostmgr
 
-struct VMCleanCommand: ParsableCommand {
+struct VMCleanCommand: AsyncParsableCommand {
 
     static let configuration = CommandConfiguration(
         commandName: "clean",
-        abstract: "Cleans up a VM prior to it being reused"
+        abstract: "Clean up the VM environment prior to running another job"
     )
 
-    @Option(
-        name: .shortAndLong,
-        help: "The VM to clean"
-    )
-    var virtualMachine: StoppedVM
+    func run() async throws {
+        try libhostmgr.resetVMStorage()
 
-    func run() throws {
-        try virtualMachine.clean()
+        // Clean up no-longer-needed local images
+        let deleteList = try await libhostmgr.listLocalImagesToDelete()
+        try libhostmgr.deleteLocalImages(list: deleteList)
     }
 }

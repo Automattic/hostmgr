@@ -1,100 +1,70 @@
 import Foundation
 import ArgumentParser
-import prlctl
+import libhostmgr
 
-struct VMListCommand: ParsableCommand {
+struct VMListCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "list",
-        abstract: "List VMs, optionally by state"
+        abstract: "List VM images that exist on disk on the local machine"
     )
 
-    @Option(
-        name: .shortAndLong,
-        help: "Filter VMs by state (running, stopped, or package)"
-    )
-    var state: VMStatus?
+    enum Location: String, CaseIterable {
+        case local
+        case remote
+        case all
 
-    func run() throws {
-        switch state {
-        case .running: try printRunningVMs()
-        case .stopped: try printStoppedVMs()
-        case .packaged: try printPackagedVMs()
-        case .suspended: try printSuspendedVMs()
-        case .resuming: try printResumingVMs()
-        case .invalid: try printInvalidVMs()
-        case .starting: try printStartingVMs()
-        case .stopping: try printStartingVMs()
-        case nil: try printAllVMs()
+        var includesLocal: Bool {
+            return self == .local || self == .all
+        }
+
+        var includesRemote: Bool {
+            return self == .remote || self == .all
         }
     }
 
-    private func printAllVMs() throws {
-        try printRunningVMs()
-        try printStoppedVMs()
-        try printPackagedVMs()
-        try printSuspendedVMs()
-        try printInvalidVMs()
-        try printStartingVMs()
-        try printStoppingVMs()
-    }
+    @Option(help: "Filter VMs by location – can be 'remote', 'local', or 'all'.")
+    var location: Location = Location.all
 
-    private func printRunningVMs() throws {
-        try Parallels().lookupRunningVMs().forEach {
-            print(status: .running, virtualMachine: $0, ipAddress: $0.ipAddress)
+    func run() async throws {
+        var data = Console.Table()
+
+        if self.location.includesLocal {
+            data.append(contentsOf: try LocalVMRepository().list().map(self.format))
         }
-    }
 
-    private func printStoppedVMs() throws {
-        try Parallels().lookupStoppedVMs().forEach {
-            print(status: .stopped, virtualMachine: $0)
+        if self.location.includesRemote {
+            data.append(contentsOf: try await RemoteVMRepository().listImages().map(self.format))
         }
+
+        Console.printTable(
+            data: data,
+            columnTitles: ["Location", "Filename", "Size"]
+        )
     }
 
-    private func printSuspendedVMs() throws {
-        try Parallels().lookupSuspendedVMs().forEach {
-            print(status: .suspended, virtualMachine: $0)
-        }
+    private func format(localVM: LocalVMImage) throws -> [String] {
+        return [
+            "Local",
+            localVM.basename,
+            Format.fileBytes(try localVM.fileSize)
+        ]
     }
 
-    private func printPackagedVMs() throws {
-        try Parallels().lookupPackagedVMs().forEach {
-            print(status: .packaged, virtualMachine: $0)
-        }
-    }
-
-    private func printInvalidVMs() throws {
-        try Parallels().lookupInvalidVMs().forEach {
-            print(status: .invalid, virtualMachine: $0)
-        }
-    }
-
-    private func printStartingVMs() throws {
-        try Parallels().lookupStartingVMs().forEach {
-            print(status: .starting, virtualMachine: $0)
-        }
-    }
-
-    private func printStoppingVMs() throws {
-        try Parallels().lookupStoppingVMs().forEach {
-            print(status: .stopping, virtualMachine: $0)
-        }
-    }
-
-    private func printResumingVMs() throws {
-        try Parallels().lookupStoppingVMs().forEach {
-            print(status: .resuming, virtualMachine: $0)
-        }
-    }
-
-    private func print(
-        status: VMStatus,
-        virtualMachine: VMProtocol,
-        ipAddress: String? = nil
-    ) {
-        Swift.print("\(status.rawValue)\t\(virtualMachine.name)\t\(virtualMachine.uuid)")
+    private func format(remoteVM: RemoteVMImage) throws -> [String] {
+        return [
+            "Remote",
+            remoteVM.basename,
+            Format.fileBytes(remoteVM.imageObject.size)
+        ]
     }
 }
 
-extension VMStatus: ExpressibleByArgument {
+extension VMListCommand.Location: ExpressibleByArgument {
+    var defaultValueDescription: String {
+        return self.rawValue
+    }
 
+    static var allValueStrings: [String] {
+        Self.allCases.map(\.rawValue)
+    }
 }
