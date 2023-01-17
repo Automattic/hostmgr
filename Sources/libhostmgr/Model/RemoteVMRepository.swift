@@ -101,8 +101,7 @@ public struct RemoteVMRepository {
             .filter { $0.key.hasSuffix(".sha256.txt") }
             .sorted()
 
-        return zip(imageObjects, checksums).reduce(into: [RemoteVMImage]()) {
-            $0.append(RemoteVMImage(imageObject: $1.0, checksumObject: $1.1))
-        }
+        return zip(imageObjects, checksums)
+            .map { RemoteVMImage(imageObject: $0, checksumObject: $1) }
     }
 }
