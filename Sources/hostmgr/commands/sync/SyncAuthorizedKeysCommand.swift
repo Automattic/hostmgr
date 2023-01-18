@@ -1,6 +1,7 @@
 import Foundation
 import ArgumentParser
 import libhostmgr
+import tinys3
 
 struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
 
@@ -30,9 +31,13 @@ struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
 
         Console.heading("Syncing Authorized Keys")
 
-        let s3Manager = S3Manager(
+        let credentials = try AWSCredentials.fromUserConfiguration()
+
+        let s3Manager = try S3Manager(
             bucket: Configuration.shared.authorizedKeysBucket,
-            region: Configuration.shared.authorizedKeysRegion
+            region: Configuration.shared.authorizedKeysRegion,
+            credentials: credentials,
+            endpoint: .accelerated
         )
 
         guard let object = try await s3Manager.lookupObject(atPath: Constants.s3Key) else {
@@ -43,7 +48,7 @@ struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
         let progressBar = Console.startFileDownload(object)
 
         try await s3Manager.download(
-            object: object,
+            key: object.key,
             to: destination,
             progressCallback: progressBar.update
         )

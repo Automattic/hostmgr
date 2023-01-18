@@ -1,4 +1,5 @@
 import Foundation
+import tinys3
 
 public struct RemoteVMRepository {
 
@@ -24,17 +25,23 @@ public struct RemoteVMRepository {
         }
 
         func sortByDateDescending(_ lhs: RemoteVMImage, _ rhs: RemoteVMImage) -> Bool {
-            lhs.imageObject.modifiedAt > rhs.imageObject.modifiedAt
+            lhs.imageObject.lastModifiedAt > rhs.imageObject.lastModifiedAt
         }
     }
 
     private let s3Manager: S3ManagerProtocol
 
-    public init(s3Manager: S3ManagerProtocol? = nil) {
+    public init(s3Manager: S3ManagerProtocol? = nil) throws {
         let bucket: String = Configuration.shared.vmImagesBucket
         let region: String = Configuration.shared.vmImagesRegion
+        let credentials = try AWSCredentials.fromUserConfiguration()
 
-        self.s3Manager = s3Manager ?? S3Manager(bucket: bucket, region: region)
+        self.s3Manager = try s3Manager ?? S3Manager(
+            bucket: bucket,
+            region: region,
+            credentials: credentials,
+            endpoint: .accelerated
+        )
     }
 
     public func getManifest() async throws -> [String] {
@@ -57,25 +64,27 @@ public struct RemoteVMRepository {
 
     /// Downloads a remote image using atomic writes to avoid conflict with existing files or other processes
     ///
-    @discardableResult
     public func download(
         image: RemoteVMImage,
-        progressCallback: @escaping FileTransferProgressCallback,
-        destinationDirectory: URL
+        destinationDirectory: URL,
+        progressCallback: @escaping FileTransferProgressCallback
     ) async throws -> URL {
 
         // Download the checksum file first
-        _ = try await self.s3Manager.download(
-            object: image.checksumObject,
+       try await self.s3Manager.download(
+            key: image.checksumObject.key,
             to: destinationDirectory.appendingPathComponent(image.checksumFileName),
-            progressCallback: nil
-        )
+            progressCallback: nil)
 
-        return try await self.s3Manager.download(
-            object: image.imageObject,
-            to: destinationDirectory.appendingPathComponent(image.fileName),
+        let imageFileDestination = destinationDirectory.appendingPathComponent(image.checksumFileName)
+
+        try await self.s3Manager.download(
+            key: image.imageObject.key,
+            to: destinationDirectory.appendingPathComponent(image.checksumFileName),
             progressCallback: progressCallback
         )
+
+        return imageFileDestination
     }
 
     public func listImages(sortedBy strategy: RemoteVMImageSortingStrategy = .name) async throws -> [RemoteVMImage] {
@@ -86,22 +95,13 @@ public struct RemoteVMRepository {
     func remoteImagesFrom(objects: [S3Object]) -> [RemoteVMImage] {
         let imageObjects = objects
             .filter { $0.key.hasSuffix(".pvmp") }
+            .sorted()
 
         let checksums = objects
             .filter { $0.key.hasSuffix(".sha256.txt") }
-            .map(\.key)
+            .sorted()
 
-        return imageObjects.compactMap { object in
-            let filename = URL(fileURLWithPath: object.key).lastPathComponent  // filename = my-image.pvmp
-            let basename = (filename as NSString).deletingPathExtension        // basename = my-image
-
-            let checksumKey = "images/" + basename + ".sha256.txt"
-
-            guard checksums.contains(checksumKey) else {
-                return nil
-            }
-
-            return RemoteVMImage(imageObject: object, checksumKey: checksumKey)
-        }
+        return zip(imageObjects, checksums)
+            .map { RemoteVMImage(imageObject: $0, checksumObject: $1) }
     }
 }

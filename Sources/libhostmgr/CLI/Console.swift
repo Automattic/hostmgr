@@ -1,5 +1,6 @@
 import Foundation
 import ConsoleKit
+import tinys3
 
 public struct Console {
 
