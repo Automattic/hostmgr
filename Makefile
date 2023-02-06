@@ -22,3 +22,9 @@ run-vm-create-debug:
 	swift build
 	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API" .build/arm64-apple-macosx/debug/hostmgr -v
 	./.build/arm64-apple-macosx/debug/hostmgr vm create --name test
+
+run-helper-debug:
+	@echo "--- Building and Signing helper for Local Development"
+	swift build
+	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API" .build/arm64-apple-macosx/debug/hostmgr-helper -v
+	./.build/arm64-apple-macosx/debug/hostmgr-helper --debug true

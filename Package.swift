@@ -6,7 +6,12 @@ import PackageDescription
 let package = Package(
     name: "hostmgr",
     platforms: [
-        .macOS(.v10_15)
+        .macOS(.v12)
+    ],
+    products: [
+        .executable(name: "hostmgr", targets: ["hostmgr"]),
+        .executable(name: "hostmgr-helper", targets: ["hostmgr-helper"]),
+        .library(name: "libhostmgr", targets: ["libhostmgr"]),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -27,7 +32,15 @@ let package = Package(
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "kcpassword", package: "kcpassword-swift"),
-                .target(name: "libhostmgr"),
+                .target(name: "libhostmgr")
+            ]
+        ),
+        .executableTarget(
+            name: "hostmgr-helper",
+            dependencies: [
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "Logging", package: "swift-log"),
+                .target(name: "libhostmgr")
             ]
         ),
         .target(
