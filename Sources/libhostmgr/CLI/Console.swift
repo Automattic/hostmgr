@@ -99,13 +99,18 @@ public class ProgressBar {
     }
 
     public func update(_ progress: Progress) {
-        let progress = FileTransferProgress(
-            completed: Int(progress.completedUnitCount),
-            total: Int(progress.totalUnitCount),
-            startDate: startDate
-        )
 
-        self.update(progress)
+        if progress.kind == .file {
+            self.update(FileTransferProgress(
+                completed: Int(progress.completedUnitCount),
+                total: Int(progress.totalUnitCount),
+                startDate: startDate)
+            )
+        }
+
+        if progress.kind == .installation {
+            self.updateInstallationProgress(progress)
+        }
     }
 
     public func update(_ progress: FileTransferProgress) {
@@ -122,6 +127,28 @@ public class ProgressBar {
         // Erase the old progress line and overwrite it
         terminal.clear(lines: 1)
         terminal.print("\(percentage) [\(rate)/s, \((remaining))]")
+
+        // Make sure we don't update again this second
+        self.lastUpdateAt = now
+    }
+
+    public func updateInstallationProgress(_ progress: Progress) {
+        // Only update progress once per second
+        let now = Int(Date().timeIntervalSince1970)
+        guard now > lastUpdateAt else {
+            return
+        }
+
+        let percentage = Format.percentage(progress.fractionCompleted)
+
+        // Erase the old progress line and overwrite it
+        terminal.clear(lines: 1)
+
+        if let remaining = progress.estimatedTimeRemaining {
+            terminal.print("\(percentage) [\((remaining))]")
+        } else {
+            terminal.print("\(percentage)")
+        }
 
         // Make sure we don't update again this second
         self.lastUpdateAt = now
@@ -219,4 +246,8 @@ extension Console {
     func padString(_ string: String, toLength length: Int) -> String {
         string.padding(toLength: length, withPad: " ", startingAt: 0)
     }
+}
+
+public extension ProgressKind {
+    static let installation = ProgressKind(rawValue: "installation")
 }

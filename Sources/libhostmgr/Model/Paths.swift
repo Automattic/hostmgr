@@ -43,4 +43,12 @@ public struct Paths {
     static var configurationFilePath: URL {
         configurationRoot.appendingPathComponent("config.json")
     }
+
+    public static func toAppleSiliconVM(named name: String) -> URL {
+        Paths.vmImageStorageDirectory.appendingPathComponent(name).appendingPathExtension("bundle")
+    }
+
+    public static func toArchivedVM(named name: String) -> URL {
+        FileManager.default.temporaryDirectory.appendingPathComponent(name).appendingPathExtension("aar")
+    }
 }

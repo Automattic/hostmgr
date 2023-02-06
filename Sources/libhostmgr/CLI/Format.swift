@@ -43,6 +43,10 @@ public struct Format {
         return percentage(NSDecimalNumber(decimal: number))
     }
 
+    public static func percentage(_ number: Double) -> String {
+        return percentage(NSNumber(value: number))
+    }
+
     public static func percentage(_ number: NSNumber) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .percent
