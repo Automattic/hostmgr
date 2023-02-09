@@ -4,7 +4,6 @@ import ArgumentParser
 struct VMCommand: AsyncParsableCommand {
 
     static var universalCommands: [ParsableCommand.Type] = [
-        VMCleanCommand.self,
         VMExistsCommand.self,
         VMFetchCommand.self,
         VMListCommand.self,
@@ -13,12 +12,24 @@ struct VMCommand: AsyncParsableCommand {
     ]
 
     static var appleSiliconCommands: [ParsableCommand.Type] {
+        #if arch(arm64)
         if #available(macOS 13.0, *) {
             return [
                 VMCreateCommand.self,
                 VMPackageCommand.self
             ]
         }
+        #endif
+
+        return []
+    }
+
+    static var intelCommands: [ParsableCommand.Type] {
+        #if arch(x86_64)
+        return [
+            VMCleanCommand.self,
+        ]
+        #endif
 
         return []
     }
@@ -26,6 +37,6 @@ struct VMCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "vm",
         abstract: "Allows working with VMs",
-        subcommands: universalCommands + appleSiliconCommands
+        subcommands: universalCommands + appleSiliconCommands + intelCommands
     )
 }

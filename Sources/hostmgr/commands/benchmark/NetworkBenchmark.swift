@@ -13,7 +13,7 @@ struct NetworkBenchmark: AsyncParsableCommand {
     )
 
     func run() async throws {
-        let remoteImages = try await RemoteVMRepository().listImages(sortedBy: .size)
+        let remoteImages = try await RemoteVMRepository().listCompatibleImages(sortedBy: .size)
 
         guard !remoteImages.isEmpty else {
             Console.error("Unable to find a remote image to use as a network benchmark")
