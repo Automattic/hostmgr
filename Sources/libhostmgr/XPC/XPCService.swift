@@ -42,11 +42,11 @@ public class XPCService: NSObject, HostmgrXPCProtocol {
     /// Example:
     ///     <key>MachServices</key>
     ///     <dict>
-    ///         <key>com.automattic.hostmgr.vmXPC</key>
+    ///         <key>com.hostmgr.helper.xpc</key>
     ///         <true/>
     ///     </dict>
     ///
-    static let serviceName = "com.automattic.hostmgr.vmXPC"
+    static let serviceName = "com.hostmgr.helper.xpc"
 
     /// A helper that creates our XPC listener
     public static func createListener() -> NSXPCListener {

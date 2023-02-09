@@ -2,9 +2,16 @@ import Foundation
 import Cocoa
 import libhostmgr
 import Virtualization
+import Logging
 
 @available(macOS 13.0, *)
 class AppDelegate: NSObject, NSApplicationDelegate {
+
+    private let logger: Logger
+
+    init(logger: Logger) {
+        self.logger = logger
+    }
 
     enum Errors: Error {
         case vmNotRunning
@@ -29,7 +36,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        print("didFinishLaunching")
+        logger.trace("didFinishLaunching")
+
         self.listener.delegate = self
         self.listener.resume()
 
@@ -49,6 +57,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     func launchVM(named name: String) async throws {
+        logger.trace("Launching VM: \(name)")
+
         let bundle = try VMBundle.fromExistingBundle(at: Paths.toAppleSiliconVM(named: name))
         let configuration = try bundle.virtualMachineConfiguration()
         try configuration.validate()
@@ -68,8 +78,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     func stopVM() async throws {
+        logger.trace("Stopping VM")
+
         guard let activeVM = self.activeVM else {
-            print("There is no active VM!")
+            logger.error("There is no active VM!")
             throw Errors.vmNotRunning
         }
 
@@ -88,7 +100,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 extension AppDelegate: NSXPCListenerDelegate {
 
     public func listener(_ listener: NSXPCListener, shouldAcceptNewConnection newConnection: NSXPCConnection) -> Bool {
-        print("About to accept new connection")
+        logger.trace("About to accept new connection")
 
         let exportedObject = XPCService(delegate: self)
 
@@ -125,10 +137,12 @@ extension AppDelegate {
 @available(macOS 13.0, *)
 extension AppDelegate: XPCServiceDelegate {
     func service(shouldStartVMNamed name: String) async throws {
+        print("Delegate received `shouldStartVM`")
         try await self.launchVM(named: name)
     }
 
     func serviceShouldStopVM() async throws {
+        print("Delegate received `shouldStopVM`")
         try await self.stopVM()
     }
 }

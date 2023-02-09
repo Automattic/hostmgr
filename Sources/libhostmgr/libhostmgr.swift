@@ -158,9 +158,10 @@ public func listLocalImagesToDelete(
 }
 
 // MARK: Virtual Machine Control
+@MainActor
 public func startVM(name: String) async throws {
     #if arch(arm64)
-    try await XPCService.startVM(named: "test")
+    try await XPCService.startVM(named: name)
     #else
     try await ParallelsVMRepository().startVM(named: name)
     #endif
