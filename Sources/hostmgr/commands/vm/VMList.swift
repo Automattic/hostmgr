@@ -33,12 +33,12 @@ struct VMListCommand: AsyncParsableCommand {
         }
 
         if self.location.includesRemote {
-            data.append(contentsOf: try await RemoteVMRepository().listImages().map(self.format))
+            data.append(contentsOf: try await RemoteVMRepository().listCompatibleImages().map(self.format))
         }
 
         Console.printTable(
             data: data,
-            columnTitles: ["Location", "Filename", "Size"]
+            columnTitles: ["Location", "Filename", "Architecture", "Size"]
         )
     }
 
@@ -46,6 +46,7 @@ struct VMListCommand: AsyncParsableCommand {
         return [
             "Local",
             localVM.basename,
+            localVM.architecture.rawValue,
             Format.fileBytes(try localVM.fileSize)
         ]
     }
@@ -54,6 +55,7 @@ struct VMListCommand: AsyncParsableCommand {
         return [
             "Remote",
             remoteVM.basename,
+            remoteVM.architecture?.rawValue ?? "unknown",
             Format.fileBytes(remoteVM.imageObject.size)
         ]
     }
