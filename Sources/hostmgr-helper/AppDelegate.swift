@@ -6,6 +6,10 @@ import Virtualization
 @available(macOS 13.0, *)
 class AppDelegate: NSObject, NSApplicationDelegate {
 
+    enum Errors: Error {
+        case vmNotRunning
+    }
+
     private let listener = XPCService.createListener()
 
     private var activeVM: VZVirtualMachine?
@@ -14,7 +18,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let viewController = VMViewController()
     lazy var vmWindow: NSWindow = {
         var window = NSWindow(contentViewController: self.viewController)
-        window.setFrame(CGRectMake(0, 0, 800, 600), display: true)
+        window.setFrame(CGRect(x: 0, y: 0, width: 800, height: 600), display: true)
         return window
     }()
 
@@ -25,6 +29,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        print("didFinishLaunching")
         self.listener.delegate = self
         self.listener.resume()
 
@@ -44,7 +49,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     func launchVM(named name: String) async throws {
-        let bundle = try VMBundle.fromExistingBundle(at: Paths.vmImageStorageDirectory.appendingPathComponent(name))
+        let bundle = try VMBundle.fromExistingBundle(at: Paths.toAppleSiliconVM(named: name))
         let configuration = try bundle.virtualMachineConfiguration()
         try configuration.validate()
 
@@ -63,7 +68,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     func stopVM() async throws {
-        try await self.activeVM?.stop()
+        guard let activeVM = self.activeVM else {
+            print("There is no active VM!")
+            throw Errors.vmNotRunning
+        }
+
+        try await activeVM.stop()
 
         self.vmWindow.close()
         self.viewController.dismissVirtualMachine()
@@ -78,7 +88,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 extension AppDelegate: NSXPCListenerDelegate {
 
     public func listener(_ listener: NSXPCListener, shouldAcceptNewConnection newConnection: NSXPCConnection) -> Bool {
-        debugPrint("About to accept new connection")
+        print("About to accept new connection")
 
         let exportedObject = XPCService(delegate: self)
 
@@ -100,11 +110,13 @@ extension AppDelegate {
         Task {
             do {
                 switch action {
-                    case .startVM: try await service(shouldStartVMNamed: "test.bundle")
-                    case .stopVM: try await service(shouldStopVMNamed: "test.bundle")
+                    case .startVM:
+                        try await launchVM(named: "test")
+                    case .stopVM:
+                        try await stopVM()
                 }
             } catch {
-                debugPrint(error.localizedDescription)
+                print(error.localizedDescription)
             }
         }
     }
@@ -116,7 +128,7 @@ extension AppDelegate: XPCServiceDelegate {
         try await self.launchVM(named: name)
     }
 
-    func service(shouldStopVMNamed name: String) async throws {
+    func serviceShouldStopVM() async throws {
         try await self.stopVM()
     }
 }

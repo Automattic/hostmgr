@@ -2,7 +2,7 @@ import Foundation
 import ArgumentParser
 import libhostmgr
 
-struct VMStopCommand: ParsableCommand {
+struct VMStopCommand: AsyncParsableCommand {
 
     static let configuration = CommandConfiguration(
         commandName: "stop",
@@ -18,10 +18,10 @@ struct VMStopCommand: ParsableCommand {
     @Flag(help: "Shutdown all VMs")
     var all: Bool = false
 
-    func run() throws {
+    func run() async throws {
 
         guard all == false else {
-            try libhostmgr.stopAllRunningVMs(immediately: self.immediately)
+            try await libhostmgr.stopAllRunningVMs(immediately: self.immediately)
             Console.exit()
         }
 
@@ -30,6 +30,6 @@ struct VMStopCommand: ParsableCommand {
             throw CleanExit.helpRequest()
         }
 
-        try libhostmgr.stopRunningVM(name: identifier, immediately: immediately)
+        try await libhostmgr.stopRunningVM(name: identifier, immediately: immediately)
     }
 }

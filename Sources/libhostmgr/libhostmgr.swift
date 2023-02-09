@@ -190,6 +190,10 @@ public func lookupParallelsVMOrExit(
 }
 
 public func startVM(name: String) async throws {
+    try await XPCService.startVM(named: "test")
+
+    return
+
     let startDate = Date()
 
     guard let sourceVM = try LocalVMRepository().lookupVM(withName: name) else {
@@ -242,9 +246,12 @@ public func startVM(name: String) async throws {
 public func stopAllRunningVMs(
     immediately: Bool = true,
     parallelsRepository: ParallelsVMRepositoryProtocol = ParallelsVMRepository()
-) throws {
+) async throws {
+    try await XPCService.stopVM()
+    return
+
     for parallelsVM in try parallelsRepository.lookupRunningVMs() {
-        try stopRunningVM(name: parallelsVM.name, immediately: immediately)
+        try await stopRunningVM(name: parallelsVM.name, immediately: immediately)
     }
 }
 
@@ -252,7 +259,10 @@ public func stopRunningVM(
     name: String,
     immediately: Bool,
     parallelsRepository: ParallelsVMRepositoryProtocol = ParallelsVMRepository()
-) throws {
+) async throws {
+    try await XPCService.stopVM()
+    return
+
     let parallelsVM = try lookupParallelsVMOrExit(withIdentifier: name)
 
     guard let vmToStop = parallelsVM.asRunningVM() else {

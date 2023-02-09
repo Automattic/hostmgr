@@ -48,7 +48,7 @@ public class VMInstaller {
         let installer = VZMacOSInstaller(virtualMachine: virtualMachine, restoringFromImageAt: url)
 
         // Observe installation progress
-        installationObserver = installer.progress.observe(\.fractionCompleted, options: [.new]) { (progress, change) in
+        installationObserver = installer.progress.observe(\.fractionCompleted, options: [.new]) { (progress, _) in
             progress.kind = .installation
             progressCallback(progress)
         }

@@ -11,18 +11,18 @@ struct VMCommand: AsyncParsableCommand {
         VMStartCommand.self,
         VMStopCommand.self
     ]
-    
+
     static var appleSiliconCommands: [ParsableCommand.Type] {
         if #available(macOS 13.0, *) {
             return [
                 VMCreateCommand.self,
-                VMPackageCommand.self,
+                VMPackageCommand.self
             ]
         }
 
         return []
     }
-    
+
     static let configuration = CommandConfiguration(
         commandName: "vm",
         abstract: "Allows working with VMs",
