@@ -33,10 +33,21 @@ let package = Package(
                 .product(name: "Logging", package: "swift-log"),
                 .product(name: "kcpassword", package: "kcpassword-swift"),
                 .target(name: "libhostmgr")
+            ],
+            exclude: [
+                "hostmgr.entitlements",
             ]
         ),
         .executableTarget(
             name: "hostmgr-helper",
+            dependencies: [
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "Logging", package: "swift-log"),
+                .target(name: "libhostmgr")
+            ]
+        ),
+        .executableTarget(
+            name: "hostmgr-beacon",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Logging", package: "swift-log"),
