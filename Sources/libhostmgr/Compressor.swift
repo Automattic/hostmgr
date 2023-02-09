@@ -27,7 +27,7 @@ public struct Compressor {
         try encodeStream.writeDirectoryContents(archiveFrom: FilePath(directory.path), keySet: keySet)
     }
 
-    func decompress(archivePath: URL, to destination: URL) throws {
+    func decompress(archiveAt archivePath: URL, to destination: URL) throws {
 
         guard !FileManager.default.fileExists(at: destination) else {
             throw Errors.fileExistsAtPath

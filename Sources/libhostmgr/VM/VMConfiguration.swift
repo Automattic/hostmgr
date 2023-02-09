@@ -47,7 +47,7 @@ struct VMConfiguration {
         return [graphicsConfiguration]
     }
 
-    var networkConfiguration: [VZVirtioNetworkDeviceConfiguration]{
+    var networkConfiguration: [VZVirtioNetworkDeviceConfiguration] {
         let networkDevice = VZVirtioNetworkDeviceConfiguration()
 
         let networkAttachment = VZNATNetworkDeviceAttachment()

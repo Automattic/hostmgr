@@ -23,7 +23,7 @@ struct DebugWindow: View {
             }
 
             Button("Stop VM") {
-                NotificationCenter.default.post(name:  DebugActions.stopVM.name, object: nil)
+                NotificationCenter.default.post(name: DebugActions.stopVM.name, object: nil)
             }
         }.padding()
     }

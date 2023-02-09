@@ -4,10 +4,10 @@ import TSCBasic
 
 @available(macOS 13.0, *)
 public struct VMBundle: Sendable {
-    
+
     internal struct BundlePathResolver {
         let path: URL
-        
+
         var configurationFilePath: URL {
             self.path.appendingPathComponent("config.json")
         }
@@ -126,7 +126,7 @@ extension VMBundle {
         let diskFd = open(pathResolver.diskImageFilePath.pathWithSlash, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)
 
         guard diskFd != -1 else {
-            fatalError("Cannot create disk image.") //TODO: This should throw
+            fatalError("Cannot create disk image.") // TODO: This should throw
         }
 
         guard ftruncate(diskFd, off_t(size.converted(to: .bytes).value)) == 0 else {
@@ -134,7 +134,7 @@ extension VMBundle {
         }
 
         guard close(diskFd) == 0 else {
-            fatalError("Failed to close the disk image.") //TODO: This should throw
+            fatalError("Failed to close the disk image.") // TODO: This should throw
         }
     }
 
