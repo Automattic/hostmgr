@@ -16,6 +16,18 @@ struct VMStartCommand: AsyncParsableCommand {
     var wait: Bool = false
 
     func run() async throws {
+        debugPrint("Trying to start \(self.name)")
         try await libhostmgr.startVM(name: self.name)
+
+        guard wait else {
+            return
+        }
+
+        debugPrint("Waiting for VM to boot")
+        try await VMResolver.resolve()
+        debugPrint("VM is booted")
+
+        let hostname = try await VMHostnameResolver.resolve()
+        debugPrint("ssh builder@\(hostname)")
     }
 }
