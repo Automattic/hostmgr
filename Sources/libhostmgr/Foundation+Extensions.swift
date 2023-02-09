@@ -1,6 +1,6 @@
 import Foundation
 
-enum ProcessorArchitecture: String {
+public enum ProcessorArchitecture: String {
     case arm64
     case x64 = "x86_64"
 }

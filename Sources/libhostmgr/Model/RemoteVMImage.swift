@@ -16,8 +16,24 @@ public struct RemoteVMImage: FilterableByBasename {
             .lastPathComponent
     }
 
+    public var fileExtension: String {
+        URL(fileURLWithPath: imageObject.key).pathExtension
+    }
+
+    public var checksumKey: String {
+        checksumObject.key
+    }
+
     public var checksumFileName: String {
         basename + ".sha256.txt"
+    }
+
+    public var architecture: ProcessorArchitecture? {
+        switch fileExtension {
+            case "aar": return .arm64
+            case "pvmp": return .x64
+            default: return nil
+        }
     }
 }
 

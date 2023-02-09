@@ -58,8 +58,8 @@ public struct RemoteVMRepository {
             .map { String($0) }
     }
 
-    public func getImage(named name: String) async throws -> RemoteVMImage? {
-        try await listImages().first(where: { $0.basename == name })
+    public func getCompatibleImage(named name: String) async throws -> RemoteVMImage? {
+        try await listCompatibleImages().first(where: { $0.basename == name })
     }
 
     /// Downloads a remote image using atomic writes to avoid conflict with existing files or other processes
@@ -89,9 +89,15 @@ public struct RemoteVMRepository {
         return imageFileDestination
     }
 
-    public func listImages(sortedBy strategy: RemoteVMImageSortingStrategy = .name) async throws -> [RemoteVMImage] {
+    public func listCompatibleImages(sortedBy strategy: RemoteVMImageSortingStrategy = .name) async throws -> [RemoteVMImage] {
         let objects = try await self.s3Manager.listObjects(startingWith: "images/")
-        return remoteImagesFrom(objects: objects).sorted(by: strategy.sortMethod)
+        let images = remoteImagesFrom(objects: objects).sorted(by: strategy.sortMethod)
+
+        #if arch(arm64)
+        return images.filter { $0.architecture == .arm64 }
+        #else
+        return images.filter { $0.architecture == .x64 }
+        #endif
     }
 
     func remoteImagesFrom(objects: [S3Object]) -> [RemoteVMImage] {
