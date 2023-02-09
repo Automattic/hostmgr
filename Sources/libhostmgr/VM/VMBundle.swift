@@ -5,6 +5,17 @@ import TSCBasic
 @available(macOS 13.0, *)
 public struct VMBundle: Sendable {
 
+    enum Errors: Error {
+        /// We couldn't create the disk image – usually because there were no file descriptors available
+        case unableToCreateDiskImage
+
+        /// We couldn't create the disk image – probably because there isn't enough space available on disk
+        case unableToProvisionDiskSpace
+
+        /// We created the disk image successfully, but couldn't properly close the file descriptor. The disk image is probably fine, but you should really try creating it again.
+        case unableToCloseDiskImage
+    }
+
     internal struct BundlePathResolver {
         let path: URL
 
@@ -126,15 +137,15 @@ extension VMBundle {
         let diskFd = open(pathResolver.diskImageFilePath.pathWithSlash, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)
 
         guard diskFd != -1 else {
-            fatalError("Cannot create disk image.") // TODO: This should throw
+            throw Errors.unableToCreateDiskImage
         }
 
         guard ftruncate(diskFd, off_t(size.converted(to: .bytes).value)) == 0 else {
-            fatalError("ftruncate() failed.")
+            throw Errors.unableToProvisionDiskSpace
         }
 
         guard close(diskFd) == 0 else {
-            fatalError("Failed to close the disk image.") // TODO: This should throw
+            throw Errors.unableToCloseDiskImage
         }
     }
 
