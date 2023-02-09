@@ -2,27 +2,51 @@ import Foundation
 
 public struct LocalVMImage: Equatable, FilterableByBasename {
 
-    public enum VMImageState: String, CaseIterable {
-        case packaged = "pvmp"
-        case ready = "pvm"
+    public enum VMImageState {
+        case packaged
+        case ready
+    }
+
+    struct VMExtension: Equatable {
+
+        static let validVMExtensions = [
+            VMExtension(name: "pvm", state: .ready, architecture: .x64),
+            VMExtension(name: "pvmp", state: .packaged, architecture: .x64),
+
+            VMExtension(name: "bundle", state: .ready, architecture: .arm64),
+            VMExtension(name: "bundle.aar", state: .packaged, architecture: .arm64)
+        ]
+
+        let name: String
+        let state: VMImageState
+        let architecture: ProcessorArchitecture
+
+        init?(path: URL) {
+            guard let newSelf = Self.validVMExtensions.first(where: { $0.name == path.pathExtension }) else {
+                return nil
+            }
+
+            self = newSelf
+        }
+
+        init(name: String, state: VMImageState, architecture: ProcessorArchitecture) {
+            self.name = name
+            self.state = state
+            self.architecture = architecture
+        }
     }
 
     let path: URL
-
-    private static let validVMExtensions = [
-        "pvmp",  // Packaged VM
-        "pvm"   // VM Image
-    ]
-
-    public let state: VMImageState
+    let vmExtension: VMExtension
 
     init?(path: URL) {
-        guard let state = VMImageState(rawValue: path.pathExtension) else {
+        /// Validate that the path is a valid VM image, otherwise return nil
+        guard let vmExtension = VMExtension(path: path) else {
             return nil
         }
 
         self.path = path
-        self.state = state
+        self.vmExtension = vmExtension
     }
 
     public var filename: String {
@@ -35,6 +59,14 @@ public struct LocalVMImage: Equatable, FilterableByBasename {
 
     var fileExtension: String {
         path.pathExtension
+    }
+
+    public var architecture: ProcessorArchitecture {
+        vmExtension.architecture
+    }
+
+    public var state: VMImageState {
+        vmExtension.state
     }
 
     public var fileSize: Int {

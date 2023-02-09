@@ -134,7 +134,7 @@ extension VMBundle {
             return
         }
 
-        let diskFd = open(pathResolver.diskImageFilePath.pathWithSlash, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)
+        let diskFd = open(pathResolver.diskImageFilePath.path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)
 
         guard diskFd != -1 else {
             throw Errors.unableToCreateDiskImage
