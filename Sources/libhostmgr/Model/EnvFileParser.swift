@@ -70,7 +70,8 @@ class EnvFileParser {
 
     func extractQuotedPortionOfValue(_ value: String) throws -> String? {
         let expression = try NSRegularExpression(pattern: #"^"(?<string>.*)""#)
-        guard let match = expression.firstMatch(in: value, range: NSRange(location: 0, length: value.count)) else {
+        let range = NSRange(location: 0, length: value.utf16.count)
+        guard let match = expression.firstMatch(in: value, range: range) else {
             return nil
         }
 
