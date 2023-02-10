@@ -24,6 +24,7 @@ final class PathsTests: XCTestCase {
             resolvesTo: "/usr/local/var/vm-images",
             forArchitecture: .x64
         )
+
         validate(
             path: Paths.vmImageStorageDirectory,
             resolvesTo: "/opt/homebrew/var/vm-images",
