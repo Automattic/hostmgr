@@ -12,7 +12,7 @@ struct VMPackageCommand: AsyncParsableCommand {
         abstract: "Package a VM to move it between computers"
     )
 
-    @Option(help: "The name of the new VM")
+    @Argument(help: "The name of the VM to package")
     var name: String
 
     mutating func run() async throws {
