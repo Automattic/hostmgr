@@ -4,19 +4,19 @@ import Logging
 // swiftlint:disable type_name
 /// A hack to allow global logging
 struct logger {
-    static func debug(_ message:  @autoclosure () -> Logger.Message) {
+    static func debug(_ message: @autoclosure () -> Logger.Message) {
         Logger.shared.debug(message())
     }
 
-    static func trace(_ message:  @autoclosure () -> Logger.Message) {
+    static func trace(_ message: @autoclosure () -> Logger.Message) {
         Logger.shared.trace(message())
     }
 
-    static func error(_ message :@autoclosure () -> Logger.Message) {
+    static func error(_ message: @autoclosure () -> Logger.Message) {
         Logger.shared.error(message())
     }
 
-    static func info(_ message:  @autoclosure () -> Logger.Message) {
+    static func info(_ message: @autoclosure () -> Logger.Message) {
         Logger.shared.info(message())
     }
 }
