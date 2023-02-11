@@ -4,18 +4,11 @@ public struct Paths {
 
     private static let storageDirectoryIdentifier = "com.automattic.hostmgr"
 
-    private static var homebrewRoot: URL {
-        switch ProcessInfo.processInfo.processorArchitecture {
-        case .arm64: return URL(fileURLWithPath: "/opt/homebrew", isDirectory: true)
-        case .x64: return URL(fileURLWithPath: "/usr/local", isDirectory: true)
-        }
-    }
-
     static var storageRoot: URL {
         #if arch(arm64)
         arm64StorageRoot.appendingPathComponent(storageDirectoryIdentifier, isDirectory: true)
         #else
-        homebrewRoot.appendingPathComponent("var", isDirectory: true)
+        URL(fileURLWithPath: "/usr/local", isDirectory: true).appendingPathComponent("var", isDirectory: true)
         #endif
     }
 
@@ -72,6 +65,6 @@ public struct Paths {
     }
 
     public static func toArchivedVM(named name: String) -> URL {
-        FileManager.default.temporaryDirectory.appendingPathComponent(name).appendingPathExtension("aar")
+        Paths.vmImageStorageDirectory.appendingPathComponent(name).appendingPathExtension("aar")
     }
 }
