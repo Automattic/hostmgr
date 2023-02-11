@@ -11,6 +11,9 @@ lintfix:
 build-release:
 	@echo "--- Building Release"
 	swift build -c release
+	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API" .build/release/hostmgr -v
+	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API" .build/release/hostmgr-helper -v
+	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API" .build/release/hostmgr-beacon -v
 
 release: build-release
 	@echo "--- Tagging Release"
