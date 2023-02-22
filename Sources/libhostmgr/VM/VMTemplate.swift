@@ -12,7 +12,7 @@ public struct VMTemplate: TemplateBundle {
         case invalidManifest
     }
 
-    struct ManifestFile: Codable {
+    struct ManifestFile: Equatable, Codable {
         let imageHash: Data
         let auxilaryDataHash: Data
 
@@ -63,6 +63,7 @@ public struct VMTemplate: TemplateBundle {
         return hash
     }
 
+    @discardableResult
     public func validate() throws -> Self {
 
         guard FileManager.default.fileExists(at: manifestFilePath) else {
@@ -85,7 +86,17 @@ public struct VMTemplate: TemplateBundle {
             throw Errors.missingConfigFile
         }
 
-        return self
+        /// Always double-check that the bundle bit is applied – the bundle isn't valid without it, but we can fix it transparently
+        return try self.applyBundleBit()
+    }
+
+    public func createEphemeralCopy() throws -> VMBundle {
+        let destination = FileManager.default.temporaryDirectory.appending(path: self.root.lastPathComponent)
+        debugPrint("Creating ephemeral copy of \(self) at \(destination)")
+
+        try FileManager.default.copyItem(atPath: self.root.path, toPath: destination.path)
+
+        return try VMBundle.fromExistingBundle(at: destination)
     }
 
     func createManifest() throws {
@@ -98,7 +109,7 @@ public struct VMTemplate: TemplateBundle {
     public static func creatingTemplate(fromBundle bundle: VMBundle) throws -> VMTemplate {
         let _templateRoot = bundle.root
             .deletingPathExtension()
-            .appendingPathExtension("vmpackage")
+            .appendingPathExtension("vmtemplate")
 
         let template = VMTemplate(at: _templateRoot)
 
@@ -107,7 +118,6 @@ public struct VMTemplate: TemplateBundle {
         }
 
         try FileManager.default.createDirectory(at: template.root, withIntermediateDirectories: true)
-        try FileManager.default.setBundleBit(forDirectoryAt: template.root, to: true)
 
         try FileManager.default.copyItem(at: bundle.configurationFilePath, to: template.configurationFilePath)
         try FileManager.default.copyItem(at: bundle.auxImageFilePath, to: template.auxImageFilePath)
@@ -115,6 +125,11 @@ public struct VMTemplate: TemplateBundle {
 
         try template.createManifest()
 
-        return template
+        return try template.applyBundleBit()
+    }
+
+    func applyBundleBit() throws -> Self {
+        try FileManager.default.setBundleBit(forDirectoryAt: self.root, to: true)
+        return self
     }
 }

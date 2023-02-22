@@ -4,7 +4,16 @@ import Foundation
 ///
 /// This method is the preferred way to install a remote image on a VM Host.
 public func fetchRemoteImage(name: String) async throws {
-    try await downloadRemoteImage(name: name)
+    if try LocalVMRepository().lookupVM(withName: name) == nil {
+        try await downloadRemoteImage(name: name)
+    }
+
+    guard let localVM = try LocalVMRepository().lookupVM(withName: name) else {
+        Console.error("Unable to find local VM: `\(name)`")
+        abort()
+    }
+
+    try await unpack(localVM: localVM)
 
     Console.success("VM \(name) is ready")
 }
@@ -69,17 +78,25 @@ public func downloadRemoteImage(
 
 /// Convert a Parallels `pvmp` VM image package into a VM that's ready for use
 ///
-public func unpackVM(name: String) async throws {
-
-    guard let localVM = try LocalVMRepository().lookupVM(withName: name) else {
-        Console.crash(message: "Local VM \(name) could not be found", reason: .fileNotFound)
-    }
+public func unpack(localVM: LocalVMImage) async throws {
 
     #if arch(arm64)
     guard #available(macOS 13.0, *) else {
         preconditionFailure("Apple Silicon in CI should only run on macOS 13 or greater")
     }
-    try Compressor().decompress(archiveAt: localVM.path, to: Paths.toAppleSiliconVM(named: name))
+
+    guard localVM.state == .compressed else {
+        return
+    }
+
+    Console.info("Unpacking VM")
+    let destination = Paths.toVMTemplate(named: localVM.basename)
+    try Compressor().decompress(archiveAt: localVM.path, to: destination)
+    Console.success("Extraction Complete")
+
+    Console.info("Validating VM")
+    try VMTemplate(at: destination).validate()
+    Console.success("Validation Complete")
     #else
     try await ParallelsVMRepository().unpack(localVM: localVM)
     #endif
