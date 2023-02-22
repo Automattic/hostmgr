@@ -45,6 +45,10 @@ public struct Paths {
         storageRoot.appendingPathComponent("vm-images")
     }
 
+    public static var ephemeralVMStorageDirectory: URL {
+        FileManager.default.temporaryDirectory.appendingPathComponent("virtual-machines")
+    }
+
     public static var gitMirrorStorageDirectory: URL {
         storageRoot.appendingPathComponent("git-mirrors")
     }
@@ -70,5 +74,13 @@ public struct Paths {
 
     public static func toArchivedVM(named name: String) -> URL {
         Paths.vmImageStorageDirectory.appendingPathComponent(name).appendingPathExtension("aar")
+    }
+
+    public static func createEphemeralVMStorageIfNeeded() throws {
+        guard try !FileManager.default.directoryExists(at: ephemeralVMStorageDirectory) else {
+            return
+        }
+
+        try FileManager.default.createDirectory(at: ephemeralVMStorageDirectory, withIntermediateDirectories: true)
     }
 }

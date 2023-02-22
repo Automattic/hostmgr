@@ -11,18 +11,13 @@ public struct VMLauncher {
         return VZVirtualMachine(configuration: configuration)
     }
 
-    public static func prepareBundle(named name: String) throws -> VMBundle {
-        debugPrint("Preparing Bundle named \(name)")
-
+    static func prepareBundle(named name: String) throws -> VMBundle {
         guard let localVM = try findLocalVM(named: name) else {
             throw CocoaError(.fileNoSuchFile)
         }
 
-        debugPrint("Found: \(localVM)")
-
         /// We never run packaged VMs directly – instead, we make a copy, turning it back into a regular bundle
         if localVM.state == .packaged {
-            debugPrint(localVM.path)
             return try VMTemplate(at: localVM.path).createEphemeralCopy()
         }
 
@@ -33,7 +28,7 @@ public struct VMLauncher {
     /// Try to resolve VMs – it's possible there's more than one present with the same name.
     ///
     ///  Prioritizes VM Templates, then VMs  – ignores archives because they're not launchable
-    public static func findLocalVM(named name: String) throws -> LocalVMImage? {
+    static func findLocalVM(named name: String) throws -> LocalVMImage? {
         if let template = try LocalVMRepository().lookupTemplate(withName: name) {
             return template
         }

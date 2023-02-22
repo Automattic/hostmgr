@@ -16,7 +16,6 @@ struct VMStartCommand: AsyncParsableCommand {
     var wait: Bool = false
 
     func run() async throws {
-        debugPrint("Trying to start \(self.name)")
         try await libhostmgr.startVM(name: self.name)
 
         guard wait else {
