@@ -3,34 +3,38 @@ import XCTest
 
 final class PathsTests: XCTestCase {
 
+    private var storageRoot: URL {
+        FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library").appendingPathComponent("Application Support").appendingPathComponent("com.automattic.hostmgr")
+    }
+
+    private func _p(_ string: String) -> String {
+        storageRoot.appendingPathComponent(string).path
+    }
+
     func testThatStorageRootIsCorrect() {
         validate(path: Paths.storageRoot, resolvesTo: "/usr/local/var", forArchitecture: .x64)
-        validate(path: Paths.storageRoot, resolvesTo: "/opt/homebrew/var", forArchitecture: .arm64)
+        validate(path: Paths.storageRoot, resolvesTo: storageRoot.path, forArchitecture: .arm64)
     }
 
     func testThatConfigurationRootIsCorrect() {
         validate(path: Paths.configurationRoot, resolvesTo: "/usr/local/etc/hostmgr", forArchitecture: .x64)
-        validate(path: Paths.configurationRoot, resolvesTo: "/opt/homebrew/etc/hostmgr", forArchitecture: .arm64)
+        validate(path: Paths.configurationRoot, resolvesTo: _p("configuration"), forArchitecture: .arm64)
     }
 
     func testThatStateRootIsCorrect() {
         validate(path: Paths.stateRoot, resolvesTo: "/usr/local/var/hostmgr/state", forArchitecture: .x64)
-        validate(path: Paths.stateRoot, resolvesTo: "/opt/homebrew/var/hostmgr/state", forArchitecture: .arm64)
+        validate(path: Paths.stateRoot, resolvesTo: _p("state"), forArchitecture: .arm64)
     }
 
     func testThatVMStoragePathIsCorrect() {
         validate(path: Paths.vmImageStorageDirectory, resolvesTo: "/usr/local/var/vm-images", forArchitecture: .x64)
-        validate(
-            path: Paths.vmImageStorageDirectory,
-            resolvesTo: "/opt/homebrew/var/vm-images",
-            forArchitecture: .arm64
-        )
+        validate(path: Paths.vmImageStorageDirectory, resolvesTo: _p("vm-images"), forArchitecture: .arm64)
     }
 
     func testThatGitMirrorStoragePathIsCorrect() {
         let path = Paths.gitMirrorStorageDirectory
         validate(path: path, resolvesTo: "/usr/local/var/git-mirrors", forArchitecture: .x64)
-        validate(path: path, resolvesTo: "/opt/homebrew/var/git-mirrors", forArchitecture: .arm64)
+        validate(path: path, resolvesTo: _p("git-mirrors"), forArchitecture: .arm64)
     }
 
     @available(macOS 13.0, *)
@@ -42,7 +46,7 @@ final class PathsTests: XCTestCase {
     func testThatConfigurationFilePathIsCorrect() {
         let path = Paths.configurationFilePath
         validate(path: path, resolvesTo: "/usr/local/etc/hostmgr/config.json", forArchitecture: .x64)
-        validate(path: path, resolvesTo: "/opt/homebrew/etc/hostmgr/config.json", forArchitecture: .arm64)
+        validate(path: path, resolvesTo: _p("configuration/config.json"), forArchitecture: .arm64)
     }
 
     private func validate(

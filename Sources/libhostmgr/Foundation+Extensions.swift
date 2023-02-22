@@ -93,6 +93,27 @@ extension FileManager {
         self.createFile(atPath: url.path, contents: contents)
     }
 
+    public func createEmptyFile(at url: URL, size: Measurement<UnitInformationStorage>) throws {
+
+        guard !FileManager.default.fileExists(at: url) else {
+            throw CocoaError(.fileWriteFileExists)
+        }
+
+        let diskFd = open(url.path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)
+
+        guard diskFd != -1 else {
+            throw CocoaError(.fileReadUnknown)
+        }
+
+        guard ftruncate(diskFd, off_t(size.converted(to: .bytes).value)) == 0 else {
+            throw CocoaError(.fileReadUnknown)
+        }
+
+        guard close(diskFd) == 0 else {
+            throw CocoaError(.fileReadUnknown)
+        }
+    }
+
     public func removeItemIfExists(at url: URL) throws {
         guard fileExists(at: url) else {
             return
@@ -103,6 +124,14 @@ extension FileManager {
 
     public func setAttributes(_ attributes: [FileAttributeKey: Any], ofItemAt path: URL) throws {
         try self.setAttributes(attributes, ofItemAtPath: path.path)
+    }
+
+    public func setBundleBit(forDirectoryAt url: URL, to value: Bool) throws {
+        var resourceValues = URLResourceValues()
+        resourceValues.isPackage = value
+
+        var urlCopy = url
+        try urlCopy.setResourceValues(resourceValues)
     }
 }
 

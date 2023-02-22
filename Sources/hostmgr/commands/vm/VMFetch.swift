@@ -25,9 +25,9 @@ struct VMFetchCommand: AsyncParsableCommand {
                     style: .success
                 )
             }
-
         }
 
         try await libhostmgr.fetchRemoteImage(name: self.name)
+        try await libhostmgr.unpackVM(name: self.name)
     }
 }
