@@ -16,12 +16,8 @@ struct VMPackageCommand: AsyncParsableCommand {
     var name: String
 
     mutating func run() async throws {
-
-        try Compressor.compress(
-            directory: Paths.toAppleSiliconVM(named: name),
-            to: Paths.toArchivedVM(named: name)
-        )
-
-        Console.success("Compression Complete")
+        let bundle = try VMBundle.fromExistingBundle(at: Paths.toAppleSiliconVM(named: name))
+        let template = try VMTemplate.creatingTemplate(fromBundle: bundle).validate()
+        try template.compress()
     }
 }

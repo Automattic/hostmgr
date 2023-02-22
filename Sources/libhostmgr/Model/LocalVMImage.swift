@@ -3,6 +3,7 @@ import Foundation
 public struct LocalVMImage: Equatable, FilterableByBasename {
 
     public enum VMImageState {
+        case compressed
         case packaged
         case ready
     }
@@ -14,7 +15,8 @@ public struct LocalVMImage: Equatable, FilterableByBasename {
             VMExtension(name: "pvmp", state: .packaged, architecture: .x64),
 
             VMExtension(name: "bundle", state: .ready, architecture: .arm64),
-            VMExtension(name: "bundle.aar", state: .packaged, architecture: .arm64)
+            VMExtension(name: "vmpackage", state: .packaged, architecture: .arm64),
+            VMExtension(name: "vmpackage.aar", state: .compressed, architecture: .arm64)
         ]
 
         let name: String

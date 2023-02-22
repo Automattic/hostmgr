@@ -91,7 +91,7 @@ public struct RemoteVMRepository {
 
     public func listCompatibleImages(sortedBy strategy: RemoteVMImageSortingStrategy = .name) async throws -> [RemoteVMImage] {
         let objects = try await self.s3Manager.listObjects(startingWith: "images/")
-        let images = remoteImagesFrom(objects: objects).sorted(by: strategy.sortMethod)
+        let images = remoteImagesFrom(objects: objects)
 
         #if arch(arm64)
         return images.filter { $0.architecture == .arm64 }
@@ -102,11 +102,11 @@ public struct RemoteVMRepository {
 
     func remoteImagesFrom(objects: [S3Object]) -> [RemoteVMImage] {
         let imageObjects = objects
-            .filter { $0.key.hasSuffix(".pvmp") }
+            .filter { $0.key.hasSuffix(".pvmp") || $0.key.hasSuffix(".aar") }
             .sorted()
 
         let checksums = objects
-            .filter { $0.key.hasSuffix(".sha256.txt") }
+            .filter { $0.key.hasSuffix(".sha256.txt") || $0.key.hasSuffix(".aar") }
             .sorted()
 
         return zip(imageObjects, checksums)

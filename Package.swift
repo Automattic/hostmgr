@@ -78,6 +78,7 @@ let package = Package(
                 .copy("resources/buildkite-environment-variables-with-code-quotes.env"),
                 .copy("resources/buildkite-commit-message-original.txt"),
                 .copy("resources/buildkite-commit-message-expected.txt"),
+                .copy("resources/file-hasher-test-1"),
             ]
         ),
     ]

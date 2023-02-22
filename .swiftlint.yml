@@ -1,3 +1,4 @@
+swiftlint_version: 1.1.5
 included:
   - Sources
   - Tests

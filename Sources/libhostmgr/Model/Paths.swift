@@ -64,6 +64,10 @@ public struct Paths {
         Paths.vmImageStorageDirectory.appendingPathComponent(name).appendingPathExtension("bundle")
     }
 
+    public static func toVMTemplate(named name: String) -> URL {
+        Paths.vmImageStorageDirectory.appendingPathComponent(name).appendingPathExtension("vmtemplate")
+    }
+
     public static func toArchivedVM(named name: String) -> URL {
         Paths.vmImageStorageDirectory.appendingPathComponent(name).appendingPathExtension("aar")
     }

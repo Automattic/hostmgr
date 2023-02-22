@@ -16,22 +16,6 @@ public struct VMBundle: Sendable {
         case unableToCloseDiskImage
     }
 
-    internal struct BundlePathResolver {
-        let path: URL
-
-        var configurationFilePath: URL {
-            self.path.appendingPathComponent("config.json")
-        }
-
-        var auxiliaryFileStorage: URL {
-            self.path.appendingPathComponent("aux.img")
-        }
-
-        var diskImageFilePath: URL {
-            self.path.appendingPathComponent("image.img")
-        }
-    }
-
     struct ConfigFile: Codable {
         let hardwareModelData: Data
         let machineIdentifierData: Data
@@ -54,34 +38,30 @@ public struct VMBundle: Sendable {
         }
     }
 
-    private let root: URL
+    public let root: URL
     private let hardwareModel: VZMacHardwareModel
     private let machineIdentifier: VZMacMachineIdentifier
 
     /// Persist the VM configuration to the local disk
     func saveConfiguration() throws {
-        let pathResolver = BundlePathResolver(path: self.root)
-
         try ConfigFile(
             hardwareModelData: self.hardwareModel.dataRepresentation,
             machineIdentifierData: self.machineIdentifier.dataRepresentation
         )
-        .write(to: pathResolver.configurationFilePath)
+        .write(to: self.configurationFilePath)
     }
 
-    var pathResolver: BundlePathResolver {
-        BundlePathResolver(path: self.root)
+    var name: String {
+        self.root.deletingPathExtension().lastPathComponent
     }
 }
 
 @available(macOS 13.0, *)
-extension VMBundle {
+extension VMBundle: Bundle {
     /// Instantiate a VMBundle from an existing VM package
     ///
     public static func fromExistingBundle(at url: URL) throws -> VMBundle {
-        let pathResolver = BundlePathResolver(path: url)
-
-        guard let configuration = try ConfigFile.from(url: pathResolver.configurationFilePath) else {
+        guard let configuration = try ConfigFile.from(url: Self.configurationFilePath(for: url)) else {
             abort() // TODO :This should throw
         }
 
@@ -130,11 +110,11 @@ extension VMBundle {
     /// Reserves the required local disk space for the VM disk image
     ///
     private func initializeStorageVolume(withSize size: Measurement<UnitInformationStorage>) throws {
-        guard !FileManager.default.fileExists(at: pathResolver.diskImageFilePath) else {
+        guard !FileManager.default.fileExists(at: self.diskImageFilePath) else {
             return
         }
 
-        let diskFd = open(pathResolver.diskImageFilePath.path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)
+        let diskFd = open(self.diskImageFilePath.path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)
 
         guard diskFd != -1 else {
             throw Errors.unableToCreateDiskImage
@@ -158,19 +138,18 @@ extension VMBundle {
     }
 
     public func virtualMachineConfiguration() throws -> VZVirtualMachineConfiguration {
-        let configuration = try VMConfiguration(diskImagePath: self.pathResolver.diskImageFilePath).asVirtualMachineConfiguration
+        let configuration = try VMConfiguration(diskImagePath: self.diskImageFilePath).asVirtualMachineConfiguration
         configuration.platform = try macPlatformConfiguration()
         return configuration
     }
 
     private func auxilaryStorage(for model: VZMacHardwareModel) throws -> VZMacAuxiliaryStorage {
-        let resolver = BundlePathResolver(path: self.root)
-        guard !FileManager.default.fileExists(at: resolver.auxiliaryFileStorage) else {
-            return VZMacAuxiliaryStorage(url: resolver.auxiliaryFileStorage)
+        guard !FileManager.default.fileExists(at: self.auxImageFilePath) else {
+            return VZMacAuxiliaryStorage(url: self.auxImageFilePath)
         }
 
         return try VZMacAuxiliaryStorage(
-            creatingStorageAt: resolver.auxiliaryFileStorage,
+            creatingStorageAt: self.auxImageFilePath,
             hardwareModel: model
         )
     }
