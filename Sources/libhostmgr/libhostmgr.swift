@@ -105,16 +105,16 @@ public func unpack(localVM: LocalVMImage) async throws {
 /// Resets local VM storage by removing all registered Parallels VMs and temporary VM clones.
 ///
 public func resetVMStorage() throws {
-    let repository = LocalVMRepository(imageDirectory: FileManager.default.temporaryDirectory)
-    try repository.list().forEach { localVM in
-        Console.info("Removing temp VM file for \(localVM.filename)")
-        try repository.delete(image: localVM)
-    }
+    try FileManager.default.removeItem(at: Paths.ephemeralVMStorageDirectory)
 
+    #if arch(i386)
     try ParallelsVMRepository().lookupVMs().forEach { parallelsVM in
         Console.info("Removing Registered VM \(parallelsVM.name)")
         try parallelsVM.unregister()
     }
+    #endif
+
+    try FileManager.default.createDirectory(at: Paths.ephemeralVMStorageDirectory, withIntermediateDirectories: true)
 
     Console.success("Cleanup Complete")
 }

@@ -91,6 +91,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.activeVM = nil
 
         NSApp.setActivationPolicy(.prohibited)
+
+        try libhostmgr.resetVMStorage()
     }
 }
 

@@ -88,7 +88,9 @@ public struct ParallelsVMRepository: ParallelsVMRepositoryProtocol {
             return try await startVM(named: name)
         }
 
-        let destination = FileManager.default.temporaryFilePath(named: name + ".tmp.pvm")
+        let destination = Paths.ephemeralVMStorageDirectory.appendingPathComponent(name + ".tmp.pvm")
+
+        try Paths.createEphemeralVMStorageIfNeeded()
         try FileManager.default.removeItemIfExists(at: destination)
         try FileManager.default.copyItem(at: sourceVM.path, to: destination)
         Console.info("Created temporary VM at \(destination)")

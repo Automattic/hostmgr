@@ -63,6 +63,15 @@ public struct VMTemplate: TemplateBundle {
         return hash
     }
 
+    /// Validate this VM template by:
+    ///
+    ///  - Ensuring that the manifest is present and can be parsed
+    ///  - Ensuring that the disk image has not been modified
+    ///  - Ensuring that the auxiliary data image has not been modified
+    ///  - Ensuring that the configuration file is present
+    ///
+    ///  This method also re-applies the `bundle` bit on template's source directory if it's missing – the bundle
+    ///  isn't valid without it, but we can fix it transparently
     @discardableResult
     public func validate() throws -> Self {
 
@@ -86,26 +95,24 @@ public struct VMTemplate: TemplateBundle {
             throw Errors.missingConfigFile
         }
 
-        /// Always double-check that the bundle bit is applied – the bundle isn't valid without it, but we can fix it transparently
+        /// Ensure that the bundle bit is applied
         return try self.applyBundleBit()
     }
 
-    public func createEphemeralCopy() throws -> VMBundle {
-        let destination = FileManager.default.temporaryDirectory.appending(path: self.root.lastPathComponent)
-        debugPrint("Creating ephemeral copy of \(self) at \(destination)")
+    /// Use this template to produce an identical virtual machine
+    ///
+    /// Doesn't alter the template in any way, and ensures that each copy has a unique place on the file system.
+    /// By default, this method creates the copy in the system temp directory, but the destination can be overridden using the `url` parameter
+    public func createEphemeralCopy(at url: URL? = nil) throws -> VMBundle {
+        let filename = self.root.lastPathComponent + "-" + UUID().uuidString
+        let destination = url ?? Paths.ephemeralVMStorageDirectory.appending(path: filename)
 
+        try Paths.createEphemeralVMStorageIfNeeded()
         try FileManager.default.copyItem(atPath: self.root.path, toPath: destination.path)
-
         return try VMBundle.fromExistingBundle(at: destination)
     }
 
-    func createManifest() throws {
-        try ManifestFile(
-            imageHash: try hashDiskImage(),
-            auxilaryDataHash: try hashAuxData()
-        ).write(to: manifestFilePath)
-    }
-
+    /// Create a read-only template on disk from an existing VM bundle
     public static func creatingTemplate(fromBundle bundle: VMBundle) throws -> VMTemplate {
         let _templateRoot = bundle.root
             .deletingPathExtension()
@@ -123,7 +130,10 @@ public struct VMTemplate: TemplateBundle {
         try FileManager.default.copyItem(at: bundle.auxImageFilePath, to: template.auxImageFilePath)
         try FileManager.default.copyItem(at: bundle.diskImageFilePath, to: template.diskImageFilePath)
 
-        try template.createManifest()
+        try ManifestFile(
+            imageHash: try template.hashDiskImage(),
+            auxilaryDataHash: try template.hashAuxData()
+        ).write(to: template.manifestFilePath)
 
         return try template.applyBundleBit()
     }
