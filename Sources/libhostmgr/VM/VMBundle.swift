@@ -32,7 +32,7 @@ public struct VMBundle: Sendable {
             try JSONEncoder().encode(self).write(to: url, options: .atomic)
         }
 
-        static func from(url: URL) throws -> ConfigFile? {
+        static func from(url: URL) throws -> ConfigFile {
             let data = try Data(contentsOf: url)
             return try JSONDecoder().decode(ConfigFile.self, from: data)
         }
@@ -61,9 +61,7 @@ extension VMBundle: Bundle {
     /// Instantiate a VMBundle from an existing VM package
     ///
     public static func fromExistingBundle(at url: URL) throws -> VMBundle {
-        guard let configuration = try ConfigFile.from(url: Self.configurationFilePath(for: url)) else {
-            abort() // TODO :This should throw
-        }
+        let configuration = try ConfigFile.from(url: Self.configurationFilePath(for: url))
 
         return VMBundle(
             root: url,

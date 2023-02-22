@@ -77,7 +77,7 @@ public struct RemoteVMRepository {
             replacingExistingFile: false,
             progressCallback: nil)
 
-        let imageFileDestination = destinationDirectory.appendingPathComponent(image.checksumFileName)
+        let imageFileDestination = destinationDirectory.appendingPathComponent(image.fileName)
 
         try await self.s3Manager.download(
             key: image.imageObject.key,
@@ -102,11 +102,11 @@ public struct RemoteVMRepository {
 
     func remoteImagesFrom(objects: [S3Object]) -> [RemoteVMImage] {
         let imageObjects = objects
-            .filter { $0.key.hasSuffix(".pvmp") || $0.key.hasSuffix(".aar") }
+            .filter { $0.key.hasSuffix(".pvmp") || $0.key.hasSuffix(".vmpackage.aar") }
             .sorted()
 
         let checksums = objects
-            .filter { $0.key.hasSuffix(".sha256.txt") || $0.key.hasSuffix(".aar") }
+            .filter { $0.key.hasSuffix(".sha256.txt") || $0.key.hasSuffix(".vmpackage.aar") }
             .sorted()
 
         return zip(imageObjects, checksums)

@@ -2,7 +2,7 @@ import Foundation
 
 public struct LocalVMImage: Equatable, FilterableByBasename {
 
-    public enum VMImageState {
+    public enum VMImageState: String {
         case compressed
         case packaged
         case ready
@@ -13,10 +13,11 @@ public struct LocalVMImage: Equatable, FilterableByBasename {
         static let validVMExtensions = [
             VMExtension(name: "pvm", state: .ready, architecture: .x64),
             VMExtension(name: "pvmp", state: .packaged, architecture: .x64),
+            VMExtension(name: "aar", state: .compressed, architecture: .x64),
 
             VMExtension(name: "bundle", state: .ready, architecture: .arm64),
-            VMExtension(name: "vmpackage", state: .packaged, architecture: .arm64),
-            VMExtension(name: "vmpackage.aar", state: .compressed, architecture: .arm64)
+            VMExtension(name: "vmtemplate", state: .packaged, architecture: .arm64),
+            VMExtension(name: "aar", state: .compressed, architecture: .arm64)
         ]
 
         let name: String
@@ -24,7 +25,21 @@ public struct LocalVMImage: Equatable, FilterableByBasename {
         let architecture: ProcessorArchitecture
 
         init?(path: URL) {
-            guard let newSelf = Self.validVMExtensions.first(where: { $0.name == path.pathExtension }) else {
+            guard let newSelf = Self.validVMExtensions.first(where: {
+                if $0.name == "aar" {
+                    if path.lastPathComponent.contains(".pvmp.aar") {
+                        return $0.architecture == .x64
+                    }
+
+                    if path.lastPathComponent.contains(".vmpackage.aar") {
+                        return $0.architecture == .arm64
+                    }
+
+                    return false
+                }
+
+                return $0.name == path.pathExtension
+            }) else {
                 return nil
             }
 
@@ -38,7 +53,7 @@ public struct LocalVMImage: Equatable, FilterableByBasename {
         }
     }
 
-    let path: URL
+    public let path: URL
     let vmExtension: VMExtension
 
     init?(path: URL) {
@@ -56,7 +71,16 @@ public struct LocalVMImage: Equatable, FilterableByBasename {
     }
 
     public var basename: String {
-        path.deletingPathExtension().lastPathComponent
+        if architecture == .arm64 {
+            return path
+                .deletingPathExtension()
+                .deletingPathExtension()
+                .lastPathComponent
+        } else {
+            return path
+                .deletingPathExtension()
+                .lastPathComponent
+        }
     }
 
     var fileExtension: String {

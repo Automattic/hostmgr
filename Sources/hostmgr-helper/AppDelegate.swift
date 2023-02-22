@@ -15,6 +15,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     enum Errors: Error {
         case vmNotRunning
+        case vmNotFound
     }
 
     private let listener = XPCService.createListener()
@@ -59,12 +60,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func launchVM(named name: String) async throws {
         logger.trace("Launching VM: \(name)")
 
-        let bundle = try VMBundle.fromExistingBundle(at: Paths.toAppleSiliconVM(named: name))
-        let configuration = try bundle.virtualMachineConfiguration()
-        try configuration.validate()
-
-        let virtualMachine = VZVirtualMachine(configuration: configuration)
+        let virtualMachine = try VMLauncher.prepareVirtualMachine(named: name)
         virtualMachine.delegate = self.delegate
+
         self.viewController.present(virtualMachine: virtualMachine)
 
         self.activeVM = virtualMachine

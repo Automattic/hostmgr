@@ -42,13 +42,21 @@ public struct LocalVMRepository: LocalVMRepositoryProtocol {
 
         return try fileManager
             .contentsOfDirectory(atPath: imageDirectory.path)
-            .map { URL(fileURLWithPath: $0, relativeTo: self.imageDirectory) }
+            .map { URL(fileURLWithPath: $0, relativeTo: imageDirectory) }
             .compactMap(LocalVMImage.init)
             .sorted(by: strategy.sortMethod)
     }
 
     public func lookupVM(withName name: String) throws -> LocalVMImage? {
         try list().first { $0.basename == name }
+    }
+
+    public func lookupTemplate(withName name: String) throws -> LocalVMImage? {
+        try list().first { $0.state == .packaged && $0.basename == name }
+    }
+
+    public func lookupBundle(withName name: String) throws -> LocalVMImage? {
+        try list().first { $0.state == .ready && $0.basename == name }
     }
 
     /// Delete a list of VM images from the local disk by image name

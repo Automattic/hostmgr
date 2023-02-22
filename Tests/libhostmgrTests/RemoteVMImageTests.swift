@@ -40,4 +40,20 @@ final class RemoteVMImageTests: XCTestCase {
     func testThatChecksumCanBeRetrieved() throws {
         XCTAssertEqual("foo/bar.sha1.txt", testSubject.checksumObject.key)
     }
+
+    func testThatChecksumCanBeDirectlyRetrieved() throws {
+        XCTAssertEqual("foo/bar.sha1.txt", testSubject.checksumKey)
+    }
+
+    func testThatChecksumFilenameCanBeInferred() throws {
+        XCTAssertEqual("bar.sha256.txt", testSubject.checksumFileName)
+    }
+
+    func testThatRemoteArm64PackagedImageFileNameIsCorrect() throws {
+        XCTAssertEqual(RemoteVMImage.with(key: "xcode-12.5.1.vmpackage.aar").basename, "xcode-12.5.1")
+    }
+
+    func testThatRemoteX64PackagedImageFileNameIsCorrect() throws {
+        XCTAssertEqual(RemoteVMImage.with(key: "xcode-12.5.1.pvmp").basename, "xcode-12.5.1")
+    }
 }

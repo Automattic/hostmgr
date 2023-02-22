@@ -11,9 +11,16 @@ public struct RemoteVMImage: FilterableByBasename {
     }
 
     public var basename: String {
-        URL(fileURLWithPath: imageObject.key)
-            .deletingPathExtension()
-            .lastPathComponent
+        if architecture == .arm64 {
+            return URL(fileURLWithPath: imageObject.key)
+                .deletingPathExtension()
+                .deletingPathExtension()
+                .lastPathComponent
+        } else {
+            return URL(fileURLWithPath: imageObject.key)
+                .deletingPathExtension()
+                .lastPathComponent
+        }
     }
 
     public var fileExtension: String {

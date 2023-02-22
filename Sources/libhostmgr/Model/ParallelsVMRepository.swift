@@ -84,7 +84,7 @@ public struct ParallelsVMRepository: ParallelsVMRepositoryProtocol {
         try resetVMStorage()
 
         if sourceVM.state == .packaged {
-            try await unpackVM(name: name)
+            try await unpack(localVM: sourceVM)
             return try await startVM(named: name)
         }
 
