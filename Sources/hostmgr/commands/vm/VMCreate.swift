@@ -12,13 +12,17 @@ struct VMCreateCommand: AsyncParsableCommand {
         abstract: "Create a new VM"
     )
 
-    @Option(help: "The name of the new VM")
+    @Argument
     var name: String
+
+    @Option(help: "The disk size of machine that should be created, in GB")
+    var diskSize: Int = 64
 
     private var continuation: CheckedContinuation<Void, Error>!
 
     private enum CodingKeys: String, CodingKey {
         case name
+        case diskSize
     }
 
     mutating func run() async throws {
@@ -34,7 +38,8 @@ struct VMCreateCommand: AsyncParsableCommand {
 
         let bundle = try VMBundle.createBundle(
             named: self.name,
-            fromRestoreImage: localImage
+            fromRestoreImage: localImage,
+            withStorageCapacity: .init(value: Double(diskSize), unit: .gigabytes)
         )
 
         let progressBar = Console.startProgress("Installing")

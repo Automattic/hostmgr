@@ -75,7 +75,7 @@ extension VMBundle: Bundle {
     public static func createBundle(
         named name: String,
         fromRestoreImage image: VZMacOSRestoreImage,
-        withStorageCapacity capacity: Measurement<UnitInformationStorage> = .init(value: 64, unit: .gigabytes)
+        withStorageCapacity capacity: Measurement<UnitInformationStorage>
     ) throws -> VMBundle {
         guard let macOSConfiguration = image.mostFeaturefulSupportedConfiguration else {
             Console.crash(
