@@ -12,13 +12,13 @@ class VMViewController: NSViewController {
         self.view.autoresizingMask = [.width, .height]
     }
 
-    func present(virtualMachine: VZVirtualMachine) {
+    func present(virtualMachine: VZVirtualMachine, named name: String) {
         guard let view = self.view as? VZVirtualMachineView else {
             abort()
         }
 
         view.virtualMachine = virtualMachine
-        view.window?.title = virtualMachine.description
+        view.window?.title = name
     }
 
     func dismissVirtualMachine() {

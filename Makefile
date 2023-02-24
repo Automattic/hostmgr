@@ -24,7 +24,7 @@ run-vm-create-debug:
 	@echo "--- Building and Signing hostmgr for Local Development"
 	swift build
 	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API" .build/arm64-apple-macosx/debug/hostmgr -v
-	./.build/arm64-apple-macosx/debug/hostmgr vm create --name test
+	./.build/arm64-apple-macosx/debug/hostmgr vm create xcode-14.2 --disk-size 92
 
 build-helper-debug:
 	@echo "--- Building and Signing helper for Local Development"
@@ -34,7 +34,7 @@ build-helper-debug:
 run-helper-debug: build-helper-debug
 	./.build/arm64-apple-macosx/debug/hostmgr-helper --debug true
 
-reload-helper-debug:
+reload-helper-debug: build-helper-debug
 	launchctl unload ~/Library/LaunchAgents/com.hostmgr.helper.plist
 	launchctl load ~/Library/LaunchAgents/com.hostmgr.helper.plist
 

@@ -42,7 +42,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.listener.delegate = self
         self.listener.resume()
 
-        NotificationCenter.default.addObserver(self, selector: #selector(self.didReceiveDebugNotification(_:)), name: nil, object: nil)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(self.didReceiveDebugNotification(_:)),
+            name: nil,
+            object: nil
+        )
 
         do {
             let arguments = try CLIArguments.parse()
@@ -52,7 +57,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         } catch {
             print(CLIArguments.helpMessage())
-            exit(0)
+            exit(1)
         }
     }
 
@@ -63,7 +68,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let virtualMachine = try VMLauncher.prepareVirtualMachine(named: name)
         virtualMachine.delegate = self.delegate
 
-        self.viewController.present(virtualMachine: virtualMachine)
+        self.viewController.present(virtualMachine: virtualMachine, named: name)
 
         self.activeVM = virtualMachine
         try await self.activeVM?.start()
