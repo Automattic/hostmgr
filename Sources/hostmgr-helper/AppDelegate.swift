@@ -40,6 +40,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         self.listener.delegate = self
         self.listener.resume()
+        self.vmWindow.delegate = self
 
         NotificationCenter.default.addObserver(
             self,
@@ -161,5 +162,14 @@ extension AppDelegate: VZVirtualMachineDelegate {
         self.vmWindow.close()
         self.viewController.dismissVirtualMachine()
         self.activeVM = nil
+    }
+}
+
+@available(macOS 13.0, *)
+extension AppDelegate: NSWindowDelegate {
+    func windowWillClose(_ notification: Notification) {
+        Task {
+            try await activeVM?.stop()
+        }
     }
 }
