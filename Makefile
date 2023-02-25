@@ -24,7 +24,10 @@ run-vm-create-debug:
 	@echo "--- Building and Signing hostmgr for Local Development"
 	swift build
 	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API" .build/arm64-apple-macosx/debug/hostmgr -v
-	./.build/arm64-apple-macosx/debug/hostmgr vm create xcode-14.2 --disk-size 92
+	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API" .build/release/hostmgr-helper -v
+	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API" .build/release/hostmgr-beacon -v
+
+	./.build/arm64-apple-macosx/debug/hostmgr vm create xcode-143 --disk-size 92
 
 build-helper-debug:
 	@echo "--- Building and Signing helper for Local Development"
