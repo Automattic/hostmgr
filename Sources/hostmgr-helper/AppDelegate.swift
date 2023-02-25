@@ -21,7 +21,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private let listener = XPCService.createListener()
 
     private var activeVM: VZVirtualMachine?
-    private let delegate = MacOSVirtualMachineDelegate()
 
     let viewController = VMViewController()
     lazy var vmWindow: NSWindow = {
@@ -66,7 +65,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         logger.trace("Launching VM: \(name)")
 
         let virtualMachine = try VMLauncher.prepareVirtualMachine(named: name)
-        virtualMachine.delegate = self.delegate
+        virtualMachine.delegate = self
 
         self.viewController.present(virtualMachine: virtualMachine, named: name)
 
@@ -149,5 +148,18 @@ extension AppDelegate: XPCServiceDelegate {
     func serviceShouldStopVM() async throws {
         print("Delegate received `shouldStopVM`")
         try await self.stopVM()
+    }
+}
+
+@available(macOS 13.0, *)
+extension AppDelegate: VZVirtualMachineDelegate {
+    public func virtualMachine(_ virtualMachine: VZVirtualMachine, didStopWithError error: Error) {
+        NSApplication.shared.presentError(error)
+    }
+
+    public func guestDidStop(_ virtualMachine: VZVirtualMachine) {
+        self.vmWindow.close()
+        self.viewController.dismissVirtualMachine()
+        self.activeVM = nil
     }
 }

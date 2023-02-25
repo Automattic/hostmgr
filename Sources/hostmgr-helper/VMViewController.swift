@@ -18,7 +18,7 @@ class VMViewController: NSViewController {
         }
 
         view.virtualMachine = virtualMachine
-        view.window?.title = name
+        self.title = name
     }
 
     func dismissVirtualMachine() {

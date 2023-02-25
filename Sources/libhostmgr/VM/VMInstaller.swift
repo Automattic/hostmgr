@@ -36,14 +36,12 @@ public class VMInstaller {
 
     @MainActor
     public func install(progressCallback: @escaping ProgressCallback) async throws {
-        let vmDelegate = MacOSVirtualMachineDelegate()
         let vmConfiguration = try self.bundle.virtualMachineConfiguration()
         try vmConfiguration.validate()
 
         let url = self.restoreImageUrl
 
         let virtualMachine = VZVirtualMachine(configuration: vmConfiguration)
-        virtualMachine.delegate = vmDelegate
 
         let installer = VZMacOSInstaller(virtualMachine: virtualMachine, restoringFromImageAt: url)
 
