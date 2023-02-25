@@ -22,10 +22,6 @@ class VMViewController: NSViewController {
     }
 
     func dismissVirtualMachine() {
-        guard let view = self.view as? VZVirtualMachineView else {
-            abort()
-        }
-
-        view.virtualMachine = nil
+        (self.view as? VZVirtualMachineView)?.virtualMachine = nil
     }
 }
