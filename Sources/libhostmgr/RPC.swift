@@ -28,11 +28,8 @@ public struct RPCServer {
 
         service.noAutoRename = true // Don't adjust the service name
 
-        if #available(macOS 13.0, *) {
-            self.listener = try NWListener(service: service, using: parameters)
-        } else {
-            abort() //TODO: Fix this
-        }
+        self.listener = try NWListener(using: parameters)
+        self.listener.service = service
     }
 
     public func start() {
@@ -63,7 +60,7 @@ public struct VMResolver {
         )
 
         await withCheckedContinuation { continuation in
-            browser.browseResultsChangedHandler = { results, changes in
+            browser.browseResultsChangedHandler = { results, _ in
                 guard let result = results.first else {
                     // Wait for another set of changes to come in
                     return
@@ -119,9 +116,9 @@ final class BonjourResolver: NSObject, NetServiceDelegate {
         assert(self.selfRetain == nil)
     }
 
-    private var service: NetService? = nil
-    private var completionHandler: (CompletionHandler)? = nil
-    private var selfRetain: BonjourResolver? = nil
+    private var service: NetService?
+    private var completionHandler: (CompletionHandler)?
+    private var selfRetain: BonjourResolver?
 
     private func start() {
         precondition(Thread.isMainThread)

@@ -18,7 +18,12 @@ public struct Compressor {
 
         guard
             let archiveFilePath = FilePath(destination),
-            let writeFileStream = ArchiveByteStream.fileStream(path: archiveFilePath, mode: .writeOnly, options: [ .create ], permissions: FilePermissions(rawValue: 0o644)),
+            let writeFileStream = ArchiveByteStream.fileStream(
+                path: archiveFilePath,
+                mode: .writeOnly,
+                options: [ .create ],
+                permissions: FilePermissions(rawValue: 0o644)
+            ),
             let compressionStream = ArchiveByteStream.compressionStream(using: .lzfse, writingTo: writeFileStream),
             let encodeStream = ArchiveStream.encodeStream(writingTo: compressionStream)
         else {
@@ -38,11 +43,19 @@ public struct Compressor {
 
         guard
             let archiveFilePath = FilePath(archivePath),
-            let readFileStream = ArchiveByteStream.fileStream(path: archiveFilePath, mode: .readOnly, options: [ ], permissions: FilePermissions(rawValue: 0o644)),
+            let readFileStream = ArchiveByteStream.fileStream(
+                path: archiveFilePath,
+                mode: .readOnly,
+                options: [ ],
+                permissions: FilePermissions(rawValue: 0o644)
+            ),
             let decompressionStream = ArchiveByteStream.decompressionStream(readingFrom: readFileStream),
             let decodeStream = ArchiveStream.decodeStream(readingFrom: decompressionStream),
             let decompressDestination = FilePath(destination),
-            let extractStream = ArchiveStream.extractStream(extractingTo: decompressDestination, flags: [ .ignoreOperationNotPermitted ])
+            let extractStream = ArchiveStream.extractStream(
+                extractingTo: decompressDestination,
+                flags: [ .ignoreOperationNotPermitted ]
+            )
 
         else {
             return

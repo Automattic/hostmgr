@@ -4,7 +4,10 @@ import XCTest
 final class PathsTests: XCTestCase {
 
     private var storageRoot: URL {
-        FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library").appendingPathComponent("Application Support").appendingPathComponent("com.automattic.hostmgr")
+        FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library")
+            .appendingPathComponent("Application Support")
+            .appendingPathComponent("com.automattic.hostmgr")
     }
 
     private func _p(_ string: String) -> String {

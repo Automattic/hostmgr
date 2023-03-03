@@ -26,7 +26,7 @@ struct VMCommand: AsyncParsableCommand {
     static var intelCommands: [ParsableCommand.Type] {
         #if arch(x86_64)
         return [
-            VMCleanCommand.self,
+            VMCleanCommand.self
         ]
         #endif
 

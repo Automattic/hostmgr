@@ -35,7 +35,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }()
 
     lazy var dockIcon: NSImage = {
-        let url = URL(fileURLWithPath: "/System/Library/CoreServices/UniversalControl.app/Contents/Resources/AppIcon.icns")
+        let iconPath = "/System/Library/CoreServices/UniversalControl.app/Contents/Resources/AppIcon.icns"
+        let url = URL(fileURLWithPath: iconPath)
         return NSImage(contentsOf: url) ?? NSImage(systemSymbolName: "terminal.fill", accessibilityDescription: nil)!
     }()
 
@@ -129,10 +130,8 @@ extension AppDelegate {
         Task {
             do {
                 switch action {
-                    case .startVM:
-                        try await launchVM(named: "test")
-                    case .stopVM:
-                        try await stopVM()
+                case .startVM: try await launchVM(named: "test")
+                case .stopVM: try await stopVM()
                 }
             } catch {
                 print(error.localizedDescription)

@@ -54,7 +54,11 @@ class DownloadDelegate: NSObject, URLSessionDownloadDelegate {
     private let continuation: CheckedContinuation<Void, Error>
     private let progressCallback: VMDownloader.ProgressCallback?
 
-    init(destination: URL, continuation: CheckedContinuation<Void, Error>, progressCallback: VMDownloader.ProgressCallback? = nil) {
+    init(
+        destination: URL,
+        continuation: CheckedContinuation<Void, Error>,
+        progressCallback: VMDownloader.ProgressCallback? = nil
+    ) {
         self.destination = destination
         self.continuation = continuation
         self.progressCallback = progressCallback
@@ -79,7 +83,13 @@ class DownloadDelegate: NSObject, URLSessionDownloadDelegate {
         self.continuation.resume(throwing: error)
     }
 
-    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
+    func urlSession(
+        _ session: URLSession,
+        downloadTask: URLSessionDownloadTask,
+        didWriteData bytesWritten: Int64,
+        totalBytesWritten: Int64,
+        totalBytesExpectedToWrite: Int64
+    ) {
         let progress = Progress(totalUnitCount: totalBytesExpectedToWrite)
         progress.completedUnitCount = totalBytesWritten
 

@@ -89,7 +89,9 @@ public struct RemoteVMRepository {
         return imageFileDestination
     }
 
-    public func listCompatibleImages(sortedBy strategy: RemoteVMImageSortingStrategy = .name) async throws -> [RemoteVMImage] {
+    public func listCompatibleImages(
+        sortedBy strategy: RemoteVMImageSortingStrategy = .name
+    ) async throws -> [RemoteVMImage] {
         let objects = try await self.s3Manager.listObjects(startingWith: "images/")
         let images = remoteImagesFrom(objects: objects)
 
