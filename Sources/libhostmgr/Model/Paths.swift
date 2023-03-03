@@ -6,20 +6,18 @@ public struct Paths {
 
     static var storageRoot: URL {
         #if arch(arm64)
-        arm64StorageRoot.appendingPathComponent(storageDirectoryIdentifier, isDirectory: true)
+        arm64StorageRoot
         #else
         URL(fileURLWithPath: "/usr/local", isDirectory: true).appendingPathComponent("var", isDirectory: true)
         #endif
     }
 
     /// A way to push the available check out to keep things pretty
+    #if arch(arm64)
     private static var arm64StorageRoot: URL {
-        guard #available(macOS 13.0, *) else {
-            preconditionFailure("Apple Silicon in CI should only run on macOS 13 or greater")
-        }
-
-        return URL.applicationSupportDirectory
+        Paths.applicationSupportDirectory
     }
+    #endif
 
     static var configurationRoot: URL {
         #if arch(arm64)
@@ -62,6 +60,18 @@ public struct Paths {
 
     static var configurationFilePath: URL {
         configurationRoot.appendingPathComponent("config.json")
+    }
+
+    static var applicationCacheDirectory: URL {
+        FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
+            .first!
+            .appendingPathComponent(storageDirectoryIdentifier)
+    }
+
+    static var applicationSupportDirectory: URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
+            .first!
+            .appendingPathComponent(storageDirectoryIdentifier)
     }
 
     public static func toAppleSiliconVM(named name: String) -> URL {
