@@ -12,6 +12,7 @@ struct VMConfiguration {
     let cpuCount: Int = VZVirtualMachineConfiguration.maximumAllowedCPUCount
     let memorySize: UInt64 = VZVirtualMachineConfiguration.maximumAllowedMemorySize
     let diskImage: VZDiskImageStorageDeviceAttachment
+    let macAddress: VZMACAddress
 
     let displays: [VZMacGraphicsDisplayConfiguration] = [
         VZMacGraphicsDisplayConfiguration(widthInPixels: 1920, heightInPixels: 1200, pixelsPerInch: 220)
@@ -20,8 +21,9 @@ struct VMConfiguration {
     let pointingDevice = VZUSBScreenCoordinatePointingDeviceConfiguration()
     let keyboard = VZUSBKeyboardConfiguration()
 
-    init(diskImagePath: URL) throws {
+    init(diskImagePath: URL, macAddress: VZMACAddress) throws {
         self.diskImage = try VZDiskImageStorageDeviceAttachment(url: diskImagePath, readOnly: false)
+        self.macAddress = macAddress
     }
 
     var asVirtualMachineConfiguration: VZVirtualMachineConfiguration {
@@ -52,10 +54,11 @@ struct VMConfiguration {
 
         let networkAttachment = VZNATNetworkDeviceAttachment()
         networkDevice.attachment = networkAttachment
+        networkDevice.macAddress = macAddress
         return [networkDevice]
     }
 
     var blockDeviceConfiguration: VZVirtioBlockDeviceConfiguration {
-        VZVirtioBlockDeviceConfiguration(attachment: self.diskImage)
+        VZVirtioBlockDeviceConfiguration(attachment: diskImage)
     }
 }

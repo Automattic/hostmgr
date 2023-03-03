@@ -183,7 +183,7 @@ public func startVM(name: String) async throws {
     try await ParallelsVMRepository().startVM(named: name)
     #endif
 
-    Console.success("VM is running")
+    Console.success("VM is starting up")
 }
 
 public func stopAllRunningVMs(
