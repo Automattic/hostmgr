@@ -20,12 +20,10 @@ release: build-release
 	git tag $(RELEASE_VERSION)
 	git push origin $(RELEASE_VERSION)
 
-run-vm-create-debug:
+create-vm-debug:
 	@echo "--- Building and Signing hostmgr for Local Development"
 	swift build
 	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API" .build/arm64-apple-macosx/debug/hostmgr -v
-	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API" .build/release/hostmgr-helper -v
-	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API" .build/release/hostmgr-beacon -v
 
 	./.build/arm64-apple-macosx/debug/hostmgr vm create xcode-143 --disk-size 92
 
