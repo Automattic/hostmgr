@@ -120,8 +120,7 @@ public struct ParallelsVMRepository: ParallelsVMRepositoryProtocol {
                 return
             }
 
-            let elapsed = Date().timeIntervalSince(startDate)
-            Console.success("Booted \(parallelsVM.name) \(Format.time(elapsed))")
+            Console.success("Booted \(parallelsVM.name) \(Format.elapsedTime(between: startDate, and: .now))")
             continuation.resume(with: .success(()))
         }
     }

@@ -33,10 +33,29 @@ public struct Format {
         return formatter.string(fromByteCount: count)
     }
 
-    public static func time(_ interval: TimeInterval) -> String {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.formattingContext = .standalone
-        return formatter.localizedString(fromTimeInterval: interval)
+//    public static func time(_ interval: TimeInterval) -> String {
+//        let formatter = RelativeDateTimeFormatter()
+//        formatter.formattingContext = .standalone
+//        return formatter.localizedString(fromTimeInterval: interval)
+//    }
+
+    public static func elapsedTime(between from: Date, and to: Date) -> String {
+        let formatter = DateComponentsFormatter()
+        formatter.includesApproximationPhrase = true
+        formatter.unitsStyle = .full
+        formatter.allowedUnits = [.second, .minute, .hour]
+        return formatter.string(from: from, to: to)!
+    }
+
+    public static func timeRemaining(_ interval: TimeInterval) -> String {
+        let formatter = DateComponentsFormatter()
+        formatter.includesApproximationPhrase = true
+        formatter.includesTimeRemainingPhrase = true
+        formatter.unitsStyle = .abbreviated
+        formatter.maximumUnitCount = 2
+        formatter.allowedUnits = [.second, .minute, .hour, .day, .month, .year]
+        return formatter.string(from: Date(), to: Date() + interval) ?? "Calculating time remaining"
+
     }
 
     public static func percentage(_ number: Decimal) -> String {

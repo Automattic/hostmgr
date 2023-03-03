@@ -121,7 +121,7 @@ public class ProgressBar {
         }
 
         let rate = Format.fileBytes(progress.dataRate)
-        let remaining = Format.time(progress.estimatedTimeRemaining)
+        let remaining = Format.timeRemaining(progress.estimatedTimeRemaining)
         let percentage = Format.percentage(progress.fractionComplete)
 
         // Erase the old progress line and overwrite it
