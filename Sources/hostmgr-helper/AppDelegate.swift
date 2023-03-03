@@ -34,6 +34,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return window
     }()
 
+    lazy var dockIcon: NSImage = {
+        let url = URL(fileURLWithPath: "/System/Library/CoreServices/UniversalControl.app/Contents/Resources/AppIcon.icns")
+        return NSImage(contentsOf: url) ?? NSImage(systemSymbolName: "terminal.fill", accessibilityDescription: nil)!
+    }()
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         logger.trace("didFinishLaunching")
 
@@ -76,6 +81,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.vmWindow.becomeFirstResponder()
 
         NSApp.setActivationPolicy(.regular)
+        NSApp.applicationIconImage = self.dockIcon
     }
 
     @MainActor
