@@ -1,10 +1,10 @@
 import Foundation
 import Network
-@preconcurrency import Virtualization
+import Virtualization
 import TSCBasic
 
-@available(macOS 11.0, *)
-public struct VMBundle: Sendable {
+#if arch(arm64)
+public struct VMBundle {
 
     enum Errors: Error {
         /// We couldn't create the disk image – usually because there were no file descriptors available
@@ -188,3 +188,4 @@ extension VMBundle: Bundle {
         )
     }
 }
+#endif

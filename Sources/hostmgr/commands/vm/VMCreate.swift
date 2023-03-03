@@ -4,6 +4,7 @@ import ArgumentParser
 import Cocoa
 import libhostmgr
 
+#if arch(arm64)
 struct VMCreateCommand: AsyncParsableCommand {
 
     static let configuration = CommandConfiguration(
@@ -49,3 +50,4 @@ struct VMCreateCommand: AsyncParsableCommand {
         Console.success("Installation Complete – you can now start the VM")
     }
 }
+#endif

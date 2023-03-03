@@ -1,5 +1,6 @@
 import Foundation
 
+#if arch(arm64)
 public struct VMTemplate: TemplateBundle {
     let root: URL
 
@@ -143,3 +144,4 @@ public struct VMTemplate: TemplateBundle {
         return self
     }
 }
+#endif

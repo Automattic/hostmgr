@@ -178,35 +178,27 @@ public func listLocalImagesToDelete(
 public func startVM(name: String) async throws {
     #if arch(arm64)
     try await XPCService.startVM(named: name)
+    Console.success("VM is starting up")
     #else
     try await ParallelsVMRepository().startVM(named: name)
     #endif
-
-    Console.success("VM is starting up")
 }
 
-public func stopAllRunningVMs(
-    immediately: Bool = true,
-    parallelsRepository: ParallelsVMRepositoryProtocol = ParallelsVMRepository()
-) async throws {
+public func stopAllRunningVMs(immediately: Bool = true) async throws {
     #if arch(arm64)
     try await XPCService.stopVM()
     #else
-    ParallelsVMRepository().stopAllRunningVMs(immediately: immediately)
+    try await ParallelsVMRepository().stopAllRunningVMs(immediately: immediately)
     #endif
 
     Console.success("Shutdown Complete")
 }
 
-public func stopRunningVM(
-    name: String,
-    immediately: Bool,
-    parallelsRepository: ParallelsVMRepositoryProtocol = ParallelsVMRepository()
-) async throws {
+public func stopRunningVM(name: String, immediately: Bool) async throws {
     #if arch(arm64)
     try await XPCService.stopVM()
     #else
-    ParallelsVMRepository().stopRunningVM(named: name, immediately: immediately)
+    try await ParallelsVMRepository().stopRunningVM(named: name, immediately: immediately)
     #endif
 
     Console.success("Shutdown Complete")
