@@ -29,7 +29,10 @@ public func downloadRemoteImage(
     let remoteRepository = try remoteRepository ?? RemoteVMRepository()
 
     guard let remoteImage = try await remoteRepository.getCompatibleImage(named: name) else {
-        Console.crash(message: "Unable to find an image named `\(name)` for \(ProcessInfo.processInfo.processorArchitecture)", reason: .unableToFindRemoteImage)
+        Console.crash(
+            message: "Unable to find an image named `\(name)` for \(ProcessInfo.processInfo.processorArchitecture)",
+            reason: .unableToFindRemoteImage
+        )
     }
 
     return try await downloadRemoteImage(remoteImage)

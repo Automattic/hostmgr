@@ -24,7 +24,10 @@ class BundleTests: XCTestCase {
     }
 
     func testThatConfigurationFileIsExternallyReferencedProperly() throws {
-        XCTAssertEqual(BundleObject.configurationFilePath(for: BundleObject().root), URL(fileURLWithPath: "/tmp/config.json"))
+        XCTAssertEqual(
+            BundleObject.configurationFilePath(for: BundleObject().root),
+            URL(fileURLWithPath: "/tmp/config.json")
+        )
     }
 }
 

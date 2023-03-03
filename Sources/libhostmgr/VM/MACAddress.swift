@@ -1,9 +1,7 @@
-
-
-//import Foundation
-//import Virtualization
+// import Foundation
+// import Virtualization
 //
-//struct MACAddress {
+// struct MACAddress {
 //
 //    static let prefix = (0x06 as u_char, 0xa8 as u_char, 0xc0 as u_char)
 //
@@ -54,9 +52,9 @@
 //            .map { String(format: "%02hhx", $0) }
 //            .joined(separator: ":")
 //    }
-//}
+// }
 //
-//extension MACAddress: Codable {
+// extension MACAddress: Codable {
 //    func encode(to encoder: Encoder) throws {
 //        var container = encoder.singleValueContainer()
 //        try container.encode(stringValue)
@@ -71,10 +69,10 @@
 //
 //        self = newSelf
 //    }
-//}
+// }
 //
-//extension MACAddress: Equatable {
+// extension MACAddress: Equatable {
 //    static func == (lhs: MACAddress, rhs: MACAddress) -> Bool {
 //        lhs.rawValue.octet == rhs.rawValue.octet
 //    }
-//}
+// }

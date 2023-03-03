@@ -16,7 +16,7 @@ public protocol HostmgrXPCProtocol {
 
 /// A delegate protocol for actions triggered by XPC – the delegate most likely owns the `XPCService` instance,
 /// and should handle its actions appropriately.
-public protocol XPCServiceDelegate {
+public protocol XPCServiceDelegate: AnyObject {
     func service(shouldStartVMNamed name: String) async throws
     func serviceShouldStopVM() async throws
 }

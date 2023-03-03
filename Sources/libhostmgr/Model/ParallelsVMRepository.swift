@@ -182,7 +182,7 @@ public struct ParallelsVMRepository: ParallelsVMRepositoryProtocol {
         Console.info("Applying VM Settings")
 
         // Always leave 4GB available to the VM host – the VM can have the rest
-        let dedicatedMemoryForVM = ProcessInfo().physicalMemory - (4096 * 1024 * 1024) // We should make this configurable
+        let dedicatedMemoryForVM = ProcessInfo().physicalMemory - (4096 * 1024 * 1024)
         let cpuCoreCount = ProcessInfo().physicalProcessorCount
 
         Console.printTable(data: [

@@ -153,8 +153,8 @@ extension Date {
 
 extension Sequence {
     func sorted<T: Comparable>(by keyPath: KeyPath<Element, T>) -> [Element] {
-        return sorted { a, b in
-            return a[keyPath: keyPath] < b[keyPath: keyPath]
+        return sorted { lhs, rhs in
+            return lhs[keyPath: keyPath] < rhs[keyPath: keyPath]
         }
     }
 }

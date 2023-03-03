@@ -41,7 +41,7 @@ struct DHCPLeaseFileParser {
         string
             .split(separator: "\n")
             .map(String.init)
-            .forEach { process(line:$0) }
+            .forEach { process(line: $0) }
     }
 
     mutating func process(line: String) {
@@ -72,11 +72,11 @@ struct DHCPLeaseFileParser {
     }
 
     func ipAddressFor(line: String) -> IPv4Address? {
-        guard let ip = valueFor(line: line) else {
+        guard let ipAddressString = valueFor(line: line) else {
             return nil
         }
 
-        return IPv4Address(ip)
+        return IPv4Address(ipAddressString)
     }
 
     func hardwareAddressFor(line: String) -> VZMACAddress? {
@@ -91,17 +91,19 @@ struct DHCPLeaseFileParser {
         // Correct for elided leading zeros in the MAC address
         let fixedAddress = macAddress
             .components(separatedBy: ":")
-            .map { octet in
-                switch octet.count {
-                    case 0: return "00"
-                    case 1: return "0" + octet
-                    case 2: return String(octet)
-                    default: preconditionFailure("This hardware address is invalid")
-                }
-            }
+            .map(self.correctHardwareAddressOctet)
             .joined(separator: ":")
 
         return VZMACAddress(string: fixedAddress)
+    }
+
+    func correctHardwareAddressOctet(_ octet: String) -> String {
+        switch octet.count {
+        case 0: return "00"
+        case 1: return "0" + octet
+        case 2: return String(octet)
+        default: preconditionFailure("This hardware address is invalid")
+        }
     }
 
     func dateFor(line: String) -> Date? {

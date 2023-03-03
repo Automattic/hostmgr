@@ -13,7 +13,8 @@ public class XPCService: NSObject, HostmgrXPCProtocol {
         self.delegate = delegate
     }
 
-    /// This method should never be called directly – it's the entry point into the `startVM` command when called via XPC
+    /// This method should never be called directly – it's the entry point into the `startVM` command
+    /// when called via XPC.
     public func startVM(named name: String, reply: @escaping (Error?) -> Void) {
         Task {
             do {
@@ -58,19 +59,19 @@ public class XPCService: NSObject, HostmgrXPCProtocol {
 extension XPCService {
     /// Send a message to the XPC service running on the local machine, asking it to start the `named` virtual machine.
     public static func startVM(named name: String) async throws {
-        let __protocol = try getProtocolObject()
+        let protocolObject = try getProtocolObject()
 
         try await withCheckedThrowingContinuation { continuation in
-            __protocol.startVM(named: name) { handle(error: $0, for: continuation) }
+            protocolObject.startVM(named: name) { handle(error: $0, for: continuation) }
         }
     }
 
     /// Send a message to the XPC service running on the local machine, asking it to stop the running virtual machine.
     public static func stopVM() async throws {
-        let __protocol = try getProtocolObject()
+        let protocolObject = try getProtocolObject()
 
         try await withCheckedThrowingContinuation { continuation in
-            __protocol.stopVM { handle(error: $0, for: continuation) }
+            protocolObject.stopVM { handle(error: $0, for: continuation) }
         }
     }
 

@@ -37,9 +37,9 @@ public struct RemoteVMImage: FilterableByBasename {
 
     public var architecture: ProcessorArchitecture? {
         switch fileExtension {
-            case "aar": return .arm64
-            case "pvmp": return .x64
-            default: return nil
+        case "aar": return .arm64
+        case "pvmp": return .x64
+        default: return nil
         }
     }
 }

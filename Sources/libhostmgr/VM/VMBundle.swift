@@ -13,7 +13,8 @@ public struct VMBundle: Sendable {
         /// We couldn't create the disk image – probably because there isn't enough space available on disk
         case unableToProvisionDiskSpace
 
-        /// We created the disk image successfully, but couldn't properly close the file descriptor. The disk image is probably fine, but you should really try creating it again.
+        /// We created the disk image successfully, but couldn't properly close the file descriptor.
+        /// The disk image is probably fine, but you should really try creating it again.
         case unableToCloseDiskImage
     }
 
@@ -164,7 +165,10 @@ extension VMBundle: Bundle {
     }
 
     public func virtualMachineConfiguration() throws -> VZVirtualMachineConfiguration {
-        let configuration = try VMConfiguration(diskImagePath: self.diskImageFilePath, macAddress: self.macAddress).asVirtualMachineConfiguration
+        let configuration = try VMConfiguration(
+            diskImagePath: self.diskImageFilePath,
+            macAddress: self.macAddress
+        ).asVirtualMachineConfiguration
         configuration.platform = try macPlatformConfiguration()
         return configuration
     }

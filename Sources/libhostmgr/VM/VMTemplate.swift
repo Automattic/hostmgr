@@ -101,7 +101,8 @@ public struct VMTemplate: TemplateBundle {
     /// Use this template to produce an identical virtual machine
     ///
     /// Doesn't alter the template in any way, and ensures that each copy has a unique place on the file system.
-    /// By default, this method creates the copy in the system temp directory, but the destination can be overridden using the `url` parameter
+    /// By default, this method creates the copy in the system temp directory, but the destination can be overridden
+    /// using the `url` parameter.
     public func createEphemeralCopy(at url: URL? = nil) throws -> VMBundle {
         let filename = self.root.lastPathComponent + "-" + UUID().uuidString
         let destination = url ?? Paths.ephemeralVMStorageDirectory.appendingPathComponent(filename)
@@ -113,11 +114,11 @@ public struct VMTemplate: TemplateBundle {
 
     /// Create a read-only template on disk from an existing VM bundle
     public static func creatingTemplate(fromBundle bundle: VMBundle) throws -> VMTemplate {
-        let _templateRoot = bundle.root
+        let templateRoot = bundle.root
             .deletingPathExtension()
             .appendingPathExtension("vmtemplate")
 
-        let template = VMTemplate(at: _templateRoot)
+        let template = VMTemplate(at: templateRoot)
 
         guard try !FileManager.default.directoryExists(at: template.root) else {
             throw CocoaError(.fileWriteFileExists)

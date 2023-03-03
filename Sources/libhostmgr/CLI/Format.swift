@@ -39,12 +39,12 @@ public struct Format {
 //        return formatter.localizedString(fromTimeInterval: interval)
 //    }
 
-    public static func elapsedTime(between from: Date, and to: Date) -> String {
+    public static func elapsedTime(between start: Date, and end: Date) -> String {
         let formatter = DateComponentsFormatter()
         formatter.includesApproximationPhrase = true
         formatter.unitsStyle = .full
         formatter.allowedUnits = [.second, .minute, .hour]
-        return formatter.string(from: from, to: to)!
+        return formatter.string(from: start, to: end)!
     }
 
     public static func timeRemaining(_ interval: TimeInterval) -> String {
