@@ -1,0 +1,7 @@
+{
+    name=my-device
+    ip_address=192.168.64.7
+    hw_address=1,6e:97:39:e2:b9:28
+    identifier=1,6e:97:39:e2:b9:28
+    lease=0x63fadb10
+}

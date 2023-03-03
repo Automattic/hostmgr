@@ -1,4 +1,6 @@
 import Foundation
+import Virtualization
+
 @testable import libhostmgr
 @testable import tinys3
 
@@ -29,10 +31,21 @@ extension LocalVMImage {
     }
 }
 
+extension VZMacHardwareModel {
+    static func createTestFixture() throws -> VZMacHardwareModel {
+        try VZMacHardwareModel(dataRepresentation: dataForResource(named: "mac-hardware-model-data"))!
+    }
+}
+
 func getPathForEnvFile(named key: String) -> URL {
     Bundle.module.url(forResource: key, withExtension: "env")!
 }
 
 func pathForResource(named key: String) -> URL {
     Bundle.module.url(forResource: key, withExtension: nil)!
+}
+
+func dataForResource(named key: String) throws -> Data {
+    let url = Bundle.module.url(forResource: key, withExtension: "dat")!
+    return try Data(contentsOf: url)
 }

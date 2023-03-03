@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 
 public enum ProcessorArchitecture: String {
     case arm64
@@ -135,6 +136,14 @@ extension FileManager {
     }
 }
 
+extension Data {
+    var sha256: Data {
+        var hasher = SHA256()
+        hasher.update(data: self)
+        return Data(hasher.finalize())
+    }
+}
+
 extension Date {
     /// Required until we only support macOS 12
     static var now: Date {
@@ -142,9 +151,11 @@ extension Date {
     }
 }
 
-extension URL {
-    public static var tempFilePath: URL {
-        FileManager.default.temporaryFilePath()
+extension Sequence {
+    func sorted<T: Comparable>(by keyPath: KeyPath<Element, T>) -> [Element] {
+        return sorted { a, b in
+            return a[keyPath: keyPath] < b[keyPath: keyPath]
+        }
     }
 }
 

@@ -1,8 +1,9 @@
 import Foundation
+import Network
 @preconcurrency import Virtualization
 import TSCBasic
 
-@available(macOS 13.0, *)
+@available(macOS 11.0, *)
 public struct VMBundle: Sendable {
 
     enum Errors: Error {
@@ -19,6 +20,7 @@ public struct VMBundle: Sendable {
     struct ConfigFile: Codable {
         let hardwareModelData: Data
         let machineIdentifierData: Data
+        let macAddress: String
 
         var hardwareModel: VZMacHardwareModel {
             VZMacHardwareModel(dataRepresentation: hardwareModelData)!
@@ -41,12 +43,14 @@ public struct VMBundle: Sendable {
     public let root: URL
     private let hardwareModel: VZMacHardwareModel
     private let machineIdentifier: VZMacMachineIdentifier
+    private let macAddress: VZMACAddress
 
     /// Persist the VM configuration to the local disk
     func saveConfiguration() throws {
         try ConfigFile(
             hardwareModelData: self.hardwareModel.dataRepresentation,
-            machineIdentifierData: self.machineIdentifier.dataRepresentation
+            machineIdentifierData: self.machineIdentifier.dataRepresentation,
+            macAddress: self.macAddress.string
         )
         .write(to: self.configurationFilePath)
     }
@@ -54,19 +58,42 @@ public struct VMBundle: Sendable {
     var name: String {
         self.root.deletingPathExtension().lastPathComponent
     }
+
+    public var currentIPaddress: IPv4Address? {
+        get throws {
+            try DHCPLease.mostRecentLease(forMACaddress: self.macAddress)?.ipAddress
+        }
+    }
+
+    init(
+        root: URL,
+        hardwareModel: VZMacHardwareModel,
+        machineIdentifier: VZMacMachineIdentifier,
+        macAddress: VZMACAddress
+    ) {
+        self.root = root
+        self.hardwareModel = hardwareModel
+        self.machineIdentifier = machineIdentifier
+        self.macAddress = macAddress
+    }
 }
 
-@available(macOS 13.0, *)
+@available(macOS 11.0, *)
 extension VMBundle: Bundle {
     /// Instantiate a VMBundle from an existing VM package
     ///
     public static func fromExistingBundle(at url: URL) throws -> VMBundle {
         let configuration = try ConfigFile.from(url: Self.configurationFilePath(for: url))
 
+        guard let macAddress = VZMACAddress(string: configuration.macAddress) else {
+            throw CocoaError(.coderInvalidValue)
+        }
+
         return VMBundle(
             root: url,
             hardwareModel: configuration.hardwareModel,
-            machineIdentifier: configuration.machineIdentifier
+            machineIdentifier: configuration.machineIdentifier,
+            macAddress: macAddress
         )
     }
 
@@ -87,7 +114,7 @@ extension VMBundle: Bundle {
         Console.log("Loaded configuration")
 
         let bundleRoot = Paths.vmImageStorageDirectory
-            .appending(path: name)
+            .appendingPathComponent(name)
             .appendingPathExtension("bundle")
 
         try FileManager.default.createDirectory(at: bundleRoot, withIntermediateDirectories: true)
@@ -96,7 +123,8 @@ extension VMBundle: Bundle {
         let bundle = VMBundle(
             root: bundleRoot,
             hardwareModel: macOSConfiguration.hardwareModel,
-            machineIdentifier: VZMacMachineIdentifier()
+            machineIdentifier: VZMacMachineIdentifier(),
+            macAddress: .randomLocallyAdministered()
         )
 
         try bundle.initializeStorageVolume(withSize: capacity)
@@ -136,14 +164,18 @@ extension VMBundle: Bundle {
     }
 
     public func virtualMachineConfiguration() throws -> VZVirtualMachineConfiguration {
-        let configuration = try VMConfiguration(diskImagePath: self.diskImageFilePath).asVirtualMachineConfiguration
+        let configuration = try VMConfiguration(diskImagePath: self.diskImageFilePath, macAddress: self.macAddress).asVirtualMachineConfiguration
         configuration.platform = try macPlatformConfiguration()
         return configuration
     }
 
     private func auxilaryStorage(for model: VZMacHardwareModel) throws -> VZMacAuxiliaryStorage {
         guard !FileManager.default.fileExists(at: self.auxImageFilePath) else {
-            return VZMacAuxiliaryStorage(url: self.auxImageFilePath)
+            if #available(macOS 13.0, *) {
+                return VZMacAuxiliaryStorage(url: self.auxImageFilePath)
+            } else {
+                return VZMacAuxiliaryStorage(contentsOf: self.auxImageFilePath)
+            }
         }
 
         return try VZMacAuxiliaryStorage(

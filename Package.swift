@@ -72,13 +72,15 @@ let package = Package(
             resources: [
                 .copy("resources/configurations/0.6.0.json"),
                 .copy("resources/configurations/defaults.json"),
-                .copy("resources/dotenv-fixtures.env"),
                 .copy("resources/buildkite-environment-variables-basic-expected-output.txt"),
                 .copy("resources/buildkite-environment-variables-basic.env"),
                 .copy("resources/buildkite-environment-variables-with-code-quotes.env"),
                 .copy("resources/buildkite-commit-message-original.txt"),
                 .copy("resources/buildkite-commit-message-expected.txt"),
+                .copy("resources/dhcpd_leases"),
+                .copy("resources/dotenv-fixtures.env"),
                 .copy("resources/file-hasher-test-1"),
+                .copy("resources/mac-hardware-model-data.dat"),
             ]
         ),
     ]
