@@ -37,7 +37,6 @@ final class PathsTests: XCTestCase {
         validate(path: path, resolvesTo: _p("git-mirrors"), forArchitecture: .arm64)
     }
 
-    @available(macOS 13.0, *)
     func testThatAuthorizedKeysFilePathIsCorrect() {
         let resolvedPath = NSHomeDirectory() + "/.ssh/authorized_keys"
         validate(path: Paths.authorizedKeysFilePath, resolvesTo: resolvedPath)

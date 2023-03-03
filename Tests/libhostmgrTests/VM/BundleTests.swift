@@ -28,7 +28,6 @@ class BundleTests: XCTestCase {
     }
 }
 
-@available(macOS 13.0, *)
 class TemplateTests: BundleTests {
     struct BundleObject: TemplateBundle {
         var root: URL { URL(fileURLWithPath: "/tmp") }

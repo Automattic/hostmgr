@@ -4,7 +4,6 @@ import libhostmgr
 import Virtualization
 import Logging
 
-@available(macOS 13.0, *)
 class AppDelegate: NSObject, NSApplicationDelegate {
 
     private let logger: Logger
@@ -96,12 +95,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.activeVM = nil
 
         NSApp.setActivationPolicy(.prohibited)
-
         try libhostmgr.resetVMStorage()
     }
 }
 
-@available(macOS 13.0, *)
 extension AppDelegate: NSXPCListenerDelegate {
 
     public func listener(_ listener: NSXPCListener, shouldAcceptNewConnection newConnection: NSXPCConnection) -> Bool {
@@ -117,7 +114,6 @@ extension AppDelegate: NSXPCListenerDelegate {
     }
 }
 
-@available(macOS 13.0, *)
 extension AppDelegate {
     @objc func didReceiveDebugNotification(_ notification: NSNotification) {
         guard let action = DebugActions(rawValue: notification.name.rawValue) else {
@@ -139,7 +135,6 @@ extension AppDelegate {
     }
 }
 
-@available(macOS 13.0, *)
 extension AppDelegate: XPCServiceDelegate {
     func service(shouldStartVMNamed name: String) async throws {
         print("Delegate received `shouldStartVM`")
@@ -152,7 +147,6 @@ extension AppDelegate: XPCServiceDelegate {
     }
 }
 
-@available(macOS 13.0, *)
 extension AppDelegate: VZVirtualMachineDelegate {
     public func virtualMachine(_ virtualMachine: VZVirtualMachine, didStopWithError error: Error) {
         NSApplication.shared.presentError(error)
@@ -165,11 +159,18 @@ extension AppDelegate: VZVirtualMachineDelegate {
     }
 }
 
-@available(macOS 13.0, *)
 extension AppDelegate: NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
         Task {
             try await activeVM?.stop()
+
+            self.viewController.dismissVirtualMachine()
+
+            self.activeVM = nil
+
+            NSApp.setActivationPolicy(.prohibited)
+
+            try libhostmgr.resetVMStorage()
         }
     }
 }

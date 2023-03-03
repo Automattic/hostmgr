@@ -1,6 +1,5 @@
 import Foundation
 
-@available(macOS 13.0, *)
 public struct VMTemplate: TemplateBundle {
     let root: URL
 
@@ -38,7 +37,7 @@ public struct VMTemplate: TemplateBundle {
     public func compress() throws -> Self {
         let fileName = self.root.deletingPathExtension().lastPathComponent
         let destination = self.root.deletingLastPathComponent()
-            .appending(component: fileName)
+            .appendingPathComponent(fileName)
             .appendingPathExtension("vmpackage")
             .appendingPathExtension("aar")
 
@@ -105,7 +104,7 @@ public struct VMTemplate: TemplateBundle {
     /// By default, this method creates the copy in the system temp directory, but the destination can be overridden using the `url` parameter
     public func createEphemeralCopy(at url: URL? = nil) throws -> VMBundle {
         let filename = self.root.lastPathComponent + "-" + UUID().uuidString
-        let destination = url ?? Paths.ephemeralVMStorageDirectory.appending(path: filename)
+        let destination = url ?? Paths.ephemeralVMStorageDirectory.appendingPathComponent(filename)
 
         try Paths.createEphemeralVMStorageIfNeeded()
         try FileManager.default.copyItem(atPath: self.root.path, toPath: destination.path)

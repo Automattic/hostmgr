@@ -11,7 +11,6 @@ struct RPCConstants {
     }
 }
 
-@available(macOS 13.0, *)
 public struct RPCServer {
     let listener: NWListener
 
@@ -29,7 +28,11 @@ public struct RPCServer {
 
         service.noAutoRename = true // Don't adjust the service name
 
-        self.listener = try NWListener(service: service, using: parameters)
+        if #available(macOS 13.0, *) {
+            self.listener = try NWListener(service: service, using: parameters)
+        } else {
+            abort() //TODO: Fix this
+        }
     }
 
     public func start() {

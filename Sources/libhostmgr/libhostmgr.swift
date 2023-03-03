@@ -81,10 +81,6 @@ public func downloadRemoteImage(
 public func unpack(localVM: LocalVMImage) async throws {
 
     #if arch(arm64)
-    guard #available(macOS 13.0, *) else {
-        preconditionFailure("Apple Silicon in CI should only run on macOS 13 or greater")
-    }
-
     guard localVM.state == .compressed else {
         return
     }

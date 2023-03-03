@@ -1,6 +1,5 @@
 import Virtualization
 
-@available(macOS 13.0, *)
 public class VMInstaller {
 
     enum Errors: Error {
