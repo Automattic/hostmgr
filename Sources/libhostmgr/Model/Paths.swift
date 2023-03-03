@@ -8,7 +8,7 @@ public struct Paths {
         #if arch(arm64)
         arm64StorageRoot
         #else
-        URL(fileURLWithPath: "/usr/local", isDirectory: true).appendingPathComponent("var", isDirectory: true)
+        URL(fileURLWithPath: "/usr/local", isDirectory: true)
         #endif
     }
 
@@ -34,13 +34,20 @@ public struct Paths {
         storageRoot.appendingPathComponent("state")
         #else
         storageRoot
+            .appendingPathComponent("var", isDirectory: true)
             .appendingPathComponent("hostmgr", isDirectory: true)
             .appendingPathComponent("state", isDirectory: true)
         #endif
     }
 
     public static var vmImageStorageDirectory: URL {
+        #if arch(arm64)
         storageRoot.appendingPathComponent("vm-images")
+        #else
+        storageRoot
+            .appendingPathComponent("var", isDirectory: true)
+            .appendingPathComponent("vm-images")
+        #endif
     }
 
     public static var ephemeralVMStorageDirectory: URL {
@@ -48,7 +55,13 @@ public struct Paths {
     }
 
     public static var gitMirrorStorageDirectory: URL {
+        #if arch(arm64)
         storageRoot.appendingPathComponent("git-mirrors")
+        #else
+        storageRoot
+            .appendingPathComponent("var", isDirectory: true)
+            .appendingPathComponent("git-mirrors", isDirectory: true)
+        #endif
     }
 
     public static var authorizedKeysFilePath: URL {

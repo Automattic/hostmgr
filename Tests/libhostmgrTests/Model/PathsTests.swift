@@ -15,7 +15,7 @@ final class PathsTests: XCTestCase {
     }
 
     func testThatStorageRootIsCorrect() {
-        validate(path: Paths.storageRoot, resolvesTo: "/usr/local/var", forArchitecture: .x64)
+        validate(path: Paths.storageRoot, resolvesTo: "/usr/local", forArchitecture: .x64)
         validate(path: Paths.storageRoot, resolvesTo: storageRoot.path, forArchitecture: .arm64)
     }
 

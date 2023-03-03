@@ -33,11 +33,18 @@ struct VMDetailsCommand: AsyncParsableCommand {
         print("IPv4 Address:\t\(ipAddress)")
 
         #else
-        if let virtualMachine = Parallels().lookupVM(named: self.name).asRunningVM() {
-            if virtualMachine.hasIpV4Address {
-                print("IPv4 Address:\t\(virtualMachine.ipAddress)")
-            }
+        guard
+            let virtualMachine = try ParallelsVMRepository().lookupVM(byIdentifier: name),
+            let runningVirtualMachine = virtualMachine.asRunningVM()
+        else {
+            Console.crash(message: "There is no local VM called `\(name)`", reason: .fileNotFound)
         }
+
+        guard runningVirtualMachine.hasIpV4Address else {
+            Console.crash(message: "Couldn't find an IP for `\(name)` – is it running?", reason: .invalidVMStatus)
+        }
+
+        print("IPv4 Address:\t\(runningVirtualMachine.ipAddress)")
         #endif
     }
 }

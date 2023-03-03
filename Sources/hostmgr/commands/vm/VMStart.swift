@@ -29,6 +29,7 @@ struct VMStartCommand: AsyncParsableCommand {
             return
         }
 
+        #if arch(arm64)
         guard let tempFilePath = try LocalVMRepository().lookupVM(withName: name)?.path else {
             Console.crash(message: "There is no local VM called `\(name)`", reason: .fileNotFound)
         }
@@ -46,5 +47,6 @@ struct VMStartCommand: AsyncParsableCommand {
 
         Console.success("Startup Complete – Elapsed time: \(Format.elapsedTime(between: startTime, and: .now))")
         Console.info("You can access the VM using `ssh builder@\(ipAddress)`")
+        #endif
     }
 }

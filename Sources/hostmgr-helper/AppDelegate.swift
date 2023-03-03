@@ -66,6 +66,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+#if arch(arm64)
     @MainActor
     func launchVM(named name: String) async throws {
         logger.trace("Launching VM: \(name)")
@@ -104,6 +105,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.prohibited)
         try libhostmgr.resetVMStorage()
     }
+#endif
 }
 
 extension AppDelegate: NSXPCListenerDelegate {
@@ -127,6 +129,7 @@ extension AppDelegate {
             return
         }
 
+        #if arch(arm64)
         Task {
             do {
                 switch action {
@@ -137,18 +140,23 @@ extension AppDelegate {
                 print(error.localizedDescription)
             }
         }
+        #endif
     }
 }
 
 extension AppDelegate: XPCServiceDelegate {
     func service(shouldStartVMNamed name: String) async throws {
+        #if arch(arm64)
         print("Delegate received `shouldStartVM`")
         try await self.launchVM(named: name)
+        #endif
     }
 
     func serviceShouldStopVM() async throws {
+        #if arch(arm64)
         print("Delegate received `shouldStopVM`")
         try await self.stopVM()
+        #endif
     }
 }
 

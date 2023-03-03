@@ -2,6 +2,7 @@ import Foundation
 import Network
 import Virtualization
 
+#if arch(arm64)
 public struct VMLauncher {
 
     public static func prepareVirtualMachine(named name: String) throws -> VZVirtualMachine {
@@ -65,3 +66,4 @@ public struct VMLauncher {
         }
     }
 }
+#endif

@@ -1,7 +1,7 @@
 import Foundation
 import Virtualization
 
-@available(macOS 11.0, *)
+#if arch(arm64)
 public struct VMDownloader {
 
     public typealias ProgressCallback = (Progress) -> Void
@@ -47,7 +47,6 @@ public struct VMDownloader {
     }
 }
 
-@available(macOS 11.0, *)
 class DownloadDelegate: NSObject, URLSessionDownloadDelegate {
 
     private let destination: URL
@@ -96,3 +95,4 @@ class DownloadDelegate: NSObject, URLSessionDownloadDelegate {
         self.progressCallback?(progress)
     }
 }
+#endif

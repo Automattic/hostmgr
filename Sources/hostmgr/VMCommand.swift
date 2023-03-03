@@ -28,9 +28,9 @@ struct VMCommand: AsyncParsableCommand {
         return [
             VMCleanCommand.self
         ]
-        #endif
-
+        #else
         return []
+        #endif
     }
 
     static let configuration = CommandConfiguration(
