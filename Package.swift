@@ -46,14 +46,6 @@ let package = Package(
                 .target(name: "libhostmgr")
             ]
         ),
-        .executableTarget(
-            name: "hostmgr-beacon",
-            dependencies: [
-                .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "Logging", package: "swift-log"),
-                .target(name: "libhostmgr")
-            ]
-        ),
         .target(
             name: "libhostmgr",
             dependencies: [
