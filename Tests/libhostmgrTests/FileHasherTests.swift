@@ -10,9 +10,8 @@ final class FileHasherTests: XCTestCase {
         )
     }
 
-    @available(macOS 13.0, *)
     func testThatHasherProducesValidOutputForLargeFile() throws {
-        let filePath = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        let filePath = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createEmptyFile(at: filePath, size: .init(value: 25, unit: .megabytes))
 
         XCTAssertEqual(

@@ -3,7 +3,6 @@ import System
 import Compression
 import AppleArchive
 
-@available(macOS 13.0, *)
 public struct Compressor {
 
     enum Errors: Error {
@@ -13,7 +12,9 @@ public struct Compressor {
     // From Apple Sample Code: https://developer.apple.com/documentation/accelerate/compressing_file_system_directories
     private static let keySet = ArchiveHeader.FieldKeySet("TYP,PAT,LNK,DEV,DAT,UID,GID,MOD,FLG,MTM,BTM,CTM")!
 
-    public static func compress(directory: URL, to destination: URL = URL.temporaryDirectory.appending(path: "archive.aar")) throws {
+    public static func compress(directory: URL, to destination: URL? = nil) throws {
+
+        let destination = destination ?? FileManager.default.temporaryDirectory.appendingPathComponent("archive.aar")
 
         guard
             let archiveFilePath = FilePath(destination),

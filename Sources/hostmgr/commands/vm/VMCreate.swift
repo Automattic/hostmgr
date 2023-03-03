@@ -4,7 +4,6 @@ import ArgumentParser
 import Cocoa
 import libhostmgr
 
-@available(macOS 13.0, *)
 struct VMCreateCommand: AsyncParsableCommand {
 
     static let configuration = CommandConfiguration(

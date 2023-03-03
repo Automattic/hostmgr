@@ -3,18 +3,14 @@ import Cocoa
 import Logging
 
 print("Helper starting up")
-if #available(macOS 13.0, *) {
-    var logger = Logger(label: "com.automattic.hostmgr.helper")
-    logger.logLevel = .trace
+var logger = Logger(label: "com.automattic.hostmgr.helper")
+logger.logLevel = .trace
 
-    logger.info("Creating App Delegate")
+logger.info("Creating App Delegate")
 
-    let delegate = AppDelegate(logger: logger)
-    NSApplication.shared.delegate = delegate
+let delegate = AppDelegate(logger: logger)
+NSApplication.shared.delegate = delegate
 
-    logger.debug("Starting run loop")
+logger.debug("Starting run loop")
 
-    _ = NSApplicationMain(CommandLine.argc, CommandLine.unsafeArgv)
-} else {
-    abort()
-}
+_ = NSApplicationMain(CommandLine.argc, CommandLine.unsafeArgv)

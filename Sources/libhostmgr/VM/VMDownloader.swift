@@ -1,7 +1,7 @@
 import Foundation
 import Virtualization
 
-@available(macOS 13.0, *)
+@available(macOS 11.0, *)
 public struct VMDownloader {
 
     public typealias ProgressCallback = (Progress) -> Void
@@ -14,12 +14,14 @@ public struct VMDownloader {
     }
 
     public static func needsToDownload(restoreImage: VZMacOSRestoreImage) -> Bool {
-        let destination = URL.downloadsDirectory.appending(path: restoreImage.url.lastPathComponent)
+        let destination = Paths.applicationCacheDirectory.appendingPathComponent(restoreImage.url.lastPathComponent)
         return !FileManager.default.fileExists(at: destination)
     }
 
     public static func download(restoreImage: VZMacOSRestoreImage, progress: @escaping ProgressCallback) async throws {
-        let destination = URL.downloadsDirectory.appending(path: restoreImage.url.lastPathComponent)
+        let destination = Paths.applicationCacheDirectory.appendingPathComponent(restoreImage.url.lastPathComponent)
+
+        try FileManager.default.createDirectory(at: Paths.applicationCacheDirectory, withIntermediateDirectories: true)
 
         // Don't redownload the restore image if we already have it
         guard !FileManager.default.fileExists(at: destination) else {
@@ -31,7 +33,7 @@ public struct VMDownloader {
     }
 
     public static func localCopy(of restoreImage: VZMacOSRestoreImage) async throws -> VZMacOSRestoreImage {
-        let destination = URL.downloadsDirectory.appending(path: restoreImage.url.lastPathComponent)
+        let destination = Paths.applicationCacheDirectory.appendingPathComponent(restoreImage.url.lastPathComponent)
         return try await VZMacOSRestoreImage.image(from: destination)
     }
 
@@ -45,7 +47,7 @@ public struct VMDownloader {
     }
 }
 
-@available(macOS 13.0, *)
+@available(macOS 11.0, *)
 class DownloadDelegate: NSObject, URLSessionDownloadDelegate {
 
     private let destination: URL

@@ -54,7 +54,6 @@ final class PathsTests: XCTestCase {
         )
     }
 
-    @available(macOS 13.0, *)
     func testThatAuthorizedKeysFilePathIsCorrect() {
         let resolvedPath = NSHomeDirectory() + "/.ssh/authorized_keys"
         validate(path: Paths.authorizedKeysFilePath, resolvesTo: resolvedPath)
