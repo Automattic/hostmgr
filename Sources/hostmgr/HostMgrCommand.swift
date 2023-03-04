@@ -26,8 +26,10 @@ struct Hostmgr: AsyncParsableCommand {
         return [
             InstallCommand.self
         ]
+        #else
+        return []
         #endif
-    )
+    }
 
     mutating func run() async throws {
         Logger.initializeLoggingSystem()
@@ -49,6 +51,16 @@ struct SetCommand: ParsableCommand {
         abstract: "Set system values",
         subcommands: [
             SetAutomaticLoginPasswordCommand.self
+        ]
+    )
+}
+
+struct InstallCommand: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "install",
+        abstract: "Install components",
+        subcommands: [
+            InstallHostmgrHelperCommand.self,
         ]
     )
 }

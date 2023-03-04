@@ -87,6 +87,19 @@ public struct Paths {
             .appendingPathComponent(storageDirectoryIdentifier)
     }
 
+    public static var userLaunchAgentsDirectory: URL {
+        FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)
+            .first!
+            .appendingPathComponent("LaunchAgents")
+    }
+
+    public static var logsDirectory: URL {
+        FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)
+            .first!
+            .appendingPathComponent("Logs")
+            .appendingPathComponent(storageDirectoryIdentifier)
+    }
+
     public static func toAppleSiliconVM(named name: String) -> URL {
         Paths.vmImageStorageDirectory.appendingPathComponent(name).appendingPathExtension("bundle")
     }

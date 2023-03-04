@@ -6,6 +6,7 @@ build-release:
 	@echo "--- Building Release"
 	swift build -c release --arch arm64 --arch x86_64
 
+	mkdir -p .build/artifacts/release
 	cp .build/apple/Products/Release/hostmgr .build/artifacts/release/hostmgr
 	cp .build/apple/Products/Release/hostmgr-helper .build/artifacts/release/hostmgr-helper
 
@@ -33,8 +34,8 @@ run-helper-debug: build-helper-debug
 	./.build/arm64-apple-macosx/debug/hostmgr-helper --debug true
 
 reload-helper-debug: build-helper-debug
-	launchctl unload ~/Library/LaunchAgents/com.hostmgr.helper.plist
-	launchctl load ~/Library/LaunchAgents/com.hostmgr.helper.plist
+	launchctl unload ~/Library/LaunchAgents/com.automattic.hostmgr.helper.plist
+	launchctl load ~/Library/LaunchAgents/com.automattic.hostmgr.helper.plist
 
 run-helper: build-helper-debug reload-helper-debug
 
