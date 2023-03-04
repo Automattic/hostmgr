@@ -60,7 +60,7 @@ struct InstallCommand: ParsableCommand {
         commandName: "install",
         abstract: "Install components",
         subcommands: [
-            InstallHostmgrHelperCommand.self,
+            InstallHostmgrHelperCommand.self
         ]
     )
 }
