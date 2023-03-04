@@ -10,10 +10,13 @@ lintfix:
 
 build-release:
 	@echo "--- Building Release"
-	swift build -c release
-	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API" .build/release/hostmgr -v
-	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API" .build/release/hostmgr-helper -v
-	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API" .build/release/hostmgr-beacon -v
+	swift build -c release --arch arm64 --arch x86_64
+
+	cp .build/apple/Products/Release/hostmgr .build/artifacts/release/hostmgr
+	cp .build/apple/Products/Release/hostmgr-helper .build/artifacts/release/hostmgr-helper
+
+	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API (886NX39KP6)" .build/artifacts/release/hostmgr --force --verbose
+	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API (886NX39KP6)" .build/artifacts/release/hostmgr-helper --force --verbose
 
 release: build-release
 	@echo "--- Tagging Release"

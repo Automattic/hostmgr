@@ -18,7 +18,15 @@ struct Hostmgr: AsyncParsableCommand {
             SetCommand.self,
             BenchmarkCommand.self,
             ConfigCommand.self
+        ] + appleSiliconCommands
+    )
+
+    static var appleSiliconCommands: [ParsableCommand.Type] {
+        #if arch(arm64)
+        return [
+            InstallCommand.self
         ]
+        #endif
     )
 
     mutating func run() async throws {

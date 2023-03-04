@@ -1,0 +1,81 @@
+# frozen_string_literal: true
+
+fastlane_require 'digest'
+
+UI.user_error!('Please run fastlane via `bundle exec`') unless FastlaneCore::Helper.bundler?
+
+########################################################################
+# Constants and Environment Variables
+########################################################################
+PROJECT_ROOT_FOLDER = File.dirname(File.expand_path(__dir__))
+SECRETS_FOLDER = File.join(PROJECT_ROOT_FOLDER, '.secrets')
+
+ARTIFACT_PATHS = Dir.glob(File.join(PROJECT_ROOT_FOLDER, '.build', 'artifacts', 'release', '*'))
+ZIP_FILE_PATH = File.join(PROJECT_ROOT_FOLDER, '.build', 'artifacts', 'artifacts.zip')
+
+GITHUB_REPO = 'automattic/hostmgr'
+
+APPLE_TEAM_ID = 'PZYM8XX95Q'
+APPLE_BUNDLE_IDENTIFIER = 'com.automattic.hostmgr'
+
+# Use this instead of getting values from ENV directly
+# It will throw an error if the requested value is missing
+def get_required_env(key)
+  UI.user_error!("Environment variable `#{key}` is not set.") unless ENV.key?(key)
+  ENV.fetch(key)
+end
+
+before_all do |_lane|
+  setup_ci  # Fixes weird Keychain bugs
+end
+
+desc 'Upload the Release Build products to Github under a new release'
+lane :upload_release do |_options|
+  UI.user_error!('No build products are present – did you run `make build-release`?') if ARTIFACT_PATHS.empty?
+  File.delete(ZIP_FILE_PATH) if File.file? ZIP_FILE_PATH
+
+  zip(
+    path: File.join(PROJECT_ROOT_FOLDER, '.build', 'artifacts', 'release'),
+    output_path: ZIP_FILE_PATH
+  )
+
+  tag = ENV['BUILDKITE_TAG'] ||= prompt(text: "Enter the tag name you'd like to use")
+
+  set_github_release(
+    repository_name: GITHUB_REPO,
+    api_token: ENV.fetch('GITHUB_TOKEN', nil),
+    name: tag,
+    tag_name: tag,
+    description: Digest::SHA256.file(ZIP_FILE_PATH).to_s,
+    upload_assets: [ZIP_FILE_PATH] + ARTIFACT_PATHS,
+    is_prerelease: true
+  )
+end
+
+desc 'Download the development signing certificates to this machine'
+lane :development_signing do |_options|
+  sync_code_signing(
+    platform: 'macos',
+    app_identifier: APPLE_BUNDLE_IDENTIFIER,
+    team_id: APPLE_TEAM_ID,
+    api_key: api_key,
+    type: 'development',
+
+    storage_mode: 's3',
+    s3_region: 'us-east-2',
+    s3_bucket: 'a8c-fastlane-match',
+
+    readonly: true
+  )
+end
+
+def api_key
+  Aws::S3::Client.new.get_object(
+    {
+      bucket: get_required_env('BUILDKITE_PLUGIN_S3_SECRETS_BUCKET'),
+      key: 'hostmgr/app_store_connect_fastlane_api_key.json'
+    }
+  ).body.read
+rescue StandardError => e
+  UI.user_error!("Unable to fetch App Store Connect API Key from S3: #{e}")
+end
