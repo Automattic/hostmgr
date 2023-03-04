@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := lint
 
-RELEASE_VERSION = $(shell .build/release/hostmgr --version)
+RELEASE_VERSION = $(shell swift run hostmgr --version)
 
 build-release:
 	@echo "--- Building Release"
