@@ -2,12 +2,6 @@
 
 RELEASE_VERSION = $(shell .build/release/hostmgr --version)
 
-lint:
-	docker run -it --rm -v `pwd`:`pwd` -w `pwd` ghcr.io/realm/swiftlint:0.50.3 swiftlint lint --strict
-
-lintfix:
-	docker run -it --rm -v `pwd`:`pwd` -w `pwd` ghcr.io/realm/swiftlint:0.50.3 swiftlint --autocorrect
-
 build-release:
 	@echo "--- Building Release"
 	swift build -c release --arch arm64 --arch x86_64
@@ -43,3 +37,21 @@ reload-helper-debug: build-helper-debug
 	launchctl load ~/Library/LaunchAgents/com.hostmgr.helper.plist
 
 run-helper: build-helper-debug reload-helper-debug
+
+## High-level operations
+lint: lint-swift lint-ruby
+lintfix: lintfix-swift lintfix-ruby
+
+## Swift Tooling
+lint-swift:
+	docker run -it --rm -v `pwd`:`pwd` -w `pwd` ghcr.io/realm/swiftlint:0.50.3 swiftlint lint --strict
+
+lintfix-swift:
+	docker run -it --rm -v `pwd`:`pwd` -w `pwd` ghcr.io/realm/swiftlint:0.50.3 swiftlint --autocorrect
+
+## Ruby Tooling
+lint-ruby:
+	docker run -it --rm -v `pwd`:`pwd` -w `pwd` ruby:2.7.7 /bin/bash -c "bundle install && bundle exec rubocop"
+
+lintfix-ruby:
+	docker run -it --rm -v `pwd`:`pwd` -w `pwd` ruby:2.7.7 /bin/bash -c "bundle install && bundle exec rubocop --autocorrect"
