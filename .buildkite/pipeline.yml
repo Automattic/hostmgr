@@ -30,6 +30,17 @@ steps:
       queue: default
 
   #################
+  # Validate Release Build
+  #################
+  - label: "🧪 Validate Release Build"
+    key: "validate-release-build"
+    command: |
+      echo "--- :swift: Release Build"
+      make build-release
+    env: *common_env
+    plugins: *common_plugins
+
+  #################
   # Publish the Binary (if we're building a tag)
   #################
   - label: "⬆️ Publish Binary"
