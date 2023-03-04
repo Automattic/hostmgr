@@ -35,21 +35,29 @@ steps:
   - label: "🧪 Validate Release Build"
     key: "validate-release-build"
     command: |
-      echo "--- :swift: Release Build"
+      install_gems
+      bundle exec fastlane development_signing
       make build-release
     env: *common_env
     plugins: *common_plugins
+    agents:
+      queue: "mac"
 
   #################
   # Publish the Binary (if we're building a tag)
   #################
   - label: "⬆️ Publish Binary"
     key: "publish"
-    command: .buildkite/publish.sh
+    command: |
+      install_gems
+      bundle exec fastlane development_signing
+      make build-release
+      bundle exec fastlane upload_release
     env: *common_env
     plugins: *common_plugins
     depends_on:
       - "test"
+      - "validate-release-build"
     if: build.tag != null
     agents:
       queue: "mac"
