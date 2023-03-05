@@ -18,4 +18,18 @@ final class LocalVMImageTests: XCTestCase {
     func testThatPackagedAppleSiliconImageIsDetectedAsArm64() {
         XCTAssertEqual(LocalVMImage(path: URL(fileURLWithPath: "/test.vmtemplate"))?.architecture, .arm64)
     }
+
+    func testThatBundlesWithXcodeMinorVersionIsParsedCorrectly() {
+        XCTAssertEqual(
+            LocalVMImage(path: URL(fileURLWithPath: "/xcode-14.3.bundle"))?.basename,
+            "xcode-14.3"
+        )
+    }
+
+    func testThatPackageWithXcodeMinorVersionIsParsedCorrectly() {
+        XCTAssertEqual(
+            LocalVMImage(path: URL(fileURLWithPath: "/xcode-14.3.vmpackage.aar"))?.basename,
+            "xcode-14.3"
+        )
+    }
 }

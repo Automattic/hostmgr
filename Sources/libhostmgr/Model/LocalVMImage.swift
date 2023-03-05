@@ -74,8 +74,8 @@ public struct LocalVMImage: Equatable, FilterableByBasename {
         if architecture == .arm64 {
             return path
                 .deletingPathExtension()
-                .deletingPathExtension()
                 .lastPathComponent
+                .replacingOccurrences(of: ".vmpackage", with: "")
         } else {
             return path
                 .deletingPathExtension()
