@@ -5,7 +5,7 @@ import libhostmgr
 struct InstallHostmgrHelperCommand: AsyncParsableCommand {
 
     static let configuration = CommandConfiguration(
-        commandName: "hostmgr-helper",
+        commandName: "helper",
         abstract: "Install the `hostmgr-helper` tool"
     )
 
