@@ -62,7 +62,10 @@ struct VMDetailsCommand: AsyncParsableCommand {
         print("IPv4 Address:\t\(runningVirtualMachine.ipAddress)")
         #endif
     }
+}
 
+#if arch(arm64)
+extension VMDetailsCommand {
     func ipAddressString(for bundle: VMBundle) -> String {
         guard let ipAddress = try? bundle.currentDHCPLease?.ipAddress else {
             return "-"
@@ -79,3 +82,4 @@ struct VMDetailsCommand: AsyncParsableCommand {
         return Format.remainingTime(until: expirationDate, context: .beginningOfSentence)
     }
 }
+#endif
