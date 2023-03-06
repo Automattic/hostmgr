@@ -15,7 +15,7 @@ struct VMDetailsCommand: AsyncParsableCommand {
     )
     var name: String
 
-    @Flag(help: "Show the VM's IPv4 address")
+    @Flag(help: "Print the VM's IP address")
     var ipv4: Bool = false
 
     func run() async throws {
@@ -25,6 +25,16 @@ struct VMDetailsCommand: AsyncParsableCommand {
         }
 
         let bundle = try VMBundle.fromExistingBundle(at: localVM.path)
+
+        if ipv4 {
+            guard let ipAddress = try bundle.currentDHCPLease?.ipAddress else {
+                Console.crash(message: "Couldn't find an IP for `\(name)` – is it running?", reason: .invalidVMStatus)
+            }
+
+            try await VMLauncher.waitForSSHServer(forAddress: ipAddress, timeout: 3)
+            print(ipAddress)
+            return
+        }
 
         do {
             _ = try bundle.currentDHCPLease?.ipAddress
