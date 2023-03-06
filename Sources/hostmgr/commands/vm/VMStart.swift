@@ -34,7 +34,7 @@ struct VMStartCommand: AsyncParsableCommand {
             Console.crash(message: "There is no local VM called `\(name)`", reason: .fileNotFound)
         }
 
-        guard let ipAddress = try VMBundle.fromExistingBundle(at: tempFilePath).currentIPaddress else {
+        guard let ipAddress = try VMBundle.fromExistingBundle(at: tempFilePath).currentDHCPLease?.ipAddress else {
             Console.crash(
                 message: "Couldn't find an IP address for `\(name)` – is it running?",
                 reason: .invalidVMStatus

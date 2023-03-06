@@ -33,18 +33,18 @@ public struct Format {
         return formatter.string(fromByteCount: count)
     }
 
-//    public static func time(_ interval: TimeInterval) -> String {
-//        let formatter = RelativeDateTimeFormatter()
-//        formatter.formattingContext = .standalone
-//        return formatter.localizedString(fromTimeInterval: interval)
-//    }
-
     public static func elapsedTime(between start: Date, and end: Date) -> String {
         let formatter = DateComponentsFormatter()
         formatter.includesApproximationPhrase = true
         formatter.unitsStyle = .full
         formatter.allowedUnits = [.second, .minute, .hour]
         return formatter.string(from: start, to: end)!
+    }
+
+    public static func remainingTime(until date: Date, context: Formatter.Context = .standalone) -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.formattingContext = context
+        return formatter.localizedString(for: date, relativeTo: .now)
     }
 
     public static func timeRemaining(_ interval: TimeInterval) -> String {

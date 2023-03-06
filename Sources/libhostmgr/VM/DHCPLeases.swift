@@ -3,15 +3,17 @@ import Network
 import Virtualization
 
 public struct DHCPLease {
-    let name: String
-    let ipAddress: IPv4Address
-    let hwAddress: VZMACAddress
+    public let name: String
+    public let ipAddress: IPv4Address
+    public let hwAddress: VZMACAddress
     let identifier: VZMACAddress
-    let expirationDate: Date
+    public let expirationDate: Date
 
     public static func mostRecentLease(forMACaddress address: VZMACAddress) throws -> DHCPLease? {
         try leasesFrom(file: URL(fileURLWithPath: "/private/var/db/dhcpd_leases"))
+            .lazy
             .filter { $0.hwAddress == address }
+            .filter { !$0.isExpired }
             .sorted(by: \.expirationDate)
             .first
     }
@@ -20,6 +22,10 @@ public struct DHCPLease {
         var parser = DHCPLeaseFileParser()
         try parser.parse(file: url)
         return parser.leases
+    }
+
+    var isExpired: Bool {
+        expirationDate < Date()
     }
 }
 
