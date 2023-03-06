@@ -13,6 +13,13 @@ build-release:
 	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API (886NX39KP6)" .build/artifacts/release/hostmgr --force --verbose
 	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API (886NX39KP6)" .build/artifacts/release/hostmgr-helper --force --verbose
 
+install: build-release
+	cp .build/artifacts/release/hostmgr /opt/homebrew/bin/hostmgr
+	cp .build/artifacts/release/hostmgr-helper /opt/homebrew/bin/hostmgr-helper
+
+	launchctl unload ~/Library/LaunchAgents/com.automattic.hostmgr.helper.plist
+	launchctl load ~/Library/LaunchAgents/com.automattic.hostmgr.helper.plist
+
 release: build-release
 	@echo "--- Tagging Release"
 	git tag $(RELEASE_VERSION)
