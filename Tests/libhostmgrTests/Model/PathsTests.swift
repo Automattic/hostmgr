@@ -68,6 +68,41 @@ final class PathsTests: XCTestCase {
         validate(path: path, resolvesTo: _p("configuration/config.json"), forArchitecture: .arm64)
     }
 
+    func testThatBuildkiteVMRootDirectoryIsCorrect() {
+        let path = Paths.buildkiteVMRootDirectory(forUser: NSUserName())
+        validate(path: path, resolvesTo: "/usr/local/var/buildkite-agent", forArchitecture: .x64)
+        validate(path: path, resolvesTo: buildkiteRoot.path, forArchitecture: .arm64)
+    }
+
+    private var buildkiteRoot: URL {
+        FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library")
+            .appendingPathComponent("Application Support")
+            .appendingPathComponent("com.buildkite.agent")
+    }
+
+    func _bp(_ path: String) -> String {
+        buildkiteRoot.appendingPathComponent(path).path
+    }
+
+    func testThatBuildkiteBuildsDirectoryIsCorrect() {
+        let path = Paths.buildkiteBuildDirectory(forUser: NSUserName())
+        validate(path: path, resolvesTo: "/usr/local/var/buildkite-agent/builds", forArchitecture: .x64)
+        validate(path: path, resolvesTo: _bp("builds"), forArchitecture: .arm64)
+    }
+
+    func testThatBuildkiteHooksDirectoryIsCorrect() {
+        let path = Paths.buildkiteHooksDirectory(forUser: NSUserName())
+        validate(path: path, resolvesTo: "/usr/local/var/buildkite-agent/hooks", forArchitecture: .x64)
+        validate(path: path, resolvesTo: _bp("hooks"), forArchitecture: .arm64)
+    }
+
+    func testThatBuildkitePluginsDirectoryIsCorrect() {
+        let path = Paths.buildkitePluginsDirectory(forUser: NSUserName())
+        validate(path: path, resolvesTo: "/usr/local/var/buildkite-agent/plugins", forArchitecture: .x64)
+        validate(path: path, resolvesTo: _bp("plugins"), forArchitecture: .arm64)
+    }
+
     private func validate(
         path: URL,
         resolvesTo sample: String,

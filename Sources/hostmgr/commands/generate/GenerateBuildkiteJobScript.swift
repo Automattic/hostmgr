@@ -9,6 +9,26 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
         abstract: "Generate a Buildkite Job Script"
     )
 
+    private let username = "builder"
+
+    private var overriddenKeys: [String: String] {
+        [
+            // Manually specify the build path to keep paths nice and clean in the output
+            "BUILDKITE_BUILD_PATH": Paths.buildkiteBuildDirectory(forUser: username).path,
+            "BUILDKITE_HOOKS_PATH": Paths.buildkiteHooksDirectory(forUser: username).path,
+            "BUILDKITE_PLUGINS_PATH": Paths.buildkitePluginsDirectory(forUser: username).path,
+
+        ]
+    }
+
+    private let disallowedKeys = [
+        "BUILDKITE_BIN_PATH",
+        "BUILDKITE_BUILD_CHECKOUT_PATH",
+        "BUILDKITE_CONFIG_PATH"
+    ]
+
+    enum CodingKeys: CodingKey {}
+
     func run() throws {
         var scriptBuilder = BuildkiteScriptBuilder()
 
@@ -17,23 +37,27 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
         scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_")
         scriptBuilder.addCommand("buildkite-agent bootstrap")
 
-        // Manually specify the build path to keep them nice and clean in the output
-        scriptBuilder.addEnvironmentVariable(
-            named: "BUILDKITE_BUILD_PATH",
-            value: "/usr/local/var/buildkite-agent/builds"
-        )
+        for (key, value) in overriddenKeys {
+            scriptBuilder.addEnvironmentVariable(named: key, value: value)
+        }
+
+        for key in disallowedKeys {
+            scriptBuilder.removeEnvironmentVariable(named: key)
+        }
 
         // Keep the agent name simple for better folder paths
-        scriptBuilder.addEnvironmentVariable(named: "BUILDKITE_AGENT_NAME", value: "builder")
+        scriptBuilder.addEnvironmentVariable(named: "BUILDKITE_AGENT_NAME", value: username)
 
         // Required to convince `fastlane` that we're running in CI
         scriptBuilder.addEnvironmentVariable(named: "CI", value: "true")
 
+        #if arch(x86_64)
         // Used by the S3 Git Mirror plugin
         scriptBuilder.addEnvironmentVariable(
             named: "GIT_MIRROR_SERVER_ROOT",
             value: "http://\(try getIpAddress()):\( Configuration.shared.gitMirrorPort)"
         )
+        #endif
 
         let scriptText = scriptBuilder.build()
 

@@ -112,11 +112,39 @@ public struct Paths {
         Paths.vmImageStorageDirectory.appendingPathComponent(name).appendingPathExtension("aar")
     }
 
+
     public static func createEphemeralVMStorageIfNeeded() throws {
         guard try !FileManager.default.directoryExists(at: ephemeralVMStorageDirectory) else {
             return
         }
 
         try FileManager.default.createDirectory(at: ephemeralVMStorageDirectory, withIntermediateDirectories: true)
+    }
+}
+
+extension Paths {
+
+    public static func buildkiteVMRootDirectory(forUser user: String) -> URL {
+        #if arch(arm64)
+        URL(fileURLWithPath: "/Users")
+            .appendingPathComponent(user)
+            .appendingPathComponent("Library")
+            .appendingPathComponent("Application Support")
+            .appendingPathComponent("com.buildkite.agent")
+        #else
+        URL(fileURLWithPath: "/usr/local/var/buildkite-agent")
+        #endif
+    }
+
+    public static func buildkiteBuildDirectory(forUser user: String) -> URL {
+        buildkiteVMRootDirectory(forUser: user).appendingPathComponent("builds")
+    }
+
+    public static func buildkiteHooksDirectory(forUser user: String) -> URL {
+        buildkiteVMRootDirectory(forUser: user).appendingPathComponent("hooks")
+    }
+
+    public static func buildkitePluginsDirectory(forUser user: String) -> URL {
+        buildkiteVMRootDirectory(forUser: user).appendingPathComponent("plugins")
     }
 }
