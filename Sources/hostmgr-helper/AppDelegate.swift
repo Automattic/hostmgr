@@ -158,7 +158,11 @@ extension AppDelegate: XPCServiceDelegate {
     func serviceShouldStopVM() async throws {
         #if arch(arm64)
         print("Delegate received `shouldStopVM`")
-        try await self.stopVM()
+        do {
+            try await self.stopVM()
+        } catch Errors.vmNotRunning {
+            // This is fine – we don't need to do anything for this case
+        }
         #endif
     }
 }
