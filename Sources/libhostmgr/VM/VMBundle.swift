@@ -62,7 +62,8 @@ public struct VMBundle {
 
     /// Look up details of this VM's most recent DHCP lease.
     ///
-    /// Note that there's no guarantee that the IP address associated with this lease is valid unless the VM is currently booted
+    /// Note that there's no guarantee that the IP address associated with this lease
+    /// is valid unless the VM is currently booted
     public var currentDHCPLease: DHCPLease? {
         get throws {
             try DHCPLease.mostRecentLease(forMACaddress: self.macAddress)
