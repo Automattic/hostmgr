@@ -59,9 +59,6 @@ final class PathsTests: XCTestCase {
 
     private var buildkiteRoot: URL {
         FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library")
-            .appendingPathComponent("Application Support")
-            .appendingPathComponent("com.buildkite.agent")
     }
 
     func _bp(_ path: String) -> String {

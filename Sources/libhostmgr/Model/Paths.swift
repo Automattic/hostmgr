@@ -126,11 +126,7 @@ extension Paths {
 
     public static func buildkiteVMRootDirectory(forUser user: String) -> URL {
         #if arch(arm64)
-        URL(fileURLWithPath: "/Users")
-            .appendingPathComponent(user)
-            .appendingPathComponent("Library")
-            .appendingPathComponent("Application Support")
-            .appendingPathComponent("com.buildkite.agent")
+        URL(fileURLWithPath: "/Users").appendingPathComponent(user)
         #else
         URL(fileURLWithPath: "/usr/local/var/buildkite-agent")
         #endif
