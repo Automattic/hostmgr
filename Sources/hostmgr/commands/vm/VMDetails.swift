@@ -1,6 +1,7 @@
 import Foundation
 import ArgumentParser
 import libhostmgr
+import Network
 
 struct VMDetailsCommand: AsyncParsableCommand {
 
@@ -19,18 +20,32 @@ struct VMDetailsCommand: AsyncParsableCommand {
 
     func run() async throws {
         #if arch(arm64)
-        guard let tempFilePath = try LocalVMRepository().lookupVM(withName: name)?.path else {
+        guard let localVM = try LocalVMRepository().lookupVM(withName: name) else {
             Console.crash(message: "There is no local VM called `\(name)`", reason: .fileNotFound)
         }
-        let bundle = try VMBundle.fromExistingBundle(at: tempFilePath)
-        guard let ipAddress = try bundle.currentIPaddress else {
-            Console.crash(message: "Couldn't find an IP for `\(name)` – is it running?", reason: .invalidVMStatus)
+
+        let bundle = try VMBundle.fromExistingBundle(at: localVM.path)
+
+        do {
+            _ = try bundle.currentDHCPLease?.ipAddress
+        } catch {
+            if ipv4 {
+                throw error
+            } else {
+                Console.info("It looks like this VM is not currently running")
+            }
         }
 
-        Console.info("Waiting for SSH server to become available")
-        try await VMLauncher.waitForSSHServer(forAddress: ipAddress)
-
-        print("IPv4 Address:\t\(ipAddress)")
+        Console.printTable(
+            data: [
+                ["Name:", localVM.basename],
+                ["State:", localVM.state.rawValue],
+                ["Location:", bundle.root.path],
+                ["MAC Address:", bundle.macAddress.string],
+                ["IPv4 Address:", ipAddressString(for: bundle)],
+                ["IPv4 Lease Expires:", relativeLeaseExpirationString(for: bundle)]
+            ]
+        )
 
         #else
         guard
@@ -46,5 +61,21 @@ struct VMDetailsCommand: AsyncParsableCommand {
 
         print("IPv4 Address:\t\(runningVirtualMachine.ipAddress)")
         #endif
+    }
+
+    func ipAddressString(for bundle: VMBundle) -> String {
+        guard let ipAddress = try? bundle.currentDHCPLease?.ipAddress else {
+            return "-"
+        }
+
+        return ipAddress.debugDescription
+    }
+
+    func relativeLeaseExpirationString(for bundle: VMBundle) -> String {
+        guard let expirationDate = try? bundle.currentDHCPLease?.expirationDate else {
+            return "-"
+        }
+
+        return Format.remainingTime(until: expirationDate, context: .beginningOfSentence)
     }
 }

@@ -44,7 +44,7 @@ public struct VMBundle {
     public let root: URL
     private let hardwareModel: VZMacHardwareModel
     private let machineIdentifier: VZMacMachineIdentifier
-    private let macAddress: VZMACAddress
+    public let macAddress: VZMACAddress
 
     /// Persist the VM configuration to the local disk
     func saveConfiguration() throws {
@@ -60,9 +60,12 @@ public struct VMBundle {
         self.root.deletingPathExtension().lastPathComponent
     }
 
-    public var currentIPaddress: IPv4Address? {
+    /// Look up details of this VM's most recent DHCP lease.
+    ///
+    /// Note that there's no guarantee that the IP address associated with this lease is valid unless the VM is currently booted
+    public var currentDHCPLease: DHCPLease? {
         get throws {
-            try DHCPLease.mostRecentLease(forMACaddress: self.macAddress)?.ipAddress
+            try DHCPLease.mostRecentLease(forMACaddress: self.macAddress)
         }
     }
 
