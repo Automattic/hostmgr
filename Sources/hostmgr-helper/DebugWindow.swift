@@ -3,7 +3,12 @@ import libhostmgr
 
 class DebugViewController: NSViewController {
     override func loadView() {
-        self.view = NSHostingView(rootView: DebugWindow())
+        do {
+            let vmList = try LocalVMRepository().list().filter { $0.state != .compressed }.map { $0.basename }
+            self.view = NSHostingView(rootView: DebugWindow(vmList: vmList))
+        } catch {
+            self.view = NSHostingView(rootView: NoVMsView())
+        }
     }
 }
 
@@ -16,13 +21,18 @@ enum DebugActions: String {
     }
 }
 
+struct NoVMsView: View {
+    var body: some View {
+        Text("No VMs found")
+    }
+}
+
 struct DebugWindow: View {
 
     @State private var VMs: [String]
     @State private var selectedVM: String
 
-    init() {
-        let vmList = try! LocalVMRepository().list().filter { $0.state != .compressed }.map { $0.basename }
+    init(vmList: [String]) {
         self.VMs = vmList
         self.selectedVM = vmList.first!
     }

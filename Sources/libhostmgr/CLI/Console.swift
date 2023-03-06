@@ -82,7 +82,8 @@ public struct Console {
     }
 
     @discardableResult public func startIndeterminateProgress(_ title: String) -> ActivityIndicator<CustomActivity> {
-        let bar = self.terminal.customActivity(frames: ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"].map { $0 + " " + title } )
+        let frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"].map { $0 + " " + title }
+        let bar = self.terminal.customActivity(frames: frames)
         bar.start(refreshRate: 80)
         return bar
     }
@@ -179,7 +180,7 @@ public class ProgressBar {
             terminal.clear(lines: 2)
 
             if let rate = self.currentRate {
-                terminal.success("Finished in \(elapsedTime) (\(rate))")
+                terminal.success("Finished in \(elapsedTime) (\(rate)/s)")
             } else {
                 terminal.success("Finished in \(elapsedTime)")
             }
