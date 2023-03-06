@@ -80,6 +80,12 @@ public struct Console {
 
         return self
     }
+
+    @discardableResult public func startIndeterminateProgress(_ title: String) -> ActivityIndicator<CustomActivity> {
+        let bar = self.terminal.customActivity(frames: ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"].map { $0 + " " + title } )
+        bar.start(refreshRate: 80)
+        return bar
+    }
 }
 
 public class ProgressBar {
@@ -88,48 +94,56 @@ public class ProgressBar {
     private let startDate = Date()
 
     private var lastUpdateAt: Int = 0
+    private var currentRate: String?
 
-    init(title: String) {
-        terminal.info(title)
-        terminal.print() // Deliberately empty string
+    private let title: String
+    private let type: ProgressType
+
+    public enum ProgressType {
+        case download
+        case installation
     }
 
-    public static func start(title: String) -> ProgressBar {
-        return ProgressBar(title: title)
+    init(title: String, type: ProgressType) {
+        self.title = title
+        self.type = type
     }
 
     public func update(_ progress: Progress) {
-
-        if progress.kind == .file {
-            self.update(FileTransferProgress(
-                completed: Int(progress.completedUnitCount),
-                total: Int(progress.totalUnitCount),
-                startDate: startDate)
-            )
-        }
-
-        if progress.kind == .installation {
-            self.updateInstallationProgress(progress)
+        switch self.type {
+        case .download: self.update(progress)
+        case .installation: self.updateInstallationProgress(progress)
         }
     }
 
-    public func update(_ progress: FileTransferProgress) {
+    public func updateFileTransferProgress(_ progress: Progress) {
         // Only update progress once per second
         let now = Int(Date().timeIntervalSince1970)
         guard now > lastUpdateAt else {
             return
         }
 
+        let progress = FileTransferProgress(
+            completed: Int(progress.completedUnitCount),
+            total: Int(progress.totalUnitCount),
+            startDate: startDate
+        )
+
         let rate = Format.fileBytes(progress.dataRate)
         let remaining = Format.timeRemaining(progress.estimatedTimeRemaining)
         let percentage = Format.percentage(progress.fractionComplete)
 
         // Erase the old progress line and overwrite it
-        terminal.clear(lines: 1)
+        terminal.clear(lines: 2)
+
+        terminal.info(title)
         terminal.print("\(percentage) [\(rate)/s, \((remaining))]")
 
         // Make sure we don't update again this second
         self.lastUpdateAt = now
+
+        // Save the rate to display at the end
+        self.currentRate = rate
     }
 
     public func updateInstallationProgress(_ progress: Progress) {
@@ -145,30 +159,56 @@ public class ProgressBar {
         terminal.clear(lines: 1)
 
         if let remaining = progress.estimatedTimeRemaining {
-            terminal.print("\(percentage) [\((remaining))]")
+            terminal.info("\(title) \(percentage) [\((remaining))]")
         } else {
-            terminal.print("\(percentage)")
+            terminal.info("\(title) \(percentage)")
         }
 
         // Make sure we don't update again this second
         self.lastUpdateAt = now
     }
+
+    public func succeed() {
+        let elapsedTime = Format.elapsedTime(between: startDate, and: .now, context: .middleOfSentence)
+
+        switch type {
+        case .installation:
+            terminal.clear(lines: 1)
+            terminal.success("Finished in \(elapsedTime)")
+        case .download:
+            terminal.clear(lines: 2)
+
+            if let rate = self.currentRate {
+                terminal.success("Finished in \(elapsedTime) (\(rate))")
+            } else {
+                terminal.success("Finished in \(elapsedTime)")
+            }
+        }
+    }
 }
 
 // MARK: Static Helpers
 extension Console {
-    public static func startProgress(_ string: String) -> ProgressBar {
-        ProgressBar(title: string)
+    public static func startProgress(_ string: String, type: ProgressBar.ProgressType) -> ProgressBar {
+        ProgressBar(title: string, type: type)
     }
 
     public static func startImageDownload(_ image: RemoteVMImage) -> ProgressBar {
         let size = Format.fileBytes(image.imageObject.size)
-        return ProgressBar(title: "Downloading \(image.fileName) (\(size))")
+        return ProgressBar(title: "Downloading \(image.fileName) (\(size))", type: .download)
     }
 
     public static func startFileDownload(_ file: S3Object) -> ProgressBar {
         let size = Format.fileBytes(file.size)
-        return ProgressBar(title: "Downloading \(file.key) (\(size))")
+        return ProgressBar(title: "Downloading \(file.key) (\(size))", type: .download)
+    }
+
+    public static func startFileDownload(_ url: URL) -> ProgressBar {
+        return ProgressBar(title: "Downloading \(url)", type: .download)
+    }
+
+    public static func startIndeterminateProgress(_ string: String) -> ActivityIndicator<CustomActivity> {
+        return Console().startIndeterminateProgress(string)
     }
 }
 

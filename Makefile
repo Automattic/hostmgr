@@ -25,6 +25,11 @@ create-vm-debug:
 
 	./.build/arm64-apple-macosx/debug/hostmgr vm create xcode-143 --disk-size 92
 
+build-debug:
+	@echo "--- Building and Signing for Local Development"
+	swift build
+	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API" .build/arm64-apple-macosx/debug/hostmgr -v
+
 build-helper-debug:
 	@echo "--- Building and Signing helper for Local Development"
 	swift build
