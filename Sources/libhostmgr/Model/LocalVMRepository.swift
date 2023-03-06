@@ -47,8 +47,13 @@ public struct LocalVMRepository: LocalVMRepositoryProtocol {
             .sorted(by: strategy.sortMethod)
     }
 
-    public func lookupVM(withName name: String) throws -> LocalVMImage? {
-        try list().first { $0.basename == name }
+    public func lookupVM(
+        withName name: String,
+        state: [LocalVMImage.VMImageState] = [.ready, .packaged]
+    ) throws -> LocalVMImage? {
+        try list()
+            .filter { state.contains($0.state) }
+            .first { $0.basename == name }
     }
 
     public func lookupTemplate(withName name: String) throws -> LocalVMImage? {

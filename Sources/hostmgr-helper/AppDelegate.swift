@@ -125,7 +125,10 @@ extension AppDelegate: NSXPCListenerDelegate {
 
 extension AppDelegate {
     @objc func didReceiveDebugNotification(_ notification: NSNotification) {
-        guard let action = DebugActions(rawValue: notification.name.rawValue) else {
+        guard
+            let action = DebugActions(rawValue: notification.name.rawValue),
+            let vmName = notification.object as? String
+        else {
             return
         }
 
@@ -133,7 +136,7 @@ extension AppDelegate {
         Task {
             do {
                 switch action {
-                case .startVM: try await launchVM(named: "test")
+                case .startVM: try await launchVM(named: vmName)
                 case .stopVM: try await stopVM()
                 }
             } catch {

@@ -1,4 +1,5 @@
 import SwiftUI
+import libhostmgr
 
 class DebugViewController: NSViewController {
     override func loadView() {
@@ -16,14 +17,34 @@ enum DebugActions: String {
 }
 
 struct DebugWindow: View {
+
+    @State private var VMs: [String]
+    @State private var selectedVM: String
+
+    init() {
+        let vmList = try! LocalVMRepository().list().filter { $0.state != .compressed }.map { $0.basename }
+        self.VMs = vmList
+        self.selectedVM = vmList.first!
+    }
+
     var body: some View {
-        VStack {
-            Button("Start VM") {
-                NotificationCenter.default.post(name: DebugActions.startVM.name, object: nil)
+        Form {
+            Section {
+                Picker("VM", selection: $selectedVM) {
+                    ForEach(self.VMs, id: \.self) {
+                        Text($0)
+                    }
+                }
+
+                Button("Start VM") {
+                    NotificationCenter.default.post(name: DebugActions.startVM.name, object: self.selectedVM)
+                }
             }
 
-            Button("Stop VM") {
-                NotificationCenter.default.post(name: DebugActions.stopVM.name, object: nil)
+            Section {
+                Button("Stop VM") {
+                    NotificationCenter.default.post(name: DebugActions.stopVM.name, object: self.selectedVM)
+                }
             }
         }.padding()
     }

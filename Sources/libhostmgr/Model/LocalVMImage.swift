@@ -1,6 +1,6 @@
 import Foundation
 
-public struct LocalVMImage: Equatable, FilterableByBasename {
+public struct LocalVMImage: Equatable, Hashable, FilterableByBasename {
 
     public enum VMImageState: String {
         case compressed
@@ -99,5 +99,9 @@ public struct LocalVMImage: Equatable, FilterableByBasename {
         get throws {
             try FileManager.default.size(ofObjectAt: path)
         }
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(self.path)
     }
 }
