@@ -112,7 +112,6 @@ public struct Paths {
         Paths.vmImageStorageDirectory.appendingPathComponent(name).appendingPathExtension("aar")
     }
 
-
     public static func createEphemeralVMStorageIfNeeded() throws {
         guard try !FileManager.default.directoryExists(at: ephemeralVMStorageDirectory) else {
             return
@@ -126,11 +125,7 @@ extension Paths {
 
     public static func buildkiteVMRootDirectory(forUser user: String) -> URL {
         #if arch(arm64)
-        URL(fileURLWithPath: "/Users")
-            .appendingPathComponent(user)
-            .appendingPathComponent("Library")
-            .appendingPathComponent("Application Support")
-            .appendingPathComponent("com.buildkite.agent")
+        URL(fileURLWithPath: "/Users").appendingPathComponent(user)
         #else
         URL(fileURLWithPath: "/usr/local/var/buildkite-agent")
         #endif
