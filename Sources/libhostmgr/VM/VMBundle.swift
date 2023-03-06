@@ -115,14 +115,14 @@ extension VMBundle: Bundle {
             )
         }
 
-        Console.log("Loaded configuration")
+        Console.log("Loaded VM Configuration from Restore Image")
 
         let bundleRoot = Paths.vmImageStorageDirectory
             .appendingPathComponent(name)
             .appendingPathExtension("bundle")
 
         try FileManager.default.createDirectory(at: bundleRoot, withIntermediateDirectories: true)
-        Console.log("Created bundle at \(bundleRoot)")
+        Console.success("Created bundle at \(bundleRoot.path)")
 
         let bundle = VMBundle(
             root: bundleRoot,

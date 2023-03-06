@@ -33,9 +33,14 @@ public struct Format {
         return formatter.string(fromByteCount: count)
     }
 
-    public static func elapsedTime(between start: Date, and end: Date) -> String {
+    public static func elapsedTime(
+        between start: Date,
+        and end: Date,
+        context: Formatter.Context = .standalone
+    ) -> String {
         let formatter = DateComponentsFormatter()
-        formatter.includesApproximationPhrase = true
+        formatter.formattingContext = context
+        formatter.includesApproximationPhrase = false
         formatter.unitsStyle = .full
         formatter.allowedUnits = [.second, .minute, .hour]
         return formatter.string(from: start, to: end)!

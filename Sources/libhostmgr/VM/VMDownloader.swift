@@ -28,7 +28,6 @@ public struct VMDownloader {
             return
         }
 
-        Console.info("Downloading latest restore image from \(restoreImage.url)")
         try await download(url: restoreImage.url, to: destination, progress: progress)
     }
 

@@ -29,9 +29,11 @@ struct VMCreateCommand: AsyncParsableCommand {
         let restoreImage = try await VZMacOSRestoreImage.latestSupported
 
         if VMDownloader.needsToDownload(restoreImage: restoreImage) {
-            let downloadProgressBar = Console.startProgress("Downloading")
-            try await VMDownloader.download(restoreImage: restoreImage, progress: downloadProgressBar.update)
-            Console.success("Downloaded Restore Image")
+            let downloadProgressBar = Console.startFileDownload(restoreImage.url)
+            try await VMDownloader.download(restoreImage: restoreImage, progress: {
+                downloadProgressBar.update($0)
+            })
+            downloadProgressBar.succeed()
         }
 
         let localImage = try await VMDownloader.localCopy(of: restoreImage)
@@ -42,12 +44,21 @@ struct VMCreateCommand: AsyncParsableCommand {
             withStorageCapacity: .init(value: Double(diskSize), unit: .gigabytes)
         )
 
-        let progressBar = Console.startProgress("Installing")
+        let tmp = Console.startIndeterminateProgress("Preparing Installer")
+        var progressBar: libhostmgr.ProgressBar?
 
         let installer = try await VMInstaller(forBundle: bundle, restoreImage: localImage)
-        try await installer.install(progressCallback: progressBar.update)
+        try await installer.install { progress in
+            if let progressBar {
+                progressBar.update(progress)
+            } else {
+                tmp.succeed()
+                progressBar = Console.startProgress("Installing macOS:", type: .installation)
+            }
+        }
+        progressBar?.succeed()
 
-        Console.success("Installation Complete – you can now start the VM")
+        Console.info("You now start the VM by running `hostmgr vm start \(name)`")
     }
 }
 #endif
