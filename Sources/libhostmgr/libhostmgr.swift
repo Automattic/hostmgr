@@ -1,4 +1,5 @@
 import Foundation
+import TSCBasic
 import prlctl
 
 /// Downloads and registers an image by name
@@ -315,5 +316,29 @@ func applyVMSettings(_ settings: [StoppedVM.VMOption], to parallelsVM: StoppedVM
         try parallelsVM.set(.withoutCDROMDevice())
     } catch {
         Console.warn("Unable to remove device: \(error.localizedDescription)")
+    }
+}
+
+public func gitMirrorsManifest(fileSystem: FileSystem = localFileSystem, gitMirrorStorageDirectory: URL = Paths.gitMirrorStorageDirectory) throws -> String {
+    let gitMirrorDir = AbsolutePath(gitMirrorStorageDirectory.path)
+    return try fileSystem.mostRecentGitMirror(in: gitMirrorDir)
+        .map { $0.relative(to: gitMirrorDir).pathString }
+        .sorted()
+        .joined(separator: "\n")
+}
+
+extension FileSystem {
+    func mostRecentGitMirror(in path: AbsolutePath) throws -> [AbsolutePath] {
+        let files = try getDirectoryContents(path)
+        let gitMirrors = files.filter { $0.hasSuffix(".git.tar") }
+        let directories = files.filter { isDirectory(path.appending(component: $0)) }
+
+        // git repo cahce files are named as "<year>-<month>-<day>.git.tar".
+        // The "max" one is the most recent.
+        let allGitMirrors = gitMirrors.max().flatMap { [path.appending(component: $0)] } ?? []
+        return try directories.reduce(into: allGitMirrors, { partialResult, relativePath in
+            let dir = path.appending(component: relativePath)
+            try partialResult.append(contentsOf: mostRecentGitMirror(in: dir))
+        })
     }
 }
