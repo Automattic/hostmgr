@@ -333,7 +333,7 @@ extension FileSystem {
         let gitMirrors = files.filter { $0.hasSuffix(".git.tar") }
         let directories = files.filter { isDirectory(path.appending(component: $0)) }
 
-        // git repo cahce files are named as "<year>-<month>-<day>.git.tar".
+        // git repo cache files are named as "<year>-<month>-<day>.git.tar".
         // The "max" one is the most recent.
         let allGitMirrors = gitMirrors.max().flatMap { [path.appending(component: $0)] } ?? []
         return try directories.reduce(into: allGitMirrors, { partialResult, relativePath in

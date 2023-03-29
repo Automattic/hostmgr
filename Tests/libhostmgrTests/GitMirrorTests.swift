@@ -43,9 +43,16 @@ class GitMirrorTests: XCTestCase {
     func testManifestOnlyContainsTheMostRecentOne() throws {
         let manifest = try getManifest(withFiles: [
             "automattic/day-one-apple/2023-03-27.git.tar",
-            "automattic/day-one-apple/2023-03-28.git.tar"
+            "automattic/day-one-apple/2023-03-28.git.tar",
+            "automattic/wordpress-ios/2023-03-24.git.tar",
+            "automattic/wordpress-ios/2023-03-26.git.tar"
         ])
-        XCTAssertEqual(manifest, "automattic/day-one-apple/2023-03-28.git.tar")
+        XCTAssertEqual(
+            manifest,
+            """
+            automattic/day-one-apple/2023-03-28.git.tar
+            automattic/wordpress-ios/2023-03-26.git.tar
+            """)
     }
 
     private func getManifest(withFiles files: [String]) throws -> String {
