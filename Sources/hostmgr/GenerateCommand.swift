@@ -7,7 +7,6 @@ struct RunCommand: ParsableCommand {
         abstract: "Data processing tasks",
         subcommands: [
             GenerateBuildkiteJobScript.self,
-            GenerateGitMirrorManifestCommand.self,
             GeneratePasswordCommand.self
         ]
     )
