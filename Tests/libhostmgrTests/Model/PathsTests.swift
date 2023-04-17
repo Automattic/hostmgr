@@ -33,8 +33,16 @@ final class PathsTests: XCTestCase {
 
     func testThatGitMirrorStoragePathIsCorrect() {
         let path = Paths.gitMirrorStorageDirectory
-        validate(path: path, resolvesTo: "/usr/local/var/git-mirrors", forArchitecture: .x64)
-        validate(path: path, resolvesTo: "/opt/homebrew/git-mirrors", forArchitecture: .arm64)
+        validate(
+            path: path,
+            resolvesTo: "/usr/local/var/git-mirrors",
+            forArchitecture: .x64
+        )
+        validate(
+            path: path,
+            resolvesTo: "/opt/homebrew/var/git-mirrors",
+            forArchitecture: .arm64
+        )
     }
 
     @available(macOS 13.0, *)
