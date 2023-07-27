@@ -11,6 +11,7 @@ public protocol S3ManagerProtocol {
     func download(
         key: String,
         to destination: URL,
+        replacingExistingFile shouldReplaceExistingFile: Bool,
         progressCallback: FileTransferProgressCallback?
     ) async throws
 
@@ -18,6 +19,10 @@ public protocol S3ManagerProtocol {
 }
 
 public struct S3Manager: S3ManagerProtocol {
+
+    enum Errors: Error {
+        case fileExistsAtDestination
+    }
 
     private let bucket: String
     private let region: String
@@ -41,6 +46,7 @@ public struct S3Manager: S3ManagerProtocol {
     public func download(
         key: String,
         to destination: URL,
+        replacingExistingFile shouldReplaceExistingFile: Bool = true,
         progressCallback: FileTransferProgressCallback?
     ) async throws {
         let tempUrl = try await s3Client.download(
@@ -48,6 +54,15 @@ public struct S3Manager: S3ManagerProtocol {
             inBucket: self.bucket,
             progressCallback: progressCallback
         )
+
+        if FileManager.default.fileExists(at: destination) {
+            if shouldReplaceExistingFile {
+                try FileManager.default.removeItem(at: destination)
+            } else {
+                throw Errors.fileExistsAtDestination
+            }
+        }
+
         try FileManager.default.moveItem(at: tempUrl, to: destination)
     }
 

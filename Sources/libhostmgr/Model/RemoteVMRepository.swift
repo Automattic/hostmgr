@@ -74,6 +74,7 @@ public struct RemoteVMRepository {
        try await self.s3Manager.download(
             key: image.checksumObject.key,
             to: destinationDirectory.appendingPathComponent(image.checksumFileName),
+            replacingExistingFile: false,
             progressCallback: nil)
 
         let imageFileDestination = destinationDirectory.appendingPathComponent(image.checksumFileName)
@@ -81,6 +82,7 @@ public struct RemoteVMRepository {
         try await self.s3Manager.download(
             key: image.imageObject.key,
             to: destinationDirectory.appendingPathComponent(image.checksumFileName),
+            replacingExistingFile: false,
             progressCallback: progressCallback
         )
 
