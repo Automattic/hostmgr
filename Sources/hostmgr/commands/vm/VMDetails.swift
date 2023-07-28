@@ -22,7 +22,7 @@ struct VMDetailsCommand: ParsableCommand {
         }
 
         guard runningVM.hasIpV4Address else {
-            Console.crash(message: "The VM \(self.virtualMachine) does not have an IP address", reason: .invalidVMStatus)
+            Console.crash(message: "The VM \(runningVM) does not have an IP address", reason: .invalidVMStatus)
         }
 
         print("IPv4 Address:\t\(runningVM.ipAddress)")
