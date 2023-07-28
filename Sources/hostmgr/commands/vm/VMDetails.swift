@@ -4,7 +4,6 @@ import libhostmgr
 import Network
 
 struct VMDetailsCommand: AsyncParsableCommand {
-
     static let configuration = CommandConfiguration(
         commandName: "details",
         abstract: "Shows information about a given VM"
