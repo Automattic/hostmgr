@@ -37,7 +37,7 @@ struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
             bucket: Configuration.shared.authorizedKeysBucket,
             region: Configuration.shared.authorizedKeysRegion,
             credentials: credentials,
-            endpoint: .accelerated
+            endpoint: .default // Secrets doesn't use the accelerated endpoint
         )
 
         guard let object = try await s3Manager.lookupObject(atPath: Constants.s3Key) else {
