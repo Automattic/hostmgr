@@ -8,6 +8,7 @@ struct VMCommand: AsyncParsableCommand {
         abstract: "Allows working with VMs",
         subcommands: [
             VMCleanCommand.self,
+            VMDetailsCommand.self,
             VMExistsCommand.self,
             VMFetchCommand.self,
             VMListCommand.self,
