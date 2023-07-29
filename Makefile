@@ -2,7 +2,7 @@
 
 RELEASE_VERSION = $(shell swift run hostmgr --version)
 
-build-release:
+build:
 	@echo "--- Building Release"
 	swift build -c release --arch arm64 --arch x86_64
 
@@ -13,14 +13,14 @@ build-release:
 	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API (886NX39KP6)" .build/artifacts/release/hostmgr --force --verbose
 	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API (886NX39KP6)" .build/artifacts/release/hostmgr-helper --force --verbose
 
-install: build-release
+install: build
 	cp .build/artifacts/release/hostmgr /opt/homebrew/bin/hostmgr
 	cp .build/artifacts/release/hostmgr-helper /opt/homebrew/bin/hostmgr-helper
 
 	launchctl unload ~/Library/LaunchAgents/com.automattic.hostmgr.helper.plist
 	launchctl load ~/Library/LaunchAgents/com.automattic.hostmgr.helper.plist
 
-release: build-release
+release: build
 	@echo "--- Tagging Release"
 	git tag $(RELEASE_VERSION)
 	git push origin $(RELEASE_VERSION)
