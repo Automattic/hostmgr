@@ -15,21 +15,32 @@ struct VMStartCommand: AsyncParsableCommand {
     @Flag(help: "Wait for the machine to finish starting up?")
     var wait: Bool = false
 
+    @Flag(help: "Mount the system git mirrors directory into the virtual machine on startup?")
+    var withGitMirrors: Bool = false
+
     private let startTime = Date()
 
     enum CodingKeys: CodingKey {
         case name
         case wait
+        case withGitMirrors
     }
 
     func run() async throws {
-        try await libhostmgr.startVM(name: self.name)
+        let configuration = try LaunchConfiguration(name: self.name, sharedPaths: self.sharedPaths)
+        try await libhostmgr.startVM(withLaunchConfiguration: configuration)
 
         guard wait else {
             return
         }
 
         #if arch(arm64)
+        try await arm64Start()
+        #endif
+    }
+
+    #if arch(arm64)
+    func arm64Start() async throws {
         guard let tempFilePath = try LocalVMRepository().lookupVM(withName: name)?.path else {
             Console.crash(message: "There is no local VM called `\(name)`", reason: .fileNotFound)
         }
@@ -47,6 +58,18 @@ struct VMStartCommand: AsyncParsableCommand {
 
         Console.success("Startup Complete – Elapsed time: \(Format.elapsedTime(between: startTime, and: .now))")
         Console.info("You can access the VM using `ssh builder@\(ipAddress)`")
-        #endif
+    }
+    #endif
+
+    var sharedPaths: [LaunchConfiguration.SharedPath] {
+        get throws {
+            guard try FileManager.default.directoryExists(at: Paths.gitMirrorStorageDirectory) else {
+                return []
+            }
+
+            return [
+                LaunchConfiguration.SharedPath(source: Paths.gitMirrorStorageDirectory, readOnly: true)
+            ]
+        }
     }
 }

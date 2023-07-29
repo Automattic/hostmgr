@@ -6,48 +6,29 @@ public struct Paths {
 
     static var storageRoot: URL {
         #if arch(arm64)
-        arm64StorageRoot
+        URL(fileURLWithPath: "/opt/a8c-ci", isDirectory: true)
         #else
         URL(fileURLWithPath: "/usr/local", isDirectory: true)
         #endif
     }
 
-    /// A way to push the available check out to keep things pretty
-    #if arch(arm64)
-    private static var arm64StorageRoot: URL {
-        Paths.applicationSupportDirectory
-    }
-    #endif
-
     static var configurationRoot: URL {
-        #if arch(arm64)
-        storageRoot.appendingPathComponent("configuration")
-        #else
         storageRoot
             .appendingPathComponent("etc", isDirectory: true)
             .appendingPathComponent("hostmgr", isDirectory: true)
-        #endif
     }
 
     static var stateRoot: URL {
-        #if arch(arm64)
-        storageRoot.appendingPathComponent("state")
-        #else
         storageRoot
             .appendingPathComponent("var", isDirectory: true)
             .appendingPathComponent("hostmgr", isDirectory: true)
             .appendingPathComponent("state", isDirectory: true)
-        #endif
     }
 
     public static var vmImageStorageDirectory: URL {
-        #if arch(arm64)
-        storageRoot.appendingPathComponent("vm-images")
-        #else
         storageRoot
             .appendingPathComponent("var", isDirectory: true)
             .appendingPathComponent("vm-images")
-        #endif
     }
 
     public static var ephemeralVMStorageDirectory: URL {
@@ -55,13 +36,9 @@ public struct Paths {
     }
 
     public static var gitMirrorStorageDirectory: URL {
-        #if arch(arm64)
-        storageRoot.appendingPathComponent("git-mirrors")
-        #else
         storageRoot
             .appendingPathComponent("var", isDirectory: true)
             .appendingPathComponent("git-mirrors", isDirectory: true)
-        #endif
     }
 
     public static var authorizedKeysFilePath: URL {

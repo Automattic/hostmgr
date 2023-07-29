@@ -5,8 +5,13 @@ import Virtualization
 #if arch(arm64)
 public struct VMLauncher {
 
-    public static func prepareVirtualMachine(named name: String) throws -> VZVirtualMachine {
-        let configuration = try prepareBundle(named: name).virtualMachineConfiguration()
+    public static func prepareVirtualMachine(
+        withLaunchConfiguration launchConfiguration: LaunchConfiguration
+    ) throws -> VZVirtualMachine {
+        let configuration = try prepareBundle(named: launchConfiguration.name).virtualMachineConfiguration()
+        if #available(macOS 13.0, *) {
+            configuration.directorySharingDevices = [launchConfiguration.sharedDirectoryConfiguration]
+        }
         try configuration.validate()
 
         return VZVirtualMachine(configuration: configuration)

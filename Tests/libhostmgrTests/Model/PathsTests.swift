@@ -3,58 +3,30 @@ import XCTest
 
 final class PathsTests: XCTestCase {
 
-    private var storageRoot: URL {
-        FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library")
-            .appendingPathComponent("Application Support")
-            .appendingPathComponent("com.automattic.hostmgr")
-    }
-
-    private func _p(_ string: String) -> String {
-        storageRoot.appendingPathComponent(string).path
-    }
-
     func testThatStorageRootIsCorrect() {
         validate(path: Paths.storageRoot, resolvesTo: "/usr/local", forArchitecture: .x64)
-        validate(path: Paths.storageRoot, resolvesTo: storageRoot.path, forArchitecture: .arm64)
+        validate(path: Paths.storageRoot, resolvesTo: "/opt/a8c-ci", forArchitecture: .arm64)
     }
 
     func testThatConfigurationRootIsCorrect() {
         validate(path: Paths.configurationRoot, resolvesTo: "/usr/local/etc/hostmgr", forArchitecture: .x64)
-        validate(path: Paths.configurationRoot, resolvesTo: _p("configuration"), forArchitecture: .arm64)
+        validate(path: Paths.configurationRoot, resolvesTo: "/opt/a8c-ci/etc/hostmgr", forArchitecture: .arm64)
     }
 
     func testThatStateRootIsCorrect() {
         validate(path: Paths.stateRoot, resolvesTo: "/usr/local/var/hostmgr/state", forArchitecture: .x64)
-        validate(path: Paths.stateRoot, resolvesTo: _p("state"), forArchitecture: .arm64)
+        validate(path: Paths.stateRoot, resolvesTo: "/opt/a8c-ci/var/hostmgr/state", forArchitecture: .arm64)
     }
 
     func testThatVMStoragePathIsCorrect() {
-        validate(
-            path: Paths.vmImageStorageDirectory,
-            resolvesTo: "/usr/local/var/vm-images",
-            forArchitecture: .x64
-        )
-
-        validate(
-            path: Paths.vmImageStorageDirectory,
-            resolvesTo: "/opt/homebrew/var/vm-images",
-            forArchitecture: .arm64
-        )
+        validate(path: Paths.vmImageStorageDirectory, resolvesTo: "/usr/local/var/vm-images", forArchitecture: .x64)
+        validate(path: Paths.vmImageStorageDirectory, resolvesTo: "/opt/a8c-ci/var/vm-images", forArchitecture: .arm64)
     }
 
     func testThatGitMirrorStoragePathIsCorrect() {
         let path = Paths.gitMirrorStorageDirectory
-        validate(
-            path: path,
-            resolvesTo: "/usr/local/var/git-mirrors",
-            forArchitecture: .x64
-        )
-        validate(
-            path: path,
-            resolvesTo: "/opt/homebrew/var/git-mirrors",
-            forArchitecture: .arm64
-        )
+        validate(path: path, resolvesTo: "/usr/local/var/git-mirrors", forArchitecture: .x64)
+        validate(path: path, resolvesTo: "/opt/a8c-ci/var/git-mirrors", forArchitecture: .arm64)
     }
 
     func testThatAuthorizedKeysFilePathIsCorrect() {
@@ -65,39 +37,7 @@ final class PathsTests: XCTestCase {
     func testThatConfigurationFilePathIsCorrect() {
         let path = Paths.configurationFilePath
         validate(path: path, resolvesTo: "/usr/local/etc/hostmgr/config.json", forArchitecture: .x64)
-        validate(path: path, resolvesTo: _p("configuration/config.json"), forArchitecture: .arm64)
-    }
-
-    func testThatBuildkiteVMRootDirectoryIsCorrect() {
-        let path = Paths.buildkiteVMRootDirectory(forUser: NSUserName())
-        validate(path: path, resolvesTo: "/usr/local/var/buildkite-agent", forArchitecture: .x64)
-        validate(path: path, resolvesTo: buildkiteRoot.path, forArchitecture: .arm64)
-    }
-
-    private var buildkiteRoot: URL {
-        FileManager.default.homeDirectoryForCurrentUser
-    }
-
-    private func _bp(_ path: String) -> String {
-        buildkiteRoot.appendingPathComponent(path).path
-    }
-
-    func testThatBuildkiteBuildsDirectoryIsCorrect() {
-        let path = Paths.buildkiteBuildDirectory(forUser: NSUserName())
-        validate(path: path, resolvesTo: "/usr/local/var/buildkite-agent/builds", forArchitecture: .x64)
-        validate(path: path, resolvesTo: _bp("builds"), forArchitecture: .arm64)
-    }
-
-    func testThatBuildkiteHooksDirectoryIsCorrect() {
-        let path = Paths.buildkiteHooksDirectory(forUser: NSUserName())
-        validate(path: path, resolvesTo: "/usr/local/var/buildkite-agent/hooks", forArchitecture: .x64)
-        validate(path: path, resolvesTo: _bp("hooks"), forArchitecture: .arm64)
-    }
-
-    func testThatBuildkitePluginsDirectoryIsCorrect() {
-        let path = Paths.buildkitePluginsDirectory(forUser: NSUserName())
-        validate(path: path, resolvesTo: "/usr/local/var/buildkite-agent/plugins", forArchitecture: .x64)
-        validate(path: path, resolvesTo: _bp("plugins"), forArchitecture: .arm64)
+        validate(path: path, resolvesTo: "/opt/a8c-ci/etc/hostmgr/config.json", forArchitecture: .arm64)
     }
 
     private func validate(

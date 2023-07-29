@@ -68,13 +68,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 #if arch(arm64)
     @MainActor
-    func launchVM(named name: String) async throws {
-        logger.trace("Launching VM: \(name)")
+    func launchVM(withLaunchConfiguration config: LaunchConfiguration) async throws {
+        logger.trace("Launching VM: \(config.name)")
 
-        let virtualMachine = try VMLauncher.prepareVirtualMachine(named: name)
+        let virtualMachine = try VMLauncher.prepareVirtualMachine(withLaunchConfiguration: config)
         virtualMachine.delegate = self
 
-        self.viewController.present(virtualMachine: virtualMachine, named: name)
+        self.viewController.present(virtualMachine: virtualMachine, named: config.name)
 
         self.activeVM = virtualMachine
         try await self.activeVM?.start()
@@ -136,7 +136,9 @@ extension AppDelegate {
         Task {
             do {
                 switch action {
-                case .startVM: try await launchVM(named: vmName)
+                case .startVM: try await launchVM(withLaunchConfiguration: LaunchConfiguration(name: vmName, sharedPaths: [
+                    .init(source: URL(fileURLWithPath: "/Users/jkmassel/Downloads"))
+                ]))
                 case .stopVM: try await stopVM()
                 }
             } catch {
@@ -148,10 +150,10 @@ extension AppDelegate {
 }
 
 extension AppDelegate: XPCServiceDelegate {
-    func service(shouldStartVMNamed name: String) async throws {
+    func service(withLaunchConfiguration config: LaunchConfiguration) async throws {
         #if arch(arm64)
         print("Delegate received `shouldStartVM`")
-        try await self.launchVM(named: name)
+        try await self.launchVM(withLaunchConfiguration: config)
         #endif
     }
 

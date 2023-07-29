@@ -16,8 +16,8 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
             // Manually specify the build path to keep paths nice and clean in the output
             "BUILDKITE_BUILD_PATH": Paths.buildkiteBuildDirectory(forUser: username).path,
             "BUILDKITE_HOOKS_PATH": Paths.buildkiteHooksDirectory(forUser: username).path,
-            "BUILDKITE_PLUGINS_PATH": Paths.buildkitePluginsDirectory(forUser: username).path
-
+            "BUILDKITE_PLUGINS_PATH": Paths.buildkitePluginsDirectory(forUser: username).path,
+            "BUILDKITE_GIT_MIRRORS_PATH": "/Volumes/My Shared Files/git-mirrors"
         ]
     }
 

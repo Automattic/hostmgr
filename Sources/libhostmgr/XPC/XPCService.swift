@@ -2,7 +2,6 @@ import Foundation
 
 @objc
 public class XPCService: NSObject, HostmgrXPCProtocol {
-
     enum Errors: Error {
         case unableToCreateRemoteObjectProxy
     }
@@ -15,10 +14,10 @@ public class XPCService: NSObject, HostmgrXPCProtocol {
 
     /// This method should never be called directly – it's the entry point into the `startVM` command
     /// when called via XPC.
-    public func startVM(named name: String, reply: @escaping (Error?) -> Void) {
+    public func startVM(withLaunchConfiguration config: String, reply: @escaping (Error?) -> Void) {
         Task {
             do {
-                try await self.delegate.service(shouldStartVMNamed: name)
+                try await self.delegate.service(withLaunchConfiguration: .from(string: config))
                 reply(nil)
             } catch {
                 reply(error)
@@ -58,11 +57,12 @@ public class XPCService: NSObject, HostmgrXPCProtocol {
 // MARK: – Public Call Sites
 extension XPCService {
     /// Send a message to the XPC service running on the local machine, asking it to start the `named` virtual machine.
-    public static func startVM(named name: String) async throws {
+    public static func startVM(withLaunchConfiguration config: LaunchConfiguration) async throws {
         let protocolObject = try getProtocolObject()
+        let configurationString = try config.toJSON()
 
         try await withCheckedThrowingContinuation { continuation in
-            protocolObject.startVM(named: name) { handle(error: $0, for: continuation) }
+            protocolObject.startVM(withLaunchConfiguration: configurationString) { handle(error: $0, for: continuation) }
         }
     }
 
