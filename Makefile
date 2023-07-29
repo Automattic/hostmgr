@@ -8,9 +8,9 @@ lint:
 lintfix:
 	docker run -it --rm -v `pwd`:`pwd` -w `pwd` ghcr.io/realm/swiftlint:0.47.1 swiftlint --autocorrect
 
-build-release:
+build:
 	@echo "--- Building Release"
-	swift build -c release
+	swift build -c release --arch arm64 --arch x86_64
 
 release: build-release
 	@echo "--- Tagging Release"
