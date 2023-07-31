@@ -8,7 +8,7 @@ public func fetchRemoteImage(name: String) async throws {
         try await downloadRemoteImage(name: name)
     }
 
-    guard let localVM = try LocalVMRepository().lookupVM(withName: name) else {
+    guard let localVM = try LocalVMRepository().lookupVM(withName: name, state: [.ready, .compressed]) else {
         Console.error("Unable to find local VM: `\(name)`")
         abort()
     }
@@ -91,11 +91,13 @@ public func unpack(localVM: LocalVMImage) async throws {
     Console.info("Unpacking VM")
     let destination = Paths.toVMTemplate(named: localVM.basename)
     try Compressor().decompress(archiveAt: localVM.path, to: destination)
+    try FileManager.default.removeItem(at: localVM.path)
     Console.success("Extraction Complete")
 
     Console.info("Validating VM")
     try VMTemplate(at: destination).validate()
     Console.success("Validation Complete")
+
     #else
     try await ParallelsVMRepository().unpack(localVM: localVM)
     #endif
@@ -106,12 +108,12 @@ public func unpack(localVM: LocalVMImage) async throws {
 public func resetVMStorage() throws {
     try FileManager.default.removeItem(at: Paths.ephemeralVMStorageDirectory)
 
-    #if arch(i386)
-    try ParallelsVMRepository().lookupVMs().forEach { parallelsVM in
-        Console.info("Removing Registered VM \(parallelsVM.name)")
-        try parallelsVM.unregister()
+    if ProcessInfo.processInfo.isIntelArchitecture {
+        try ParallelsVMRepository().lookupVMs().forEach { parallelsVM in
+            Console.info("Removing Registered VM \(parallelsVM.name)")
+            try parallelsVM.unregister()
+        }
     }
-    #endif
 
     try FileManager.default.createDirectory(at: Paths.ephemeralVMStorageDirectory, withIntermediateDirectories: true)
 

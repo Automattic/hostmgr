@@ -14,14 +14,14 @@ public struct VMDownloader {
     }
 
     public static func needsToDownload(restoreImage: VZMacOSRestoreImage) -> Bool {
-        let destination = Paths.applicationCacheDirectory.appendingPathComponent(restoreImage.url.lastPathComponent)
+        let destination = Paths.restoreImageDirectory.appendingPathComponent(restoreImage.url.lastPathComponent)
         return !FileManager.default.fileExists(at: destination)
     }
 
     public static func download(restoreImage: VZMacOSRestoreImage, progress: @escaping ProgressCallback) async throws {
-        let destination = Paths.applicationCacheDirectory.appendingPathComponent(restoreImage.url.lastPathComponent)
+        try FileManager.default.createDirectory(at: Paths.restoreImageDirectory, withIntermediateDirectories: true)
 
-        try FileManager.default.createDirectory(at: Paths.applicationCacheDirectory, withIntermediateDirectories: true)
+        let destination = Paths.restoreImageDirectory.appendingPathComponent(restoreImage.url.lastPathComponent)
 
         // Don't redownload the restore image if we already have it
         guard !FileManager.default.fileExists(at: destination) else {
@@ -32,7 +32,7 @@ public struct VMDownloader {
     }
 
     public static func localCopy(of restoreImage: VZMacOSRestoreImage) async throws -> VZMacOSRestoreImage {
-        let destination = Paths.applicationCacheDirectory.appendingPathComponent(restoreImage.url.lastPathComponent)
+        let destination = Paths.restoreImageDirectory.appendingPathComponent(restoreImage.url.lastPathComponent)
         return try await VZMacOSRestoreImage.image(from: destination)
     }
 

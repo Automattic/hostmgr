@@ -112,7 +112,7 @@ public class ProgressBar {
 
     public func update(_ progress: Progress) {
         switch self.type {
-        case .download: self.update(progress)
+        case .download: self.updateFileTransferProgress(progress)
         case .installation: self.updateInstallationProgress(progress)
         }
     }
@@ -135,7 +135,9 @@ public class ProgressBar {
         let percentage = Format.percentage(progress.fractionComplete)
 
         // Erase the old progress line and overwrite it
-        terminal.clear(lines: 2)
+        if lastUpdateAt == 0 {
+            terminal.clear(lines: 2)
+        }
 
         terminal.info(title)
         terminal.print("\(percentage) [\(rate)/s, \((remaining))]")

@@ -51,7 +51,7 @@ public struct LocalVMRepository: LocalVMRepositoryProtocol {
         withName name: String,
         state: [LocalVMImage.VMImageState] = [.ready, .packaged]
     ) throws -> LocalVMImage? {
-        try list()
+        return try list()
             .filter { state.contains($0.state) }
             .first { $0.basename == name }
     }

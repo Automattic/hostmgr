@@ -21,6 +21,14 @@ extension ProcessInfo {
         sysctlbyname("hw.physicalcpu", &coresCount, &size, nil, 0)
         return coresCount
     }
+
+    var isIntelArchitecture: Bool {
+        processorArchitecture == .x64
+    }
+
+    var isAppleSilicon: Bool {
+        processorArchitecture == .arm64
+    }
 }
 
 extension FileManager {

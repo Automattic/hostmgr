@@ -2,15 +2,9 @@ import Foundation
 import Cocoa
 import libhostmgr
 import Virtualization
-import Logging
+import OSLog
 
 class AppDelegate: NSObject, NSApplicationDelegate {
-
-    private let logger: Logger
-
-    init(logger: Logger) {
-        self.logger = logger
-    }
 
     enum Errors: Error {
         case vmNotRunning
@@ -41,7 +35,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        logger.trace("didFinishLaunching")
+        Logger.helper.trace("didFinishLaunching")
 
         self.listener.delegate = self
         self.listener.resume()
@@ -69,7 +63,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 #if arch(arm64)
     @MainActor
     func launchVM(withLaunchConfiguration config: LaunchConfiguration) async throws {
-        logger.trace("Launching VM: \(config.name)")
+        Logger.helper.trace("Launching VM: \(config.name, privacy: .public)")
 
         let virtualMachine = try VMLauncher.prepareVirtualMachine(withLaunchConfiguration: config)
         virtualMachine.delegate = self
@@ -88,10 +82,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     func stopVM() async throws {
-        logger.trace("Stopping VM")
+        Logger.helper.trace("Stopping VM")
 
         guard let activeVM = self.activeVM else {
-            logger.error("There is no active VM!")
+            Logger.helper.error("There is no active VM!")
             throw Errors.vmNotRunning
         }
 
@@ -111,7 +105,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 extension AppDelegate: NSXPCListenerDelegate {
 
     public func listener(_ listener: NSXPCListener, shouldAcceptNewConnection newConnection: NSXPCConnection) -> Bool {
-        logger.trace("About to accept new connection")
+        Logger.helper.trace("About to accept new connection")
 
         let exportedObject = XPCService(delegate: self)
 

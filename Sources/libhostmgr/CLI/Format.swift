@@ -60,7 +60,16 @@ public struct Format {
         formatter.maximumUnitCount = 2
         formatter.allowedUnits = [.second, .minute, .hour, .day, .month, .year]
         return formatter.string(from: Date(), to: Date() + interval) ?? "Calculating time remaining"
+    }
 
+    public static func timeInterval(_ interval: TimeInterval) -> String {
+        let formatter = DateComponentsFormatter()
+        formatter.includesApproximationPhrase = false
+        formatter.includesTimeRemainingPhrase = false
+        formatter.unitsStyle = .abbreviated
+        formatter.maximumUnitCount = 2
+        formatter.allowedUnits = [.second, .minute, .hour, .day, .month, .year]
+        return formatter.string(from: Date(), to: Date() + interval) ?? "a while"
     }
 
     public static func percentage(_ number: Decimal) -> String {

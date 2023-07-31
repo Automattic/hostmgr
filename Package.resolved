@@ -50,8 +50,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-crypto.git",
       "state" : {
-        "revision" : "80a6e3edc1fc3a4c6c7d4177c73fa3f74c72d3e1",
-        "version" : "2.3.0"
+        "revision" : "33a20e650c33f6d72d822d558333f2085effa3dc",
+        "version" : "2.5.0"
       }
     },
     {
@@ -87,7 +87,7 @@
       "location" : "https://github.com/jkmassel/tinys3.git",
       "state" : {
         "branch" : "main",
-        "revision" : "31b1568aa7ab6354b42cd8b344fbb5bc57c1620c"
+        "revision" : "6569b05ebe5bea0252346dbd9db33718efd531ee"
       }
     }
   ],

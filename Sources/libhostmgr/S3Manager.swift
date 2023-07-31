@@ -49,6 +49,15 @@ public struct S3Manager: S3ManagerProtocol {
         replacingExistingFile shouldReplaceExistingFile: Bool = true,
         progressCallback: FileTransferProgressCallback?
     ) async throws {
+
+        /// Skip downloading the file if it already exists
+        guard !FileManager.default.fileExists(at: destination) else {
+            Console.info("\(destination.path) already exists – skipping download")
+            return
+        }
+
+        Console.info("Downloading \(key)")
+
         let tempUrl = try await s3Client.download(
             objectWithKey: key,
             inBucket: self.bucket,

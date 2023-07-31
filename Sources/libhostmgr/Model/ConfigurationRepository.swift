@@ -12,6 +12,12 @@ public struct ConfigurationRepository {
 
     public static func getConfiguration() throws -> Configuration {
         try createConfigurationDirectoryIfNeeded()
+
+        guard FileManager.default.fileExists(at: Paths.configurationFilePath) else {
+            let message = "No configuration file found. Create one at \(Paths.configurationFilePath.path)"
+            Console.crash(message: message, reason: .fileNotFound)
+        }
+
         let data = try Data(contentsOf: Paths.configurationFilePath)
         return try Configuration.from(data: data)
     }

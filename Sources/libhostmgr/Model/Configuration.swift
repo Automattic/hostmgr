@@ -113,7 +113,15 @@ public struct Configuration: Codable {
 /// Accessor Helpers
 public extension Configuration {
 
-    static var shared: Configuration = (try? ConfigurationRepository.getConfiguration()) ?? Configuration()
+    static var shared: Configuration {
+        get {
+            do {
+                return try ConfigurationRepository.getConfiguration()
+            } catch {
+                Console.crash(message: error.localizedDescription, reason: .fileNotFound)
+            }
+        }
+    }
 
     static var isValid: Bool {
         let configuration = try? ConfigurationRepository.getConfiguration()

@@ -17,7 +17,7 @@ let package = Package(
         // Dependencies declare other packages that this package depends on.
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.1.4"),
         .package(url: "https://github.com/jkmassel/tinys3.git", branch: "main"),
-        .package(url: "https://github.com/jkmassel/prlctl.git", from: "1.22.0"),
+        .package(url: "https://github.com/jkmassel/prlctl.git", .upToNextMinor(from: "1.22.0")),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
         .package(url: "https://github.com/jkmassel/kcpassword-swift.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-tools-support-core", from: "0.2.5"),

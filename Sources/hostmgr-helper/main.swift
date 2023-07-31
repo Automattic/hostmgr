@@ -1,16 +1,18 @@
 import Foundation
 import Cocoa
-import Logging
+import OSLog
 
-print("Helper starting up")
-var logger = Logger(label: "com.automattic.hostmgr.helper")
-logger.logLevel = .trace
 
-logger.info("Creating App Delegate")
+Logger.helper.debug("Helper is starting up")
+Logger.helper.info("Creating App Delegate")
 
-let delegate = AppDelegate(logger: logger)
+let delegate = AppDelegate()
 NSApplication.shared.delegate = delegate
 
-logger.debug("Starting run loop")
+Logger.helper.debug("Starting run loop")
 
 _ = NSApplicationMain(CommandLine.argc, CommandLine.unsafeArgv)
+
+extension Logger {
+    static let helper = Logger(subsystem: "com.automattic.hostmgr.helper", category: "main")
+}

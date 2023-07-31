@@ -6,29 +6,42 @@ public struct Paths {
 
     static var storageRoot: URL {
         #if arch(arm64)
-        URL(fileURLWithPath: "/opt/a8c-ci", isDirectory: true)
+        URL(fileURLWithPath: "/opt/hostmgr", isDirectory: true)
         #else
         URL(fileURLWithPath: "/usr/local", isDirectory: true)
         #endif
     }
 
     static var configurationRoot: URL {
+        #if arch(arm64)
+        storageRoot
+        #else
         storageRoot
             .appendingPathComponent("etc", isDirectory: true)
             .appendingPathComponent("hostmgr", isDirectory: true)
+
+        #endif
     }
 
     static var stateRoot: URL {
+        #if arch(arm64)
+        storageRoot.appendingPathComponent("state", isDirectory: true)
+        #else
         storageRoot
             .appendingPathComponent("var", isDirectory: true)
             .appendingPathComponent("hostmgr", isDirectory: true)
             .appendingPathComponent("state", isDirectory: true)
+        #endif
     }
 
     public static var vmImageStorageDirectory: URL {
+        #if arch(arm64)
+        storageRoot.appendingPathComponent("vm-images", isDirectory: true)
+        #else
         storageRoot
             .appendingPathComponent("var", isDirectory: true)
             .appendingPathComponent("vm-images")
+        #endif
     }
 
     public static var ephemeralVMStorageDirectory: URL {
@@ -36,9 +49,17 @@ public struct Paths {
     }
 
     public static var gitMirrorStorageDirectory: URL {
+        #if arch(arm64)
+        storageRoot.appendingPathComponent("git-mirrors", isDirectory: true)
+        #else
         storageRoot
             .appendingPathComponent("var", isDirectory: true)
             .appendingPathComponent("git-mirrors", isDirectory: true)
+        #endif
+    }
+
+    public static var restoreImageDirectory: URL {
+        storageRoot.appendingPathComponent("restore-images", isDirectory: true)
     }
 
     public static var authorizedKeysFilePath: URL {
@@ -54,12 +75,6 @@ public struct Paths {
 
     static var applicationCacheDirectory: URL {
         FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
-            .first!
-            .appendingPathComponent(storageDirectoryIdentifier)
-    }
-
-    static var applicationSupportDirectory: URL {
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
             .first!
             .appendingPathComponent(storageDirectoryIdentifier)
     }
@@ -100,23 +115,23 @@ public struct Paths {
 
 extension Paths {
 
-    public static func buildkiteVMRootDirectory(forUser user: String) -> URL {
+    public static var buildkiteVMRootDirectory: URL {
         #if arch(arm64)
-        URL(fileURLWithPath: "/Users").appendingPathComponent(user)
+        storageRoot.appendingPathComponent("buildkite", isDirectory: true)
         #else
         URL(fileURLWithPath: "/usr/local/var/buildkite-agent")
         #endif
     }
 
-    public static func buildkiteBuildDirectory(forUser user: String) -> URL {
-        buildkiteVMRootDirectory(forUser: user).appendingPathComponent("builds")
+    public static var buildkiteBuildDirectory: URL {
+        buildkiteVMRootDirectory.appendingPathComponent("builds")
     }
 
-    public static func buildkiteHooksDirectory(forUser user: String) -> URL {
-        buildkiteVMRootDirectory(forUser: user).appendingPathComponent("hooks")
+    public static var buildkiteHooksDirectory: URL {
+        buildkiteVMRootDirectory.appendingPathComponent("hooks")
     }
 
-    public static func buildkitePluginsDirectory(forUser user: String) -> URL {
-        buildkiteVMRootDirectory(forUser: user).appendingPathComponent("plugins")
+    public static var buildkitePluginsDirectory: URL {
+        buildkiteVMRootDirectory.appendingPathComponent("plugins")
     }
 }

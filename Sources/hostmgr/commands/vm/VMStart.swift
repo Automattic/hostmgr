@@ -18,12 +18,16 @@ struct VMStartCommand: AsyncParsableCommand {
     @Flag(help: "Mount the system git mirrors directory into the virtual machine on startup?")
     var withGitMirrors: Bool = false
 
+    @Flag(help: "Wait indefinitely for the SSH server to become available (useful when provisioning a new image")
+    var waitForever: Bool = false
+
     private let startTime = Date()
 
     enum CodingKeys: CodingKey {
         case name
         case wait
         case withGitMirrors
+        case waitForever
     }
 
     func run() async throws {
@@ -41,7 +45,7 @@ struct VMStartCommand: AsyncParsableCommand {
 
     #if arch(arm64)
     func arm64Start() async throws {
-        guard let tempFilePath = try LocalVMRepository().lookupVM(withName: name)?.path else {
+        guard let tempFilePath = try LocalVMRepository().lookupVM(withName: name, state: [.ready])?.path else {
             Console.crash(message: "There is no local VM called `\(name)`", reason: .fileNotFound)
         }
 
@@ -52,8 +56,15 @@ struct VMStartCommand: AsyncParsableCommand {
             )
         }
 
-        Console.info("Waiting for SSH server to become available")
-        try await VMLauncher.waitForSSHServer(forAddress: ipAddress)
+        let timeout = waitForever ? .greatestFiniteMagnitude : 30
+
+        if waitForever {
+            Console.info("Waiting indefinitely for SSH server to become available")
+        } else {
+            Console.info("Waiting \(Format.timeInterval(timeout)) for SSH server to become available")
+        }
+
+        try await VMLauncher.waitForSSHServer(forAddress: ipAddress, timeout: timeout)
         Console.success("SSH server is available")
 
         Console.success("Startup Complete – Elapsed time: \(Format.elapsedTime(between: startTime, and: .now))")

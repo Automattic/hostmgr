@@ -14,9 +14,9 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
     private var overriddenKeys: [String: String] {
         [
             // Manually specify the build path to keep paths nice and clean in the output
-            "BUILDKITE_BUILD_PATH": Paths.buildkiteBuildDirectory(forUser: username).path,
-            "BUILDKITE_HOOKS_PATH": Paths.buildkiteHooksDirectory(forUser: username).path,
-            "BUILDKITE_PLUGINS_PATH": Paths.buildkitePluginsDirectory(forUser: username).path,
+            "BUILDKITE_BUILD_PATH": Paths.buildkiteBuildDirectory.path,
+            "BUILDKITE_HOOKS_PATH": Paths.buildkiteHooksDirectory.path,
+            "BUILDKITE_PLUGINS_PATH": Paths.buildkitePluginsDirectory.path,
             "BUILDKITE_GIT_MIRRORS_PATH": "/Volumes/My Shared Files/git-mirrors"
         ]
     }
@@ -32,7 +32,10 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
     func run() throws {
         var scriptBuilder = BuildkiteScriptBuilder()
 
+        #if arch(x86_64)
         scriptBuilder.addDependency(atPath: "~/.circ")
+        #endif
+
         scriptBuilder.addEnvironmentVariable(named: "BUILDKITE", value: "true")
         scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_")
         scriptBuilder.addCommand("buildkite-agent bootstrap")

@@ -70,21 +70,25 @@ public struct RemoteVMRepository {
         progressCallback: @escaping FileTransferProgressCallback
     ) async throws -> URL {
 
-        // Download the checksum file first
-       try await self.s3Manager.download(
-            key: image.checksumObject.key,
-            to: destinationDirectory.appendingPathComponent(image.checksumFileName),
-            replacingExistingFile: false,
-            progressCallback: nil)
-
         let imageFileDestination = destinationDirectory.appendingPathComponent(image.fileName)
 
         try await self.s3Manager.download(
             key: image.imageObject.key,
-            to: destinationDirectory.appendingPathComponent(image.checksumFileName),
+            to: destinationDirectory.appendingPathComponent(image.fileName),
             replacingExistingFile: false,
             progressCallback: progressCallback
         )
+
+        #if(arch(x86_64))
+        // For some reason (*possibly* due to using `await` with a callback?) downloading the checksum file first
+        // breaks the progress bar. Downloading it second resolves this issue 🤷‍♂️
+        try await self.s3Manager.download(
+            key: image.checksumObject.key,
+            to: destinationDirectory.appendingPathComponent(image.checksumFileName),
+            replacingExistingFile: false,
+            progressCallback: nil
+       )
+        #endif
 
         return imageFileDestination
     }
