@@ -9,13 +9,34 @@ public struct DHCPLease {
     let identifier: VZMACAddress
     public let expirationDate: Date
 
-    public static func mostRecentLease(forMACaddress address: VZMACAddress) throws -> DHCPLease? {
+    enum Errors: Error {
+        case noIpAddressAssigned
+        case ipAddressNoLongerValid
+    }
+
+    public static func hasValidLease(forMACaddress address: VZMACAddress) throws -> Bool {
+        try !leases(for: address).filter { !$0.isExpired }.isEmpty
+    }
+
+    public static func mostRecentLease(forMACaddress address: VZMACAddress) throws -> DHCPLease {
+
+        let leases = try leases(for: address)
+
+        guard !leases.isEmpty else {
+            throw Errors.noIpAddressAssigned
+        }
+
+        guard let lease = leases.filter({ $0.isExpired }).sorted(by: \.expirationDate).first else {
+            throw Errors.ipAddressNoLongerValid
+        }
+
+        return lease
+    }
+
+    static func leases(for address: VZMACAddress) throws -> [DHCPLease] {
         try leasesFrom(file: URL(fileURLWithPath: "/private/var/db/dhcpd_leases"))
             .lazy
             .filter { $0.hwAddress == address }
-            .filter { !$0.isExpired }
-            .sorted(by: \.expirationDate)
-            .first
     }
 
     static func leasesFrom(file url: URL) throws -> [DHCPLease] {

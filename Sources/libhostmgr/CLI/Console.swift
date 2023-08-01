@@ -136,7 +136,7 @@ public class ProgressBar {
         let percentage = Format.percentage(progress.fractionComplete)
 
         // Erase the old progress line and overwrite it
-        if lastUpdateAt == 0 {
+        if lastUpdateAt != 0 {
             terminal.clear(lines: 2)
         }
 
@@ -193,8 +193,14 @@ public class ProgressBar {
 
 // MARK: Static Helpers
 extension Console {
+
     public static func startProgress(_ string: String, type: ProgressBar.ProgressType) -> ProgressBar {
         ProgressBar(title: string, type: type)
+    }
+
+    public static func startImageDownload(_ image: any RemoteVMImage) -> ProgressBar {
+        let size = Format.fileBytes(image.size)
+        return ProgressBar(title: "Downloading \(image.fileName) (\(size))", type: .download)
     }
 
     public static func startFileDownload(_ file: S3Object) -> ProgressBar {

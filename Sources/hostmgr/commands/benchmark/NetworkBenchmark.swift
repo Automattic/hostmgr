@@ -5,14 +5,14 @@ import libhostmgr
 
 private let startDate = Date()
 
-struct NetworkBenchmark: AsyncParsableCommand {
+struct NetworkBenchmark: ParsableCommand {
 
     static let configuration = CommandConfiguration(
         commandName: "network",
         abstract: "Test Network Speed"
     )
 
-    func run() async throws {
+    func run() throws {
         Console.crash(message: "Deprecated – use the `networkQuality` tool.", reason: .deprecated)
     }
 }

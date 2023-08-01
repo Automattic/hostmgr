@@ -10,5 +10,5 @@ public enum ExitCode: Int32, Error {
     case parallelsVirtualMachineIsNotStopped
     case parallelsVirtualMachineAlreadyExists
     case missingArgument
-    case deprecatedCommand
+    case deprecated
 }

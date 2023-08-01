@@ -1,38 +1,41 @@
 import Foundation
 import tinys3
 
+public struct CacheServerFile: Codable {
+    public let name: String
+    public let size: Int
+    public let path: String
+    public let lastModifiedAt: Date
+    public let mode: Int
+    public let isDirectory: Bool
+    public let isSymlink: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case name = "name"
+        case size = "size"
+        case path = "url"
+        case mode = "mode"
+        case lastModifiedAt = "mod_time"
+        case isDirectory = "is_dir"
+        case isSymlink = "is_symlink"
+    }
+
+    public static func < (lhs: CacheServerFile, rhs: CacheServerFile) -> Bool {
+        lhs.name < rhs.name
+    }
+
+    public var basename: String {
+        name
+    }
+
+    var asRemoteFile: RemoteFile {
+        RemoteFile(size: size, path: path, lastModifiedAt: lastModifiedAt)
+    }
+}
+
 public struct CacheServer: ReadOnlyRemoteFileProvider {
     enum Errors: Error {
         case invalidPath
-    }
-
-    public struct File: Codable, RemoteFile {
-        public let name: String
-        public let size: Int
-        public let path: String
-//        public let lastModifiedAt: Date
-        public let mode: Int
-        public let isDirectory: Bool
-        public let isSymlink: Bool
-
-        // swiftlint:disable nesting
-        enum CodingKeys: String, CodingKey {
-            case name = "name"
-            case size = "size"
-            case path = "url"
-            case mode = "mode"
-//            case lastModifiedAt = "mod_time"
-            case isDirectory = "is_dir"
-            case isSymlink = "is_symlink"
-        }
-        // swiftlint:enable nesting
-        public static func < (lhs: CacheServer.File, rhs: CacheServer.File) -> Bool {
-            lhs.name < rhs.name
-        }
-
-        public var basename: String {
-            name
-        }
     }
 
     public static let cache = CacheServer(baseURL: URL(string: "http://localhost/cache")!)
@@ -52,18 +55,16 @@ public struct CacheServer: ReadOnlyRemoteFileProvider {
         return try await HEAD(url: url).statusCode == 200
     }
 
-    public func listFiles(startingWith prefix: String) async throws -> [any RemoteFile] {
+    public func listFiles(startingWith prefix: String) async throws -> [RemoteFile] {
         let url = baseURL.appendingPathComponent(prefix)
-
         let (data, _) = try await LIST(url: url)
+        return try parseFileData(data).filter { $0.path.hasPrefix("./" + prefix) }
+    }
 
+    func parseFileData(_ data: Data) throws -> [RemoteFile] {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-
-        let files = try decoder.decode([File].self, from: data)
-        debugPrint(files)
-
-        return files.filter { $0.path.hasPrefix("./" + prefix) }
+        return try decoder.decode([CacheServerFile].self, from: data).map { $0.asRemoteFile }
     }
 
     func findParentDirectory(forKey key: String) -> String {

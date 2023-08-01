@@ -15,6 +15,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var activeVM: VZVirtualMachine?
 
+    @DIInjected
+    private var vmManager: any VMManager
+
     let viewController = VMViewController()
     lazy var vmWindow: NSWindow = {
         var window = NSWindow(contentViewController: self.viewController)
@@ -65,7 +68,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func launchVM(withLaunchConfiguration config: LaunchConfiguration) async throws {
         Logger.helper.trace("Launching VM: \(config.name, privacy: .public)")
 
-        let virtualMachine = try VMLauncher.prepareVirtualMachine(withLaunchConfiguration: config)
+        let virtualMachine = try await setupVirtualMachine(for: config)
         virtualMachine.delegate = self
 
         self.viewController.present(virtualMachine: virtualMachine, named: config.name)
@@ -97,8 +100,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.activeVM = nil
 
         NSApp.setActivationPolicy(.prohibited)
-        try libhostmgr.resetVMStorage()
+        try await vmManager.resetVMWorkingDirectory()
     }
+
+    func setupVirtualMachine(for launchConfiguration: LaunchConfiguration) async throws -> VZVirtualMachine {
+        let configuration = try await prepareBundle(named: launchConfiguration.name).virtualMachineConfiguration()
+        configuration.directorySharingDevices = [launchConfiguration.sharedDirectoryConfiguration]
+
+        try configuration.validate()
+        return VZVirtualMachine(configuration: configuration)
+    }
+
+    func prepareBundle(named name: String) async throws -> VMBundle {
+        if try await vmManager.hasLocalVM(name: name, state: .packaged) {
+            let tmpName = name + UUID().uuidString
+            try await vmManager.cloneVM(from: name, to: tmpName)
+            return try VMBundle.fromExistingBundle(at:  Paths.toAppleSiliconVM(named: tmpName))
+        }
+
+        if try await vmManager.hasLocalVM(name: name, state: .ready) {
+            return try VMBundle.fromExistingBundle(at: Paths.toAppleSiliconVM(named: name))
+        }
+
+        preconditionFailure("Unable to find bundle named \(name)")
+    }
+
 #endif
 }
 
@@ -186,7 +212,7 @@ extension AppDelegate: NSWindowDelegate {
 
             NSApp.setActivationPolicy(.prohibited)
 
-            try libhostmgr.resetVMStorage()
+            try await vmManager.resetVMWorkingDirectory()
         }
     }
 }

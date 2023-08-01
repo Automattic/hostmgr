@@ -15,6 +15,6 @@ struct VMPublish: AsyncParsableCommand {
     var name: String
 
     func run() async throws {
-        
+
     }
 }

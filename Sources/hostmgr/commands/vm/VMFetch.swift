@@ -13,7 +13,28 @@ struct VMFetchCommand: AsyncParsableCommand {
     )
     var name: String
 
+    @DIInjected
+    var vmProvider: any VMProvider
+
+    @DIInjected
+    var vmManager: any VMManager
+
+    enum CodingKeys: CodingKey {
+        case name
+    }
+
     func run() async throws {
-        try await libhostmgr.fetchRemoteImage(name: self.name)
+        // If we already have the VM ready to go, don't re-download it
+        if try await vmManager.hasLocalVM(name: name, state: .ready) {
+            Console.exit(message: "VM is present locally", style: .success)
+        }
+
+        // If it just needs to be unpacked, try that
+        if try await vmManager.hasLocalVM(name: name, state: .packaged) {
+            try await vmManager.unpackVM(name: name)
+        }
+
+        // Otherwise do the whole thing
+        try await vmProvider.fetchRemoteImage(name: name)
     }
 }

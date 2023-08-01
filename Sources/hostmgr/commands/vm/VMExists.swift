@@ -11,11 +11,18 @@ struct VMExistsCommand: ParsableCommand {
     @Argument(help: "The exact name of the VM")
     var name: String
 
-    func run() throws {
-        guard let localVM = try LocalVMRepository().lookupVM(withName: self.name) else {
-            Console.crash(message: "There is no local VM named \(self.name)", reason: .fileNotFound)
+    @DIInjected
+    var vmManager: any VMManager
+
+    enum CodingKeys: CodingKey {
+        case name
+    }
+
+    func run() async throws {
+        guard try await vmManager.hasLocalVM(name: name, state: .ready) else {
+            Console.crash(message: "There is no local VM named \(name)", reason: .fileNotFound)
         }
 
-        Console.success("VM \(localVM.basename) exists")
+        Console.success("VM \(name) exists")
     }
 }

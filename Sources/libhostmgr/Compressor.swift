@@ -39,7 +39,7 @@ public struct Compressor {
     }
 
     @discardableResult
-    public static func decompress(archiveAt archivePath: URL, to destination: URL) throws -> URL{
+    public static func decompress(archiveAt archivePath: URL, to destination: URL) throws -> URL {
 
         guard !FileManager.default.fileExists(at: destination) else {
             throw Errors.fileExistsAtPath

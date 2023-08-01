@@ -18,10 +18,19 @@ struct VMStopCommand: AsyncParsableCommand {
     @Flag(help: "Shutdown all VMs")
     var all: Bool = false
 
+    @DIInjected
+    var vmManager: any VMManager
+
+    enum CodingKeys: CodingKey {
+        case identifier
+        case immediately
+        case all
+    }
+
     func run() async throws {
 
         guard all == false else {
-            try await libhostmgr.stopAllRunningVMs(immediately: self.immediately)
+            try await vmManager.stopAllRunningVMs()
             Console.exit()
         }
 
@@ -30,6 +39,6 @@ struct VMStopCommand: AsyncParsableCommand {
             throw CleanExit.helpRequest()
         }
 
-        try await libhostmgr.stopRunningVM(name: identifier, immediately: immediately)
+        try await vmManager.stopVM(name: identifier)
     }
 }

@@ -1,24 +1,9 @@
 import Foundation
 
-public protocol RemoteFile: Comparable, FilterableByBasename {
-    var size: Int { get }
-    var path: String { get }
-}
-
-extension RemoteFile {
-    var name: String {
-        URL(fileURLWithPath: path).lastPathComponent
-    }
-
-    var basename: String {
-        URL(fileURLWithPath: path).deletingPathExtension().lastPathComponent
-    }
-}
-
 public typealias ProgressCallback = (Progress) -> Void
 
 public protocol RemoteFileProvider {
-    func listFiles(startingWith prefix: String) async throws -> [any RemoteFile]
+    func listFiles(startingWith prefix: String) async throws -> [RemoteFile]
     func hasFile(at path: String) async throws -> Bool
 }
 

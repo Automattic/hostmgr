@@ -2,7 +2,6 @@ import Foundation
 import Cocoa
 import OSLog
 
-
 Logger.helper.debug("Helper is starting up")
 Logger.helper.info("Creating App Delegate")
 

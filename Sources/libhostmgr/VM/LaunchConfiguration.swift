@@ -24,8 +24,7 @@ public struct LaunchConfiguration: Codable {
         self.sharedPaths = sharedPaths
     }
 
-    @available(macOS 13.0, *)
-    var sharedDirectoryConfiguration: VZDirectorySharingDeviceConfiguration {
+    public var sharedDirectoryConfiguration: VZDirectorySharingDeviceConfiguration {
 
         let tag = VZVirtioFileSystemDeviceConfiguration.macOSGuestAutomountTag
 

@@ -9,11 +9,15 @@ struct VMCleanCommand: AsyncParsableCommand {
         abstract: "Clean up the VM environment prior to running another job"
     )
 
+    @DIInjected
+    var vmManager: any VMManager
+
+    enum CodingKeys: CodingKey {}
+
     func run() async throws {
-        try libhostmgr.resetVMStorage()
+        try await vmManager.resetVMWorkingDirectory()
 
         // Clean up no-longer-needed local images
-        let deleteList = try await libhostmgr.listLocalImagesToDelete()
-        try libhostmgr.deleteLocalImages(list: deleteList)
+        try await vmManager.purgeUnusedImages()
     }
 }

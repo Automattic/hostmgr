@@ -32,6 +32,10 @@ public struct Paths {
         tempDirectory.appendingPathComponent("virtual-machines", isDirectory: true)
     }
 
+    public static var vmWorkingStorageDirectory: URL {
+        storageRoot.appendingPathComponent("working-vm-images")
+    }
+
     public static var gitMirrorStorageDirectory: URL {
         storageRoot.appendingPathComponent("git-mirrors", isDirectory: true)
     }

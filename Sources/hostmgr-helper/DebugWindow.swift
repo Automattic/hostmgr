@@ -2,12 +2,18 @@ import SwiftUI
 import libhostmgr
 
 class DebugViewController: NSViewController {
+
+    @DIInjected
+    var vmManager: any VMManager
+
     override func loadView() {
-        do {
-            let vmList = try LocalVMRepository().list().filter { $0.state != .compressed }.map { $0.basename }
-            self.view = NSHostingView(rootView: DebugWindow(vmList: vmList))
-        } catch {
-            self.view = NSHostingView(rootView: NoVMsView())
+        Task {
+            do {
+                let vmList = try await vmManager.list().map(\.name)
+                self.view = NSHostingView(rootView: DebugWindow(vmList: vmList))
+            } catch {
+                self.view = NSHostingView(rootView: NoVMsView())
+            }
         }
     }
 }

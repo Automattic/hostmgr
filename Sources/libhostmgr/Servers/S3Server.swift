@@ -11,16 +11,6 @@ public struct S3Server: ReadWriteRemoteFileProvider, BytewiseRemoteFileProvider 
         case unableToReadFile
     }
 
-    struct File: RemoteFile {
-        let name: String
-        let size: Int
-        let path: String
-
-        static func < (lhs: S3Server.File, rhs: S3Server.File) -> Bool {
-            lhs.name < rhs.name
-        }
-    }
-
     public static let gitMirrors: S3Server = S3Server(
         bucketName: Configuration.shared.gitMirrorBucket,
         region: Configuration.shared.gitMirrorRegion,
@@ -65,14 +55,8 @@ public struct S3Server: ReadWriteRemoteFileProvider, BytewiseRemoteFileProvider 
         return bytes
     }
 
-    public func listFiles(startingWith prefix: String) async throws -> [any RemoteFile] {
-        try await s3Client.listObjects(startingWith: prefix).compactMap {
-            guard let name = $0.key.split(separator: "/").last else {
-                return nil
-            }
-
-            return File(name: String(name), size: $0.size, path: $0.key)
-        }
+    public func listFiles(startingWith prefix: String) async throws -> [RemoteFile] {
+        try await s3Client.listObjects(startingWith: prefix).map { $0.asFile }
     }
 
     public func hasFile(at path: String) async throws -> Bool {
@@ -88,5 +72,11 @@ public struct S3Server: ReadWriteRemoteFileProvider, BytewiseRemoteFileProvider 
                 endpoint: self.endpoint
             )
         }
+    }
+}
+
+extension S3Object {
+    var asFile: RemoteFile {
+        RemoteFile(size: size, path: key, lastModifiedAt: lastModifiedAt)
     }
 }

@@ -142,6 +142,12 @@ extension FileManager {
         var urlCopy = url
         try urlCopy.setResourceValues(resourceValues)
     }
+
+    public func children(ofDirectory directory: URL) throws -> [URL] {
+        try FileManager.default
+            .contentsOfDirectory(atPath: directory.path)
+            .map { URL(fileURLWithPath: $0, relativeTo: directory) }
+    }
 }
 
 extension Data {

@@ -28,70 +28,13 @@ public struct VMDownloader {
             return
         }
 
-        try await download(url: restoreImage.url, to: destination, progress: progress)
+        let tempPath = try await DownloadOperation(url: restoreImage.url).start(progressCallback: progress)
+        try FileManager.default.copyItem(at: tempPath, to: destination)
     }
 
     public static func localCopy(of restoreImage: VZMacOSRestoreImage) async throws -> VZMacOSRestoreImage {
         let destination = Paths.restoreImageDirectory.appendingPathComponent(restoreImage.url.lastPathComponent)
         return try await VZMacOSRestoreImage.image(from: destination)
-    }
-
-    private static func download(url: URL, to destination: URL, progress: @escaping ProgressCallback) async throws {
-        try await withCheckedThrowingContinuation {
-            let delegate = DownloadDelegate(destination: destination, continuation: $0, progressCallback: progress)
-            let task = URLSession.shared.downloadTask(with: URLRequest(url: url))
-            task.delegate = delegate
-            task.resume()
-        }
-    }
-}
-
-class DownloadDelegate: NSObject, URLSessionDownloadDelegate {
-
-    private let destination: URL
-    private let continuation: CheckedContinuation<Void, Error>
-    private let progressCallback: VMDownloader.ProgressCallback?
-
-    init(
-        destination: URL,
-        continuation: CheckedContinuation<Void, Error>,
-        progressCallback: VMDownloader.ProgressCallback? = nil
-    ) {
-        self.destination = destination
-        self.continuation = continuation
-        self.progressCallback = progressCallback
-
-        super.init()
-    }
-
-    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
-        do {
-            try FileManager.default.moveItem(at: location, to: self.destination)
-            self.continuation.resume()
-        } catch {
-            self.continuation.resume(throwing: error)
-        }
-    }
-
-    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        guard let error else {
-            return
-        }
-
-        self.continuation.resume(throwing: error)
-    }
-
-    func urlSession(
-        _ session: URLSession,
-        downloadTask: URLSessionDownloadTask,
-        didWriteData bytesWritten: Int64,
-        totalBytesWritten: Int64,
-        totalBytesExpectedToWrite: Int64
-    ) {
-        let progress = Progress(totalUnitCount: totalBytesExpectedToWrite)
-        progress.completedUnitCount = totalBytesWritten
-
-        self.progressCallback?(progress)
     }
 }
 #endif

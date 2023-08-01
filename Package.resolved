@@ -23,8 +23,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/jkmassel/prlctl.git",
       "state" : {
-        "revision" : "8c4726953f8578d3c71124f382913a11eba20b1d",
-        "version" : "1.22.0"
+        "revision" : "98cc09b34d3645a30f2a94b7d0c4741780daf81c",
+        "version" : "1.23.0"
       }
     },
     {
