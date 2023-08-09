@@ -4,6 +4,12 @@ import libhostmgr
 import Network
 
 struct VMDetailsCommand: AsyncParsableCommand {
+
+    enum Detail: EnumerableFlag {
+        case ipAddress
+        case all
+    }
+
     static let configuration = CommandConfiguration(
         commandName: "details",
         abstract: "Shows information about a given VM"
@@ -14,8 +20,8 @@ struct VMDetailsCommand: AsyncParsableCommand {
     )
     var name: String
 
-    @Flag(help: "Print the VM's IP address")
-    var ipv4: Bool = false
+    @Flag(exclusivity: .exclusive)
+    var detail: Detail = .all
 
     func run() async throws {
         #if arch(arm64)
@@ -25,37 +31,30 @@ struct VMDetailsCommand: AsyncParsableCommand {
 
         let bundle = try VMBundle.fromExistingBundle(at: localVM.path)
 
-        if ipv4 {
-            guard let ipAddress = try bundle.currentDHCPLease?.ipAddress else {
-                Console.crash(message: "Couldn't find an IP for `\(name)` – is it running?", reason: .invalidVMStatus)
-            }
-
-            try await VMLauncher.waitForSSHServer(forAddress: ipAddress, timeout: 3)
-            print(ipAddress)
-            return
-        }
-
         do {
-            _ = try bundle.currentDHCPLease?.ipAddress
+            let ipAddress = try bundle.currentDHCPLease?.ipAddress
+
+            switch detail {
+            case .ipAddress: print("\(ipAddress)")
+            case .all:
+                Console.printTable(
+                    data: [
+                        ["Name:", localVM.basename],
+                        ["State:", localVM.state.rawValue],
+                        ["Location:", bundle.root.path],
+                        ["MAC Address:", bundle.macAddress.string],
+                        ["IPv4 Address:", ipAddressString(for: bundle)],
+                        ["IPv4 Lease Expires:", relativeLeaseExpirationString(for: bundle)]
+                    ]
+                )
+            }
         } catch {
-            if ipv4 {
+            if detail == .ipAddress {
                 throw error
             } else {
                 Console.info("It looks like this VM is not currently running")
             }
         }
-
-        Console.printTable(
-            data: [
-                ["Name:", localVM.basename],
-                ["State:", localVM.state.rawValue],
-                ["Location:", bundle.root.path],
-                ["MAC Address:", bundle.macAddress.string],
-                ["IPv4 Address:", ipAddressString(for: bundle)],
-                ["IPv4 Lease Expires:", relativeLeaseExpirationString(for: bundle)]
-            ]
-        )
-
         #else
         guard
             let virtualMachine = try ParallelsVMRepository().lookupVM(byIdentifier: name),
@@ -68,7 +67,17 @@ struct VMDetailsCommand: AsyncParsableCommand {
             Console.crash(message: "Couldn't find an IP for `\(name)` – is it running?", reason: .invalidVMStatus)
         }
 
-        print("IPv4 Address:\t\(runningVirtualMachine.ipAddress)")
+        switch detail {
+            case .ipAddress: print(runningVirtualMachine.ipAddress)
+            case .all:
+                Console.printTable(
+                    data: [
+                        ["Name:", runningVirtualMachine.name],
+                        ["UUID:", runningVirtualMachine.uuid],
+                        ["IPv4 Address:", runningVirtualMachine.ipAddress],
+                    ]
+                )
+        }
         #endif
     }
 }
