@@ -14,12 +14,6 @@ public struct Configuration: Codable {
     }
 
     struct Defaults {
-
-        static let defaultSyncTasks: [SchedulableSyncCommand] = [
-            .authorizedKeys,
-            .vmImages
-        ]
-
         static let defaultGitMirrorPort: UInt = 41362
 
         static let defaultAWSAcceleratedTransferAllowed = true
@@ -29,8 +23,6 @@ public struct Configuration: Codable {
     }
 
     public var version = 1
-
-    public var syncTasks = Defaults.defaultSyncTasks
 
     /// VM Remote Image Settings
     public var vmImagesBucket: String = ""
@@ -54,8 +46,6 @@ public struct Configuration: Codable {
 
     enum CodingKeys: String, CodingKey {
         case version
-        case syncTasks
-
         case vmImagesBucket
         case vmImagesRegion
 
@@ -77,10 +67,6 @@ public struct Configuration: Codable {
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         version = 1
-        syncTasks = values.decode(
-            forKey: .syncTasks,
-            defaultingTo: Defaults.defaultSyncTasks
-        )
 
         vmImagesBucket = try values.decode(String.self, forKey: .vmImagesBucket)
         vmImagesRegion = try values.decode(String.self, forKey: .vmImagesRegion)
@@ -123,9 +109,8 @@ public extension Configuration {
         }
     }
 
-    static var isValid: Bool {
-        let configuration = try? ConfigurationRepository.getConfiguration()
-        return configuration != nil
+    static func validate() throws {
+        _ = try ConfigurationRepository.getConfiguration()
     }
 
     @discardableResult

@@ -5,57 +5,35 @@ public struct Paths {
     private static let storageDirectoryIdentifier = "com.automattic.hostmgr"
 
     static var storageRoot: URL {
-        #if arch(arm64)
-        URL(fileURLWithPath: "/opt/hostmgr", isDirectory: true)
-        #else
-        URL(fileURLWithPath: "/usr/local", isDirectory: true)
-        #endif
+        URL(fileURLWithPath: "/opt/ci", isDirectory: true)
     }
 
     static var configurationRoot: URL {
-        #if arch(arm64)
         storageRoot
-        #else
-        storageRoot
-            .appendingPathComponent("etc", isDirectory: true)
-            .appendingPathComponent("hostmgr", isDirectory: true)
-
-        #endif
     }
 
     static var stateRoot: URL {
-        #if arch(arm64)
-        storageRoot.appendingPathComponent("state", isDirectory: true)
-        #else
         storageRoot
-            .appendingPathComponent("var", isDirectory: true)
             .appendingPathComponent("hostmgr", isDirectory: true)
             .appendingPathComponent("state", isDirectory: true)
-        #endif
     }
 
     public static var vmImageStorageDirectory: URL {
-        #if arch(arm64)
         storageRoot.appendingPathComponent("vm-images", isDirectory: true)
-        #else
+    }
+
+    public static var tempDirectory: URL {
         storageRoot
             .appendingPathComponent("var", isDirectory: true)
-            .appendingPathComponent("vm-images")
-        #endif
+            .appendingPathComponent("tmp", isDirectory: true)
     }
 
     public static var ephemeralVMStorageDirectory: URL {
-        FileManager.default.temporaryDirectory.appendingPathComponent("virtual-machines")
+        tempDirectory.appendingPathComponent("virtual-machines", isDirectory: true)
     }
 
     public static var gitMirrorStorageDirectory: URL {
-        #if arch(arm64)
         storageRoot.appendingPathComponent("git-mirrors", isDirectory: true)
-        #else
-        storageRoot
-            .appendingPathComponent("var", isDirectory: true)
-            .appendingPathComponent("git-mirrors", isDirectory: true)
-        #endif
     }
 
     public static var restoreImageDirectory: URL {
@@ -70,7 +48,7 @@ public struct Paths {
     }
 
     static var configurationFilePath: URL {
-        configurationRoot.appendingPathComponent("config.json")
+        storageRoot.appendingPathComponent("hostmgr.json")
     }
 
     static var applicationCacheDirectory: URL {
@@ -115,23 +93,19 @@ public struct Paths {
 
 extension Paths {
 
-    public static var buildkiteVMRootDirectory: URL {
-        #if arch(arm64)
-        storageRoot.appendingPathComponent("buildkite", isDirectory: true)
-        #else
-        URL(fileURLWithPath: "/usr/local/var/buildkite-agent")
-        #endif
+    public static var buildkiteRootDirectory: URL {
+        storageRoot
     }
 
     public static var buildkiteBuildDirectory: URL {
-        buildkiteVMRootDirectory.appendingPathComponent("builds")
+        buildkiteRootDirectory.appendingPathComponent("builds")
     }
 
     public static var buildkiteHooksDirectory: URL {
-        buildkiteVMRootDirectory.appendingPathComponent("hooks")
+        buildkiteRootDirectory.appendingPathComponent("hooks")
     }
 
     public static var buildkitePluginsDirectory: URL {
-        buildkiteVMRootDirectory.appendingPathComponent("plugins")
+        buildkiteRootDirectory.appendingPathComponent("plugins")
     }
 }

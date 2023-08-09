@@ -37,10 +37,7 @@ struct Hostmgr: AsyncParsableCommand {
 
         logger.trace("Starting Up")
 
-        guard Configuration.isValid else {
-            print("Invalid configuration – exiting")
-            throw ExitCode(1)
-        }
+        try Configuration.validate()
 
         throw CleanExit.helpRequest(self)
     }
