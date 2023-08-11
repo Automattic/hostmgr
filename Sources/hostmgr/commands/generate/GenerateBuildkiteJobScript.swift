@@ -38,6 +38,15 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
 
         scriptBuilder.addEnvironmentVariable(named: "BUILDKITE", value: "true")
         scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_")
+
+        scriptBuilder.addEnvironmentVariable(named: "BUILDKITE_BIN_PATH", value: "/usr/local/bin")
+        scriptBuilder.addEnvironmentVariable(
+            named: "BUILDKITE_BUILD_CHECKOUT_PATH",
+            value: "/usr/local/var/buildkite-agent/builds/\(hostname)/\(buildkiteOrganization)\(buildkitePipelineSlug)"
+        )
+        scriptBuilder.addEnvironmentVariable(named: "BUILDKITE_HOOKS_PATH", value: "/usr/local/etc/buildkite-agent/hooks")
+        scriptBuilder.addEnvironmentVariable(named: "BUILDKITE_PLUGINS_PATH", value: "/usr/local/var/buildkite-agent/plugins")
+
         scriptBuilder.addCommand("buildkite-agent bootstrap")
 
         for (key, value) in overriddenKeys {
@@ -66,6 +75,16 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
 
         let path = try FileManager.default.createTemporaryFile(containing: scriptText).path
         print(path)
+    }
+
+    let hostname: String = Host.current().name!
+
+    var buildkiteOrganization: String {
+        ProcessInfo.processInfo.environment["BUILDKITE_ORGANIZATION_SLUG"]!
+    }
+
+    var buildkitePipelineSlug: String {
+        ProcessInfo.processInfo.environment["BUILDKITE_PIPELINE_SLUG"]!
     }
 
     // A somewhat hack-ey way to get the device's IP address, but it should continue
