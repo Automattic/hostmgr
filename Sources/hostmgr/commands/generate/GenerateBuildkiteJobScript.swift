@@ -44,6 +44,7 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
             named: "BUILDKITE_BUILD_CHECKOUT_PATH",
             value: "/usr/local/var/buildkite-agent/builds/\(hostname)/\(buildkiteOrganization)\(buildkitePipelineSlug)"
         )
+
         scriptBuilder.addEnvironmentVariable(
             named: "BUILDKITE_HOOKS_PATH",
             value: "/usr/local/etc/buildkite-agent/hooks"
