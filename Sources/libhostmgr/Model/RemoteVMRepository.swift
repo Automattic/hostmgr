@@ -69,12 +69,11 @@ public struct RemoteVMRepository {
         destinationDirectory: URL,
         progressCallback: @escaping FileTransferProgressCallback
     ) async throws -> URL {
-
         let imageFileDestination = destinationDirectory.appendingPathComponent(image.fileName)
 
         try await self.s3Manager.download(
             key: image.imageObject.key,
-            to: destinationDirectory.appendingPathComponent(image.fileName),
+            to: imageFileDestination,
             replacingExistingFile: false,
             progressCallback: progressCallback
         )
@@ -89,6 +88,15 @@ public struct RemoteVMRepository {
             progressCallback: nil
        )
         #endif
+
+        // Download the checksum file after the main file in order to better handle failure. If the checksum file
+        // downloads but the image doesn't, the filesystem is left in an inconsistent state.
+       try await self.s3Manager.download(
+            key: image.checksumObject.key,
+            to: destinationDirectory.appendingPathComponent(image.checksumFileName),
+            replacingExistingFile: true,
+            progressCallback: nil
+       )
 
         return imageFileDestination
     }
