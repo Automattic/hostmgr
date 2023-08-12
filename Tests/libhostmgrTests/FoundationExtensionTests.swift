@@ -44,4 +44,16 @@ final class FoundationExtensionTests: XCTestCase {
 
         XCTAssertEqual(Int(count), ProcessInfo.processInfo.physicalProcessorCount)
     }
+
+    // MARK: String Extensions
+    func testThatSlugifyProperlyTransformsURLs() throws {
+        XCTAssertEqual(
+            "https---github-com-kelseyhightower-nocode-git",
+            "https://github.com/kelseyhightower/nocode.git".slugify()
+        )
+        XCTAssertEqual(
+            "git-github-com-wordpress-mobile-WordPress-iOS-git",
+            "git@github.com:wordpress-mobile/WordPress-iOS.git".slugify()
+        )
+    }
 }
