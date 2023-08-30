@@ -87,16 +87,16 @@ internal enum CommandPolicyViolation: Error {
 
 public protocol FollowsCommandPolicies {
     /// A unique identifier for this command – used to derive a file storage path
-    static var commandIdentifier: String { get }
+    var commandIdentifier: String { get }
 
     /// The policies that apply to this command
-    static var commandPolicies: [CommandPolicy] { get }
+    var commandPolicies: [CommandPolicy] { get }
 }
 
 public extension FollowsCommandPolicies {
 
     func key(forPolicy policy: CommandPolicy) -> String {
-        Self.commandIdentifier + "-" + policy.label
+        commandIdentifier + "-" + policy.label
     }
 
     /// Evaluate any command policies on this command
@@ -106,7 +106,7 @@ public extension FollowsCommandPolicies {
     func evaluateCommandPolicies(stateRepository: StateRepository? = nil) throws {
         let stateRepository = stateRepository ?? FileStateRepository()
 
-        for policy in Self.commandPolicies {
+        for policy in commandPolicies {
             try policy.evaluate(forKey: key(forPolicy: policy), stateRepository: stateRepository)
         }
     }

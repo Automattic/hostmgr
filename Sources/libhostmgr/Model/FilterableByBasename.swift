@@ -1,7 +1,7 @@
 import Foundation
 import prlctl
 
-protocol FilterableByBasename {
+public protocol FilterableByBasename {
     var basename: String { get }
 }
 
@@ -16,7 +16,7 @@ extension Array where Element: FilterableByBasename {
 }
 
 extension VM: FilterableByBasename {
-    var basename: String {
+    public var basename: String {
         self.name
     }
 }

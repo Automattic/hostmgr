@@ -17,12 +17,18 @@ struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
     @OptionGroup
     var options: SharedSyncOptions
 
-    static let commandIdentifier: String = "authorized-key-sync"
+    let commandIdentifier: String = "authorized-key-sync"
 
-    /// A set of command policies that control the circumstances under which this command can be run
-    static let commandPolicies: [CommandPolicy] = [
+    // A set of command policies that control the circumstances under which this command can be run
+    let commandPolicies: [CommandPolicy] = [
         .scheduled(every: 3600)
     ]
+
+    let server = S3Server.secrets
+
+    enum CodingKeys: CodingKey {
+        case options
+    }
 
     func run() async throws {
         let destination = Paths.authorizedKeysFilePath
@@ -31,29 +37,15 @@ struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
 
         Console.heading("Syncing Authorized Keys")
 
-        let credentials = try AWSCredentials.fromUserConfiguration()
-
-        let s3Manager = try S3Manager(
-            bucket: Configuration.shared.authorizedKeysBucket,
-            region: Configuration.shared.authorizedKeysRegion,
-            credentials: credentials,
-            endpoint: .default // Secrets doesn't use the accelerated endpoint
-        )
-
-        guard let object = try await s3Manager.lookupObject(atPath: Constants.s3Key) else {
+        guard try await server.hasFile(at: Constants.s3Key) else {
             Console.error("Unable to locate authorized_keys file – exiting")
             throw ExitCode(rawValue: 1)
         }
 
-        let progressBar = Console.startFileDownload(object)
+        let progressBar = Console.startProgress("Downloading `authorized_keys`", type: .download)
+        try await server.downloadFile(at: Constants.s3Key, to: destination, progress: progressBar.update)
 
-        try await s3Manager.download(
-            key: object.key,
-            to: destination,
-            progressCallback: progressBar.update
-        )
-
-        /// Fix the permissions on the file, if needed
+        // Fix the permissions on the file, if needed
         Console.info("Setting file permissions on \(destination)")
         try FileManager.default.setAttributes([
             .posixPermissions: 0o600

@@ -51,7 +51,6 @@ public struct Paths {
         storageRoot.appendingPathComponent("hostmgr.json")
     }
 
-<<<<<<< HEAD
     static var applicationCacheDirectory: URL {
         FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
             .first!
@@ -83,6 +82,10 @@ public struct Paths {
         Paths.vmImageStorageDirectory.appendingPathComponent(name).appendingPathExtension("aar")
     }
 
+    public static func toGitMirror(atURL url: URL) -> URL {
+        gitMirrorStorageDirectory.appendingPathComponent(url.absoluteString.slugify())
+    }
+
     public static func createEphemeralVMStorageIfNeeded() throws {
         guard try !FileManager.default.directoryExists(at: ephemeralVMStorageDirectory) else {
             return
@@ -108,13 +111,9 @@ extension Paths {
 
     public static var buildkitePluginsDirectory: URL {
         buildkiteRootDirectory.appendingPathComponent("plugins")
-=======
-    static var tempFilePath: URL {
-        storageRoot.appendingPathComponent("var").appendingPathComponent("tmp")
     }
 
-    public static func toGitMirror(atURL url: URL) -> URL {
-        gitMirrorStorageDirectory.appendingPathComponent(url.absoluteString.slugify())
->>>>>>> b9c7883 (Add cache commands)
+    static var tempFilePath: URL {
+        storageRoot.appendingPathComponent("var").appendingPathComponent("tmp")
     }
 }

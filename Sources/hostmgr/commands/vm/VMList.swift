@@ -52,14 +52,14 @@ struct VMListCommand: AsyncParsableCommand {
         ]
     }
 
-    private func format(remoteVM: RemoteVMImage) throws -> [String] {
+    private func format(remoteVM: any RemoteFile) throws -> [String] {
         return [
             "Remote",
             remoteVM.basename,
             "",
 //            remoteVM.state.rawValue,
-            remoteVM.architecture?.rawValue ?? "unknown",
-            Format.fileBytes(remoteVM.imageObject.size)
+//            remoteVM.architecture?.rawValue ?? "unknown",
+            Format.fileBytes(remoteVM.size)
         ]
     }
 }

@@ -18,14 +18,9 @@ struct Hostmgr: AsyncParsableCommand {
             RunCommand.self,
             SetCommand.self,
             BenchmarkCommand.self,
-<<<<<<< HEAD
-            ConfigCommand.self
-        ] + appleSiliconCommands
-=======
             ConfigCommand.self,
             CacheCommand.self
-        ]
->>>>>>> b9c7883 (Add cache commands)
+        ] + appleSiliconCommands
     )
 
     static var appleSiliconCommands: [ParsableCommand.Type] {

@@ -1,5 +1,6 @@
 import Foundation
 import ArgumentParser
+import tinys3
 
 public struct Configuration: Codable {
 
@@ -27,6 +28,7 @@ public struct Configuration: Codable {
     /// VM Remote Image Settings
     public var vmImagesBucket: String = ""
     public var vmImagesRegion: String = "us-east-1"
+    public var vmImagesEndpoint: S3Endpoint = .accelerated
 
     /// Images that are protected from deletion (useful for local work, or for a fallback image)
     public var protectedImages: [String] = []
@@ -39,6 +41,8 @@ public struct Configuration: Codable {
     /// git repo mirroring
     public var gitMirrorBucket = ""
     public var gitMirrorPort = Defaults.defaultGitMirrorPort
+    public var gitMirrorRegion: String = "us-east-1"
+    public var gitMirrorEndpoint: S3Endpoint = .accelerated
 
     /// settings for running in AWS
     public var allowAWSAcceleratedTransfer: Bool! = Defaults.defaultAWSAcceleratedTransferAllowed
@@ -46,8 +50,10 @@ public struct Configuration: Codable {
 
     enum CodingKeys: String, CodingKey {
         case version
+
         case vmImagesBucket
         case vmImagesRegion
+        case vmImagesEndpoint
 
         case protectedImages
 
@@ -57,6 +63,8 @@ public struct Configuration: Codable {
 
         case gitMirrorBucket
         case gitMirrorPort
+        case gitMirrorRegion
+        case gitMirrorEndpoint
 
         case allowAWSAcceleratedTransfer
         case awsConfigurationMethod
@@ -70,6 +78,8 @@ public struct Configuration: Codable {
 
         vmImagesBucket = try values.decode(String.self, forKey: .vmImagesBucket)
         vmImagesRegion = try values.decode(String.self, forKey: .vmImagesRegion)
+        let vmImagesEndpointString = try values.decode(String.self, forKey: .vmImagesEndpoint)
+        vmImagesEndpoint = vmImagesEndpointString == "acccelerated" ? .accelerated : .default
 
         protectedImages = values.decode(
             forKey: .protectedImages,
@@ -84,6 +94,9 @@ public struct Configuration: Codable {
             forKey: .gitMirrorPort,
             defaultingTo: Defaults.defaultGitMirrorPort
         )
+        gitMirrorRegion = try values.decode(String.self, forKey: .gitMirrorRegion)
+        let gitMirrorEndpointString = try values.decode(String.self, forKey: .gitMirrorEndpoint)
+        gitMirrorEndpoint = gitMirrorEndpointString == "acccelerated" ? .accelerated : .default
 
         allowAWSAcceleratedTransfer = values.decode(
             forKey: .allowAWSAcceleratedTransfer,
@@ -131,5 +144,24 @@ private extension KeyedDecodingContainer {
         } catch {
             return defaultValue
         }
+    }
+}
+
+extension S3Endpoint: Encodable {
+    enum Errors: Error {
+        case invalidEndpoint
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        if self == .accelerated {
+            try container.encode("accelerated")
+        }
+
+        if self == .default {
+            try container.encode("default")
+        }
+
+        throw Errors.invalidEndpoint
     }
 }

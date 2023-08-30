@@ -77,6 +77,8 @@ struct VMDetailsCommand: AsyncParsableCommand {
                         ["IPv4 Address:", runningVirtualMachine.ipAddress],
                     ]
                 )
+        case .ipAddress: print(runningVM.ipAddress)
+        case .none: print("IPv4 Address:\t\(runningVM.ipAddress)")
         }
         #endif
     }

@@ -1,15 +1,12 @@
 import Foundation
 import tinys3
 
-public struct CacheServer {
-
-    public typealias ProgressCallback = (Progress) -> Void
-
+public struct CacheServer: ReadOnlyRemoteFileProvider {
     enum Errors: Error {
         case invalidPath
     }
 
-    public struct File: Codable {
+    public struct File: Codable, RemoteFile {
         public let name: String
         public let size: Int
         public let path: String
@@ -18,6 +15,7 @@ public struct CacheServer {
         public let isDirectory: Bool
         public let isSymlink: Bool
 
+        // swiftlint:disable nesting
         enum CodingKeys: String, CodingKey {
             case name = "name"
             case size = "size"
@@ -26,6 +24,14 @@ public struct CacheServer {
 //            case lastModifiedAt = "mod_time"
             case isDirectory = "is_dir"
             case isSymlink = "is_symlink"
+        }
+        // swiftlint:enable nesting
+        public static func < (lhs: CacheServer.File, rhs: CacheServer.File) -> Bool {
+            lhs.name < rhs.name
+        }
+
+        public var basename: String {
+            name
         }
     }
 
@@ -41,13 +47,13 @@ public struct CacheServer {
         self.baseURL = baseURL
     }
 
-    public func hasFile(atPath path: String) async throws -> Bool {
+    public func hasFile(at path: String) async throws -> Bool {
         let url = baseURL.appendingPathComponent(path)
         return try await HEAD(url: url).statusCode == 200
     }
 
-    public func listFiles(startingWith key: String = "/") async throws -> [File] {
-        let url = baseURL.appendingPathComponent(key)
+    public func listFiles(startingWith prefix: String) async throws -> [any RemoteFile] {
+        let url = baseURL.appendingPathComponent(prefix)
 
         let (data, _) = try await LIST(url: url)
 
@@ -57,7 +63,7 @@ public struct CacheServer {
         let files = try decoder.decode([File].self, from: data)
         debugPrint(files)
 
-        return files.filter { $0.path.hasPrefix("./" + key) }
+        return files.filter { $0.path.hasPrefix("./" + prefix) }
     }
 
     func findParentDirectory(forKey key: String) -> String {
@@ -75,15 +81,19 @@ public struct CacheServer {
     }
 
     public func downloadFile(
-        atPath path: String,
+        at path: String,
         to destination: URL,
-        progress: @escaping ProgressCallback
-    ) async throws {
+        progress: @escaping (Progress) -> Void)
+    async throws {
         let url = baseURL.appendingPathComponent(path)
 
         let downloadPath = try await DownloadOperation(url: url).start(progressCallback: progress)
 
-        try FileManager.default.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: destination.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+
         try FileManager.default.moveItem(at: downloadPath, to: destination)
     }
 
@@ -93,17 +103,21 @@ public struct CacheServer {
 
         let (_, response) = try await session.data(for: request)
 
+        // swiftlint:disable force_cast
         return response as! HTTPURLResponse
+        // swiftlint:enable force_cast
     }
 
-    func LIST(url: URL) async throws -> (Data, HTTPURLResponse){
+    func LIST(url: URL) async throws -> (Data, HTTPURLResponse) {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Accept")
 
         let (data, response) = try await session.data(for: request)
 
+        // swiftlint:disable force_cast
         return (data, response as! HTTPURLResponse)
+        // swiftlint:enable force_cast
     }
 }
 
@@ -168,7 +182,7 @@ extension DownloadOperation: URLSessionDownloadDelegate {
     }
 
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
-        do{
+        do {
             // It's easier to debug issues if the file name is recognizable, but in unlikely circumstances where
             // the filename *isn't* available, we'll use a UUID
             let filename = self.request.url?.lastPathComponent ?? UUID().uuidString

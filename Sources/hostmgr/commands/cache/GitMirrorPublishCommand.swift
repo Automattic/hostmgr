@@ -2,7 +2,7 @@ import Foundation
 import ArgumentParser
 import libhostmgr
 
-struct PublishGitMirrorCommand: AsyncParsableCommand {
+struct GitMirrorPublishCommand: AsyncParsableCommand {
 
     static let configuration = CommandConfiguration(
         commandName: "publish-git-mirror",
@@ -14,33 +14,31 @@ struct PublishGitMirrorCommand: AsyncParsableCommand {
     )
     var gitMirror: GitMirror?
 
+    let server = S3Server.gitMirrors
+
+    enum CodingKeys: CodingKey {
+        case gitMirror
+    }
+
     func run() async throws {
 
         let gitMirror = try self.gitMirror ?? GitMirror.fromEnvironment(key: "BUILDKITE_REPO")
 
         Console.info("Publishing the Git Mirror for \(gitMirror.url)")
 
-        let s3Manager = try S3Manager(
-            bucket: "a8c-repo-mirrors",
-            region: "us-east-2",
-            credentials: .fromUserConfiguration(),
-            endpoint: .accelerated
-        )
-
         guard try gitMirror.existsLocally else {
             Console.exit(message: "There is no local Git Mirror at \(gitMirror.localPath)", style: .error)
         }
 
-        if let _ = try? await s3Manager.lookupObject(atPath: gitMirror.remoteFilename) {
+        guard try await !server.hasFile(at: gitMirror.remoteFilename) else {
             Console.exit(message: "Remote mirror already exists – exiting", style: .error)
         }
 
         Console.info("Compressing \(gitMirror.localPath)")
         try gitMirror.compress()
 
-        let progress = Console.startProgress("Uploading mirror to \(gitMirror.remoteFilename)")
-
-        try await s3Manager.upload(fileAt: gitMirror.archivePath, toKey: gitMirror.remoteFilename, progress: progress.update)
+        let progress = Console.startProgress("Uploading mirror to \(gitMirror.remoteFilename)", type: .upload)
+        try await server.uploadFile(at: gitMirror.archivePath, to: gitMirror.remoteFilename, progress: progress.update)
 
         Console.success("Upload complete")
     }

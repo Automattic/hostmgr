@@ -4,11 +4,10 @@ import ArgumentParser
 struct CacheCommand: AsyncParsableCommand {
 
     static var subcommands: [any ParsableCommand.Type] {
-
         if #available(macOS 13.0, *) {
             return [
-                FetchGitMirrorCommand.self,
-                PublishGitMirrorCommand.self
+                GitMirrorFetchCommand.self,
+                GitMirrorPublishCommand.self
             ]
         } else {
             return []

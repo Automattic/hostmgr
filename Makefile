@@ -1,6 +1,16 @@
 .DEFAULT_GOAL := lint
 
+<<<<<<< HEAD
 RELEASE_VERSION = $(shell swift run hostmgr --version)
+=======
+RELEASE_VERSION = $(shell .build/release/hostmgr --version)
+
+lint:
+	docker run -it --rm -v `pwd`:`pwd` -w `pwd` ghcr.io/realm/swiftlint:0.50.0 swiftlint lint --strict
+
+lintfix:
+	docker run -it --rm -v `pwd`:`pwd` -w `pwd` ghcr.io/realm/swiftlint:0.50.0 swiftlint --autocorrect
+>>>>>>> 39e3b70 (Refactor for multiple servers)
 
 build:
 	@echo "--- Building Release"
