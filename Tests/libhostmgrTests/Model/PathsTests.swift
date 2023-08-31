@@ -4,29 +4,29 @@ import XCTest
 final class PathsTests: XCTestCase {
 
     func testThatStorageRootIsCorrect() {
-        validate(path: Paths.storageRoot, resolvesTo: "/usr/local", forArchitecture: .x64)
-        validate(path: Paths.storageRoot, resolvesTo: "/opt/hostmgr", forArchitecture: .arm64)
+        validate(path: Paths.storageRoot, resolvesTo: "/opt/ci", forArchitecture: .x64)
+        validate(path: Paths.storageRoot, resolvesTo: "/opt/ci", forArchitecture: .arm64)
     }
 
     func testThatConfigurationRootIsCorrect() {
-        validate(path: Paths.configurationRoot, resolvesTo: "/usr/local/etc/hostmgr", forArchitecture: .x64)
-        validate(path: Paths.configurationRoot, resolvesTo: "/opt/hostmgr", forArchitecture: .arm64)
+        validate(path: Paths.configurationRoot, resolvesTo: "/opt/ci", forArchitecture: .x64)
+        validate(path: Paths.configurationRoot, resolvesTo: "/opt/ci", forArchitecture: .arm64)
     }
 
     func testThatStateRootIsCorrect() {
-        validate(path: Paths.stateRoot, resolvesTo: "/usr/local/var/hostmgr/state", forArchitecture: .x64)
-        validate(path: Paths.stateRoot, resolvesTo: "/opt/hostmgr/state", forArchitecture: .arm64)
+        validate(path: Paths.stateRoot, resolvesTo: "/opt/ci/hostmgr/state", forArchitecture: .x64)
+        validate(path: Paths.stateRoot, resolvesTo: "/opt/ci/hostmgr/state", forArchitecture: .arm64)
     }
 
     func testThatVMStoragePathIsCorrect() {
-        validate(path: Paths.vmImageStorageDirectory, resolvesTo: "/usr/local/var/vm-images", forArchitecture: .x64)
-        validate(path: Paths.vmImageStorageDirectory, resolvesTo: "/opt/hostmgr/vm-images", forArchitecture: .arm64)
+        validate(path: Paths.vmImageStorageDirectory, resolvesTo: "/opt/ci/vm-images", forArchitecture: .x64)
+        validate(path: Paths.vmImageStorageDirectory, resolvesTo: "/opt/ci/vm-images", forArchitecture: .arm64)
     }
 
     func testThatGitMirrorStoragePathIsCorrect() {
         let path = Paths.gitMirrorStorageDirectory
-        validate(path: path, resolvesTo: "/usr/local/var/git-mirrors", forArchitecture: .x64)
-        validate(path: path, resolvesTo: "/opt/hostmgr/git-mirrors", forArchitecture: .arm64)
+        validate(path: path, resolvesTo: "/opt/ci/git-mirrors", forArchitecture: .x64)
+        validate(path: path, resolvesTo: "/opt/ci/git-mirrors", forArchitecture: .arm64)
     }
 
     func testThatAuthorizedKeysFilePathIsCorrect() {
@@ -36,8 +36,8 @@ final class PathsTests: XCTestCase {
 
     func testThatConfigurationFilePathIsCorrect() {
         let path = Paths.configurationFilePath
-        validate(path: path, resolvesTo: "/usr/local/etc/hostmgr/config.json", forArchitecture: .x64)
-        validate(path: path, resolvesTo: "/opt/hostmgr/config.json", forArchitecture: .arm64)
+        validate(path: path, resolvesTo: "/opt/ci/hostmgr.json", forArchitecture: .x64)
+        validate(path: path, resolvesTo: "/opt/ci/hostmgr.json", forArchitecture: .arm64)
     }
 
     private func validate(

@@ -7,12 +7,15 @@ public struct Compressor {
 
     enum Errors: Error {
         case fileExistsAtPath
+        case unableToCompress
+        case unableToDecompress
     }
 
     // From Apple Sample Code: https://developer.apple.com/documentation/accelerate/compressing_file_system_directories
     private static let keySet = ArchiveHeader.FieldKeySet("TYP,PAT,LNK,DEV,DAT,UID,GID,MOD,FLG,MTM,BTM,CTM")!
 
-    public static func compress(directory: URL, to destination: URL? = nil) throws {
+    @discardableResult
+    public static func compress(directory: URL, to destination: URL? = nil) throws -> URL {
 
         let destination = destination ?? FileManager.default.temporaryDirectory.appendingPathComponent("archive.aar")
 
@@ -27,13 +30,16 @@ public struct Compressor {
             let compressionStream = ArchiveByteStream.compressionStream(using: .lzfse, writingTo: writeFileStream),
             let encodeStream = ArchiveStream.encodeStream(writingTo: compressionStream)
         else {
-            return
+            throw Errors.unableToCompress
         }
 
         try encodeStream.writeDirectoryContents(archiveFrom: FilePath(directory.path), keySet: keySet)
+
+        return destination
     }
 
-    func decompress(archiveAt archivePath: URL, to destination: URL) throws {
+    @discardableResult
+    public static func decompress(archiveAt archivePath: URL, to destination: URL) throws -> URL{
 
         guard !FileManager.default.fileExists(at: destination) else {
             throw Errors.fileExistsAtPath
@@ -56,11 +62,12 @@ public struct Compressor {
                 extractingTo: decompressDestination,
                 flags: [ .ignoreOperationNotPermitted ]
             )
-
         else {
-            return
+            throw Errors.unableToDecompress
         }
 
         _ = try ArchiveStream.process(readingFrom: decodeStream, writingTo: extractStream)
+
+        return destination
     }
 }

@@ -27,9 +27,9 @@ public struct S3Manager: S3ManagerProtocol {
     private let bucket: String
     private let region: String
 
-    private let s3Client: S3Client
+    private let s3Client: tinys3.S3Client
 
-    public init(bucket: String, region: String, credentials: AWSCredentials, endpoint: S3Endpoint) throws {
+    public init(bucket: String, region: String, credentials: tinys3.AWSCredentials, endpoint: S3Endpoint) throws {
         self.bucket = bucket
         self.region = region
         self.s3Client = S3Client(credentials: credentials, endpoint: endpoint)
@@ -40,7 +40,7 @@ public struct S3Manager: S3ManagerProtocol {
     }
 
     public func lookupObject(atPath path: String) async throws -> S3Object? {
-        try await s3Client.head(bucket: self.bucket, key: path).s3Object
+        try await listObjects(startingWith: path).first
     }
 
     public func download(
@@ -78,5 +78,9 @@ public struct S3Manager: S3ManagerProtocol {
     public func download(object: S3Object) async throws -> Data? {
         let downloadUrl = s3Client.signedDownloadUrl(forKey: object.key, in: self.bucket, validFor: 60)
         return try await URLSession.shared.data(from: downloadUrl).0
+    }
+
+    public func upload(fileAt path: URL, toKey key: String, progress: ProgressCallback? = nil) async throws {
+        try await s3Client.upload(objectAtPath: path, toBucket: self.bucket, key: key, progressCallback: progress)
     }
 }

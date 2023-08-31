@@ -2,8 +2,8 @@ import XCTest
 @testable import libhostmgr
 
 struct TestCommand: FollowsCommandPolicies {
-    static var commandIdentifier = "TestCommandIdentifier"
-    static var commandPolicies: [CommandPolicy] = []
+    var commandIdentifier = "TestCommandIdentifier"
+    var commandPolicies: [CommandPolicy] = []
 }
 
 class CommandPolicyTests: XCTestCase {

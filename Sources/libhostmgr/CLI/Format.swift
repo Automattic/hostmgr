@@ -89,4 +89,8 @@ public struct Format {
 
         return formatter.string(for: number)!
     }
+
+    public static func path(_ url: URL) -> String {
+        url.path
+    }
 }

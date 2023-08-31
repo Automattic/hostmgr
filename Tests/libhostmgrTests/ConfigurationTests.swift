@@ -6,11 +6,6 @@ final class ConfigurationTests: XCTestCase {
 
     func testThatEmptyConfigurationUsesDefaults() {
         XCTAssertEqual(
-            Configuration().syncTasks,
-            Configuration.Defaults.defaultSyncTasks
-        )
-
-        XCTAssertEqual(
             Configuration().gitMirrorPort,
             Configuration.Defaults.defaultGitMirrorPort
         )
@@ -44,7 +39,6 @@ final class ConfigurationTests: XCTestCase {
         XCTAssertEqual(123456, configuration.gitMirrorPort)
 
         XCTAssertEqual(["foo-bar-baz"], configuration.protectedImages)
-        XCTAssertEqual([.vmImages], configuration.syncTasks)
     }
 
     func testThatConfigurationWithoutLocalGitMirrorPortUsesDefault() throws {
@@ -60,12 +54,6 @@ final class ConfigurationTests: XCTestCase {
             Configuration.Defaults.defaultAWSAcceleratedTransferAllowed,
             configuration.allowAWSAcceleratedTransfer
         )
-    }
-
-    func testThatConfigurationWithoutSyncTasksUsesDefault() throws {
-        let data = getJSONDataForResource(named: "defaults")
-        let configuration = try Configuration.from(data: data)
-        XCTAssertEqual(Configuration.Defaults.defaultSyncTasks, configuration.syncTasks)
     }
 
     func testThatConfigurationWithoutProtectedImagesReturnsEmptyList() throws {

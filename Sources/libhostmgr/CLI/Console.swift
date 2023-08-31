@@ -102,6 +102,7 @@ public class ProgressBar {
 
     public enum ProgressType {
         case download
+        case upload
         case installation
     }
 
@@ -112,7 +113,7 @@ public class ProgressBar {
 
     public func update(_ progress: Progress) {
         switch self.type {
-        case .download: self.updateFileTransferProgress(progress)
+        case .download, .upload: self.updateFileTransferProgress(progress)
         case .installation: self.updateInstallationProgress(progress)
         }
     }
@@ -178,7 +179,7 @@ public class ProgressBar {
         case .installation:
             terminal.clear(lines: 1)
             terminal.success("Finished in \(elapsedTime)")
-        case .download:
+        case .download, .upload:
             terminal.clear(lines: 2)
 
             if let rate = self.currentRate {
@@ -194,11 +195,6 @@ public class ProgressBar {
 extension Console {
     public static func startProgress(_ string: String, type: ProgressBar.ProgressType) -> ProgressBar {
         ProgressBar(title: string, type: type)
-    }
-
-    public static func startImageDownload(_ image: RemoteVMImage) -> ProgressBar {
-        let size = Format.fileBytes(image.imageObject.size)
-        return ProgressBar(title: "Downloading \(image.fileName) (\(size))", type: .download)
     }
 
     public static func startFileDownload(_ file: S3Object) -> ProgressBar {

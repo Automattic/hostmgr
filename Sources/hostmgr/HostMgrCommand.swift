@@ -6,7 +6,7 @@ import libhostmgr
 @main
 struct Hostmgr: AsyncParsableCommand {
 
-    private static var appVersion = "0.20.0-rc-4"
+    private static var appVersion = "0.17.2"
 
     static var configuration = CommandConfiguration(
         abstract: "A utility for managing VM hosts",
@@ -18,7 +18,8 @@ struct Hostmgr: AsyncParsableCommand {
             RunCommand.self,
             SetCommand.self,
             BenchmarkCommand.self,
-            ConfigCommand.self
+            ConfigCommand.self,
+            CacheCommand.self
         ] + appleSiliconCommands
     )
 
@@ -37,10 +38,7 @@ struct Hostmgr: AsyncParsableCommand {
 
         logger.trace("Starting Up")
 
-        guard Configuration.isValid else {
-            print("Invalid configuration – exiting")
-            throw ExitCode(1)
-        }
+        try Configuration.validate()
 
         throw CleanExit.helpRequest(self)
     }

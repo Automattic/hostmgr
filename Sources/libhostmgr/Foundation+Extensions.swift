@@ -173,6 +173,37 @@ extension Sequence {
     }
 }
 
+extension String {
+
+    public func slugify() -> String {
+        self.components(separatedBy: .alphanumerics.inverted).joined(separator: "-")
+    }
+}
+
+extension Progress {
+    func estimateThroughput(fromTimeElapsed elapsedTime: TimeInterval) {
+        guard Int64(elapsedTime) > 0 else {
+            self.setUserInfoObject(0, forKey: .throughputKey)
+            self.setUserInfoObject(TimeInterval.infinity, forKey: .estimatedTimeRemainingKey)
+            return
+        }
+
+        let unitsPerSecond = self.completedUnitCount.quotientAndRemainder(dividingBy: Int64(elapsedTime)).quotient
+        let throughput = Int(unitsPerSecond)
+        self.setUserInfoObject(throughput, forKey: .throughputKey)
+
+        guard throughput > 0 else {
+            self.setUserInfoObject(TimeInterval.infinity, forKey: .estimatedTimeRemainingKey)
+            return
+        }
+
+        let unitsRemaining = self.totalUnitCount - self.completedUnitCount
+        let secondsRemaining = unitsRemaining.quotientAndRemainder(dividingBy: Int64(throughput)).quotient
+
+        self.setUserInfoObject(TimeInterval(secondsRemaining), forKey: .estimatedTimeRemainingKey)
+    }
+}
+
 public func to(_ callback: @autoclosure () throws -> Void, if conditional: Bool) rethrows {
     guard conditional == true else {
         return

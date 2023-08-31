@@ -24,53 +24,14 @@ public func fetchRemoteImage(name: String) async throws {
 @discardableResult
 public func downloadRemoteImage(
     name: String,
-    remoteRepository: RemoteVMRepository? = nil
-) async throws -> URL {
-    let remoteRepository = try remoteRepository ?? RemoteVMRepository()
-
-    guard let remoteImage = try await remoteRepository.getCompatibleImage(named: name) else {
-        Console.crash(
-            message: "Unable to find an image named `\(name)` for \(ProcessInfo.processInfo.processorArchitecture)",
-            reason: .unableToFindRemoteImage
-        )
-    }
-
-    return try await downloadRemoteImage(remoteImage)
-}
-
-/// Downloads the given remote VM image to the given directory
-///
-/// Does not import or register the images – this method only handles download.
-@discardableResult
-public func downloadRemoteImage(
-    _ remoteImage: RemoteVMImage,
-    remoteRepository: RemoteVMRepository? = nil,
-    storageDirectory: URL = Paths.vmImageStorageDirectory
+    remoteRepository: RemoteVMRepository = RemoteVMRepository()
 ) async throws -> URL {
 
-    // If this is the first run, the storage directory may not exist, so we'll create it just in case
-    try FileManager.default.createDirectory(at: storageDirectory, withIntermediateDirectories: true)
+    let progressBar = Console.startProgress("Downloading \(name)", type: .download)
 
-    let availableStorageSpace = try FileManager.default.availableStorageSpace(
-        forVolumeContainingDirectoryAt: storageDirectory
-    )
-
-    guard remoteImage.imageObject.size < availableStorageSpace else {
-        Console.crash(
-            message: [
-                "Unable to download \(remoteImage.fileName) (\(Format.fileBytes(remoteImage.imageObject.size)))",
-                "not enough local storage available (\(Format.fileBytes(availableStorageSpace)))"
-            ].joined(separator: " - "),
-            reason: .notEnoughLocalDiskSpace
-        )
-    }
-
-    let progressBar = Console.startImageDownload(remoteImage)
-
-    let remoteRepository = try remoteRepository ?? RemoteVMRepository()
     let destination = try await remoteRepository.download(
-        image: remoteImage,
-        destinationDirectory: storageDirectory,
+        imageNamed: name,
+        destinationDirectory: Paths.vmImageStorageDirectory,
         progressCallback: progressBar.update
     )
 
@@ -90,7 +51,7 @@ public func unpack(localVM: LocalVMImage) async throws {
 
     Console.info("Unpacking VM")
     let destination = Paths.toVMTemplate(named: localVM.basename)
-    try Compressor().decompress(archiveAt: localVM.path, to: destination)
+    try Compressor.decompress(archiveAt: localVM.path, to: destination)
     try FileManager.default.removeItem(at: localVM.path)
     Console.success("Extraction Complete")
 
@@ -143,30 +104,29 @@ public func deleteLocalImages(
     Console.success("Deletion Complete")
 }
 
-/// Calculates a list of images that don't exist on the local machine and should
-/// be downloaded (according to the remote manifest)
-public func listAvailableRemoteImages(
-    sortedBy strategy: RemoteVMRepository.RemoteVMImageSortingStrategy = .newest,
-    localRepository: LocalVMRepository = LocalVMRepository(),
-    remoteRepository: RemoteVMRepository? = nil
-) async throws -> [RemoteVMImage] {
-    let remoteRepository = try remoteRepository ?? RemoteVMRepository()
-    let manifest = try await remoteRepository.getManifest()
-    let remoteImages = try await remoteRepository.listCompatibleImages(sortedBy: strategy)
-    let localImages = try localRepository.list()
-
-    return remoteImages
-        .filter(includingItemsIn: manifest)
-        .filter(excludingItemsIn: localImages.map(\.basename))
-}
+///// Calculates a list of images that don't exist on the local machine and should
+///// be downloaded (according to the remote manifest)
+//public func listAvailableRemoteImages(
+//    sortedBy strategy: RemoteVMRepository.RemoteVMImageSortingStrategy = .newest,
+//    localRepository: LocalVMRepository = LocalVMRepository(),
+//    remoteRepository: RemoteVMRepository? = nil
+//) async throws -> [RemoteVMImage] {
+//    let remoteRepository = try remoteRepository ?? RemoteVMRepository()
+//    let manifest = try await remoteRepository.getManifest()
+//    let remoteImages = try await remoteRepository.listCompatibleImages(sortedBy: strategy)
+//    let localImages = try localRepository.list()
+//
+//    return remoteImages
+//        .filter(includingItemsIn: manifest)
+//        .filter(excludingItemsIn: localImages.map(\.basename))
+//}
 
 /// Calculates a list of local images that should be deleted because they're not part of the remote manifest
 ///
 public func listLocalImagesToDelete(
     localRepository: LocalVMRepository = LocalVMRepository(),
-    remoteRepository: RemoteVMRepository? = nil
+    remoteRepository: RemoteVMRepository = RemoteVMRepository()
 ) async throws -> [LocalVMImage] {
-    let remoteRepository = try remoteRepository ?? RemoteVMRepository()
     let manifest = try await remoteRepository.getManifest()
     let localImages = try localRepository.list()
 
