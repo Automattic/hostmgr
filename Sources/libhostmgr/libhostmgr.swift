@@ -1,5 +1,6 @@
 import Foundation
 import prlctl
+import ShellOut
 
 /// Downloads and registers an image by name
 ///
@@ -110,6 +111,8 @@ public func resetVMStorage() throws {
         Console.info("Removing temp VM file for \(localVM.filename)")
         try repository.delete(image: localVM)
     }
+
+    killVMProcesses()
 
     try ParallelsVMRepository().lookupVMs().forEach { parallelsVM in
         Console.info("Removing Registered VM \(parallelsVM.name)")
@@ -316,4 +319,18 @@ func applyVMSettings(_ settings: [StoppedVM.VMOption], to parallelsVM: StoppedVM
     } catch {
         Console.warn("Unable to remove device: \(error.localizedDescription)")
     }
+}
+
+/// Force kill all running VM processes
+///
+/// We have a relatively frequent error in CI jobs:
+/// "Failed to unregister the VM: Unable to perform the action because the
+/// virtual machine is busy. The virtual machine is currently running.
+/// Please try again later."
+///
+/// This functions kills all the running VM processes so that we can unregister it later.
+func killVMProcesses() {
+    Console.info("Killing running virtual machines")
+    // The command failure is ignored because there may not be any running VM.
+    _ = try? shellOut(to: "pkill", arguments: ["-9", "-f", #"Parallels VM\.app/Contents/MacOS/prl_vm_app"#])
 }
