@@ -1,10 +1,20 @@
 import Foundation
 
 public struct ParallelsVMImage: LocalVMImage, FilterableByName {
+
+    public static let validVMExtensions = [
+        ".pvm",
+        ".pvmp",
+    ]
+
     public let path: URL
 
     public init?(path: URL) {
-        self.path = path
+        guard Self.validVMExtensions.contains(where: { path.path.hasSuffix($0) }) else {
+            return nil
+        }
+
+        self.init(path: path)
     }
 
     public var name: String {
@@ -15,7 +25,7 @@ public struct ParallelsVMImage: LocalVMImage, FilterableByName {
         switch path.pathExtension {
             case "pvmp": return .packaged
             case "pvm": return .ready
-            default: Console.crash(message: "Invalid VM: \(self.path)", reason: .invalidVMStatus)
+            default: preconditionFailure("Invalid VM State")
         }
     }
 

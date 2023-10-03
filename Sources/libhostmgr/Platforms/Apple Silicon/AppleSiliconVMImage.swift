@@ -4,16 +4,46 @@ public struct AppleSiliconVMImage: LocalVMImage {
 
     public let path: URL
 
+    public static let validVMExtensions = [
+        ".bundle",
+        ".vmtemplate",
+        ".vmtemplate.aar",
+    ]
+
     public init?(path: URL) {
+        guard Self.validVMExtensions.contains(where: { path.path.hasSuffix($0) }) else {
+            return nil
+        }
+
         self.path = path
     }
 
     public var state: VMImageState {
-        .ready
+        if path.path.hasSuffix(".vmtemplate") {
+            return .ready
+        }
+
+        if path.path.hasSuffix(".vmtemplate.aar") {
+            return .packaged
+        }
+
+        if path.path.hasSuffix(".bundle") {
+            return .ready
+        }
+
+        preconditionFailure("Invalid VM State")
     }
 
     public var name: String {
-        path.deletingPathExtension().deletingPathExtension().lastPathComponent
+        if path.path.hasSuffix(".vmtemplate") {
+            return path.deletingPathExtension().lastPathComponent
+        }
+
+        if path.path.hasSuffix(".vmtemplate.aar") {
+            return path.deletingPathExtension().deletingPathExtension().lastPathComponent
+        }
+
+        return path.deletingPathExtension().lastPathComponent
     }
 
     var fileName: String {
@@ -25,4 +55,14 @@ public struct AppleSiliconVMImage: LocalVMImage {
             try FileManager.default.size(ofObjectAt: path)
         }
     }
+
 }
+
+// MARK: Apple Silicon-specific code
+#if arch(arm64)
+extension AppleSiliconVMImage {
+    func asBundle() throws -> VMBundle {
+        try VMBundle.fromExistingBundle(at: self.path)
+    }
+}
+#endif

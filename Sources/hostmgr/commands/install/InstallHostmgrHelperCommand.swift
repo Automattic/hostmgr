@@ -12,7 +12,7 @@ struct InstallHostmgrHelperCommand: AsyncParsableCommand {
     private let agentIdentifier = "com.automattic.hostmgr.helper"
     private let helperPath = URL(fileURLWithPath: ProcessInfo.processInfo.arguments.first!)
         .deletingLastPathComponent()
-        .appendingPathComponent("hostmgr-helper").path
+        .appendingPathComponent("hostmgr-helper")
 
     private let stdoutPath = Paths.logsDirectory.appendingPathComponent("hostmgr-helper.stdout.log").path
     private let stderrPath = Paths.logsDirectory.appendingPathExtension("hostmgr-helper.stderr.log").path
@@ -20,16 +20,13 @@ struct InstallHostmgrHelperCommand: AsyncParsableCommand {
     enum CodingKeys: CodingKey {}
 
     func run() throws {
-        guard FileManager.default.fileExists(atPath: helperPath) else {
-            Console.crash(
-                message: "`hostmgr-helper` is missing – please reinstall `hostmgr` (should be at \(helperPath))",
-                reason: .fileNotFound
-            )
+        guard FileManager.default.fileExists(at: helperPath) else {
+            throw HostmgrError.helperIsMissing(helperPath)
         }
 
        try agentTemplate
             .replacingOccurrences(of: "${AGENT_IDENTIFIER}", with: agentIdentifier)
-            .replacingOccurrences(of: "${APPLICATION_PATH}", with: helperPath)
+            .replacingOccurrences(of: "${APPLICATION_PATH}", with: helperPath.path)
             .replacingOccurrences(of: "${STDOUT_PATH}", with: stdoutPath)
             .replacingOccurrences(of: "${STDERR_PATH}", with: stderrPath)
             .write(to: plistDesination, atomically: true, encoding: .utf8)

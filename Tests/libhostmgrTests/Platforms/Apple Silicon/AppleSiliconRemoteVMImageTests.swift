@@ -6,7 +6,7 @@ final class AppleSiliconRemoteVMImageTests: XCTestCase {
 
     private let testSubject = AppleSiliconRemoteVMImage(
         imageFile: S3Object.with(
-            key: "/foo/bar.vmpackage.aar",
+            key: "/foo/bar.vmtemplate.aar",
             size: 4096
         ).asFile
     )!
@@ -20,11 +20,11 @@ final class AppleSiliconRemoteVMImageTests: XCTestCase {
     }
 
     func testThatfileNameIsCorrect() throws {
-        XCTAssertEqual("bar.vmpackage.aar", testSubject.fileName)
+        XCTAssertEqual("bar.vmtemplate.aar", testSubject.fileName)
     }
 
     func testThatPathIsCorrect() throws {
-        XCTAssertEqual("/foo/bar.vmpackage.aar", testSubject.path)
+        XCTAssertEqual("/foo/bar.vmtemplate.aar", testSubject.path)
     }
 
     func testThatSizeIsCorrect() throws {

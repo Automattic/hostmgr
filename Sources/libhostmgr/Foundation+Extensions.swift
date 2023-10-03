@@ -47,13 +47,7 @@ extension FileManager {
     }
 
     public func size(ofObjectAt url: URL) throws -> Int {
-
-        var isDir: ObjCBool = true
-        guard fileExists(atPath: url.path, isDirectory: &isDir) else {
-            return 0
-        }
-
-        if isDir.boolValue {
+        if try directoryExists(at: url) {
             return try directorySize(of: url)
         } else {
             return try fileSize(of: url)
@@ -61,8 +55,11 @@ extension FileManager {
     }
 
     func fileSize(of url: URL) throws -> Int {
-        let values = try url.resourceValues(forKeys: [.fileSizeKey])
-        return values.fileSize!
+        guard let size = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize else {
+            throw CocoaError(.fileReadUnknown)
+        }
+
+        return size
     }
 
     /// returns total allocated size of a the directory including its subFolders or not
@@ -224,4 +221,29 @@ public func to(_ callback: @autoclosure () throws -> Void, unless conditional: B
     }
 
     try callback()
+}
+
+public typealias ProgressCallback = (Progress) -> Void
+
+extension Task where Failure == Error {
+    @discardableResult
+    static func retrying(
+        times: Int = 3,
+        delay: TimeInterval = 1,
+        operation: @Sendable @escaping () async throws -> Success
+    ) -> Task {
+        Task {
+            for _ in 0..<times {
+                do {
+                    return try await operation()
+                } catch {
+                    try await Task<Never, Never>.sleep(for: .seconds(delay))
+                    continue
+                }
+            }
+
+            try Task<Never, Never>.checkCancellation()
+            return try await operation()
+        }
+    }
 }

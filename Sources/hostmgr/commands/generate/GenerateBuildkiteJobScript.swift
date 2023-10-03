@@ -55,6 +55,11 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
             value: "/usr/local/var/buildkite-agent/plugins"
         )
 
+        scriptBuilder.addEnvironmentVariable(
+            named: "PATH",
+            value: "/opt/homebrew/bin:/opt/ci/bin:$PATH"
+        )
+
         scriptBuilder.addCommand("buildkite-agent bootstrap")
 
         for (key, value) in overriddenKeys {

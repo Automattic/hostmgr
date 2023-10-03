@@ -9,7 +9,7 @@ public protocol VMManager {
 
     /// Start a VM
     ///
-    func startVM(name: String) async throws
+    func startVM(configuration: LaunchConfiguration) async throws
 
     /// Immediately terminate a VM
     /// 
@@ -56,6 +56,9 @@ public protocol VMManager {
 
     /// Free up disk space by removing unused images
     func purgeUnusedImages() async throws
+
+    /// Find the template for a given VM name
+    func vmTemplateName(forVmWithName: String) async throws -> String?
 }
 
 extension VMManager {
@@ -65,7 +68,7 @@ extension VMManager {
     }
 
     public func hasLocalVM(name: String, state: VMImageState) async throws -> Bool {
-        try lookupVMImages().contains { $0.name == name }
+        try lookupVMImages().contains { $0.name == name && $0.state == state }
     }
 
     public func hasTempVM(named name: String) async throws -> Bool {
@@ -91,5 +94,13 @@ extension VMManager {
 
     private func resolveVMs(_ paths: [URL]) -> [VM] {
         paths.compactMap { VM(path: $0) }
+    }
+}
+
+extension VMManager {
+    func ensureLocalVMExists(named name: String) async throws {
+        guard try await hasLocalVM(name: name, state: .ready) else {
+            throw HostmgrError.localVMNotFound(name)
+        }
     }
 }

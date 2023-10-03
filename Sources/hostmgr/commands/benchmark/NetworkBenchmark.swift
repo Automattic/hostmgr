@@ -13,6 +13,6 @@ struct NetworkBenchmark: ParsableCommand {
     )
 
     func run() throws {
-        Console.crash(message: "Deprecated – use the `networkQuality` tool.", reason: .deprecated)
+        Console.exit("Deprecated – use the `networkQuality` tool.", style: .error)
     }
 }

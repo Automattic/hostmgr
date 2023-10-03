@@ -9,7 +9,7 @@ struct VMStopCommand: AsyncParsableCommand {
         abstract: "Stops a VM"
     )
 
-    @Argument(help: "The Name or ID of the VM you'd like to stop")
+    @Argument(help: "The Name, ID, or Handle of the VM you'd like to stop")
     var identifier: String?
 
     @Flag(help: "Kill the VM immediately, without waiting for it to shut down")

@@ -7,6 +7,8 @@ struct VMDetailsCommand: AsyncParsableCommand {
 
     enum Detail: EnumerableFlag {
         case ipAddress
+        case path
+        case workingPath
         case all
     }
 
@@ -18,7 +20,7 @@ struct VMDetailsCommand: AsyncParsableCommand {
     @Argument(
         help: "The VM to fetch details for"
     )
-    var name: String
+    var handle: String
 
     @Flag(exclusivity: .exclusive)
     var detail: Detail = .all
@@ -26,30 +28,25 @@ struct VMDetailsCommand: AsyncParsableCommand {
     @DIInjected
     var vmManager: any VMManager
 
-    enum CodingKeys: CodingKey {}
+    enum CodingKeys: CodingKey {
+        case handle
+        case detail
+    }
 
     func run() async throws {
-//        let address = try await vmManager.ipAddress(forVmWithName: self.virtualMachine)
-//        print("IPv4 Address:\t\(address)")
+        let ipAddress = try await vmManager.ipAddress(forVmWithName: handle)
+        let templateName = try await vmManager.vmTemplateName(forVmWithName: handle) ?? handle
+        let path = Paths.toVMTemplate(named: templateName).path()
+        let workingPath = Paths.toWorkingAppleSiliconVM(named: handle).path()
+
+        switch detail {
+            case .ipAddress: print(ipAddress)
+            case .path: print(path)
+            case .workingPath: print(workingPath)
+            case .all:
+                print("Path:\t\t\(path)")
+                print("Working Path:\t\(workingPath)")
+                print("IPv4 Address:\t\(ipAddress)")
+        }
     }
 }
-
-#if arch(arm64)
-extension VMDetailsCommand {
-    func ipAddressString(for bundle: VMBundle) -> String {
-        guard let ipAddress = try? bundle.currentDHCPLease?.ipAddress else {
-            return "-"
-        }
-
-        return ipAddress.debugDescription
-    }
-
-    func relativeLeaseExpirationString(for bundle: VMBundle) -> String {
-        guard let expirationDate = try? bundle.currentDHCPLease?.expirationDate else {
-            return "-"
-        }
-
-        return Format.remainingTime(until: expirationDate, context: .beginningOfSentence)
-    }
-}
-#endif

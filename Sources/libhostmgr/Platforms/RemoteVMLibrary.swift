@@ -33,12 +33,16 @@ public protocol RemoteVMLibrary<VM> {
 
     func getManifest() async throws -> [String]
     func listImages(sortedBy strategy: RemoteVMImageSortingStrategy) async throws -> [VM]
-    func lookupImage(named name: String) async throws -> VM?
-    func download(
-        image: VM,
-        destinationDirectory: URL,
-        progressCallback: @escaping FileTransferProgressCallback
-    ) async throws -> URL
+    func hasImage(named: String) async throws -> Bool
+    func lookupImage(named name: String) async throws -> VM
+
+    @discardableResult
+    func download(vmNamed: String, progressCallback: @escaping ProgressCallback) async throws -> URL
+
+    /// Make a local image available for others to use (by publishing it to S3)
+    ///
+    /// This method is the preferred way to deploy a VM image
+    func publish(vmNamed: String, progressCallback: @escaping ProgressCallback) async throws
 
     func remoteImagesFrom(objects: [RemoteFile]) -> [VM]
 }
@@ -59,57 +63,65 @@ extension RemoteVMLibrary {
     }
 
     public func getManifest() async throws -> [String] {
-        guard try await S3Server.vmImages.hasFile(at: "manifest.txt") else {
-            throw RemoteVMLibraryErrors.manifestNotFound
-        }
-
-        let bytes = try await S3Server.vmImages.fetchFileBytes(forFileAt: "manifest.txt")
-
-        guard let manifestString = String(data: bytes, encoding: .utf8) else {
-            throw RemoteVMLibraryErrors.invalidManifest
-        }
-
-        return manifestString
-            .split(separator: "\n")
-            .map { String($0) }
+        let objects = try await S3Server.vmImages.listFiles(startingWith: "/images-v2")
+        return remoteImagesFrom(objects: objects).map { $0.name }
     }
 
-    func download(
-        image: VM,
-        destinationDirectory: URL,
-        progressCallback: @escaping FileTransferProgressCallback
-    ) async throws -> URL {
+    public func download(vmNamed name: String, progressCallback: @escaping ProgressCallback) async throws -> URL {
+        let image = try await lookupImage(named: name)
 
-        for server in servers {
-            guard try await server.hasFile(at: image.path) else {
-                continue
-            }
+        // If this is the first run, the storage directory may not exist, so we'll create it just in case
+        try FileManager.default.createDirectory(at: Paths.vmImageStorageDirectory, withIntermediateDirectories: true)
 
-            let destination = destinationDirectory.appendingPathComponent(image.fileName)
+        let availableStorageSpace = try FileManager.default.availableStorageSpace(
+            forVolumeContainingDirectoryAt: Paths.vmImageStorageDirectory
+        )
 
-            try await server.downloadFile(
-                at: image.path,
-                to: destination,
-                progress: progressCallback
-            )
-
-            return destination
+        guard image.size < availableStorageSpace else {
+            throw HostmgrError.notEnoughLocalDiskSpaceToDownloadFile(image.fileName, image.size, availableStorageSpace)
         }
 
-        throw RemoteVMLibraryErrors.vmNotFound
-    }
+        guard let server = try await servers.first(havingFileAtPath: image.path) else {
+            throw RemoteVMLibraryErrors.vmNotFound
+        }
 
+        let destination = Paths.vmImageStorageDirectory.appendingPathComponent(image.fileName)
+
+        try await server.downloadFile(
+            at: image.path,
+            to: destination,
+            progress: progressCallback
+        )
+
+        return destination
+    }
 
     public func listImages(sortedBy strategy: RemoteVMImageSortingStrategy = .name) async throws -> [VM] {
-        let objects = try await S3Server.vmImages.listFiles(startingWith: "images/")
+        let objects = try await S3Server.vmImages.listFiles(startingWith: "images-v2/")
         return remoteImagesFrom(objects: objects)
     }
 
-    public func lookupImage(named name: String) async throws -> (VM)? {
-        try await listImages().first(where: { $0.name == name })
+    public func hasImage(named name: String) async throws -> Bool {
+        try await listImages().contains(where: { $0.name == name })
+    }
+
+    public func lookupImage(named name: String) async throws -> VM {
+        guard let image = try await listImages().first(where: { $0.name == name }) else {
+            throw HostmgrError.unableToFindRemoteImage(name)
+        }
+
+        return image
     }
 
     public func remoteImagesFrom(objects: [RemoteFile]) -> [VM] {
         objects.compactMap(VM.init)
+    }
+
+    public func publish(vmNamed name: String, progressCallback: @escaping ProgressCallback) async throws {
+        try await S3Server.vmImages.uploadFile(
+            at: Paths.toArchivedVM(named: name),
+            to: "/images-v2/" + Paths.toVMTemplate(named: name).lastPathComponent,
+            progress: progressCallback
+        )
     }
 }

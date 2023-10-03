@@ -20,7 +20,7 @@ struct VMExistsCommand: ParsableCommand {
 
     func run() async throws {
         guard try await vmManager.hasLocalVM(name: name, state: .ready) else {
-            Console.crash(message: "There is no local VM named \(name)", reason: .fileNotFound)
+            Console.crash(.localVMNotFound(name))
         }
 
         Console.success("VM \(name) exists")

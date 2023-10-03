@@ -2,23 +2,7 @@ import Foundation
 import CryptoKit
 import tinys3
 
-public typealias FileTransferProgressCallback = (Progress) -> Void
-
-public protocol S3ManagerProtocol {
-    func listObjects(startingWith prefix: String) async throws -> [S3Object]
-    func lookupObject(atPath path: String) async throws -> S3Object?
-
-    func download(
-        key: String,
-        to destination: URL,
-        replacingExistingFile shouldReplaceExistingFile: Bool,
-        progressCallback: FileTransferProgressCallback?
-    ) async throws
-
-    func download(object: S3Object) async throws -> Data?
-}
-
-public struct S3Manager: S3ManagerProtocol {
+public struct S3Manager {
 
     enum Errors: Error {
         case fileExistsAtDestination
@@ -47,16 +31,8 @@ public struct S3Manager: S3ManagerProtocol {
         key: String,
         to destination: URL,
         replacingExistingFile shouldReplaceExistingFile: Bool = true,
-        progressCallback: FileTransferProgressCallback?
+        progressCallback: ProgressCallback?
     ) async throws {
-
-        /// Skip downloading the file if it already exists
-        guard !FileManager.default.fileExists(at: destination) else {
-            Console.info("\(destination.path) already exists – skipping download")
-            return
-        }
-
-        Console.info("Downloading \(key)")
 
         let tempUrl = try await s3Client.download(
             objectWithKey: key,

@@ -10,7 +10,8 @@ struct VMCommand: AsyncParsableCommand {
         VMListCommand.self,
         VMStartCommand.self,
         VMStopCommand.self,
-        VMPublish.self
+        VMPublish.self,
+        VMCloneCommand.self,
     ]
 
     static var appleSiliconCommands: [ParsableCommand.Type] {

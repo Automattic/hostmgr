@@ -10,8 +10,6 @@ public class VMInstaller {
         case invalidMachineIdentifier
     }
 
-    public typealias ProgressCallback = (Progress) -> Void
-
     private var installationObserver: NSKeyValueObservation?
     private let restoreImageUrl: URL
     private let bundle: VMBundle

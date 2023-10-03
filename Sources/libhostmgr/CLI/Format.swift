@@ -22,6 +22,10 @@ public struct Format {
         return formatter.string(fromByteCount: count)
     }
 
+    public static func memoryBytes(_ count: Int) -> String {
+        memoryBytes(Int64(count))
+    }
+
     public static func memoryBytes(_ count: UInt64) -> String {
         memoryBytes(Int64(count))
     }

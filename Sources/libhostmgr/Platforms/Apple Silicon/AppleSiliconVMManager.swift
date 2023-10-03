@@ -2,15 +2,14 @@ import Foundation
 import Network
 import Virtualization
 
+#if arch(arm64)
 struct AppleSiliconVMManager: VMManager {
-
     typealias VM = AppleSiliconVMImage
 
-    func startVM(name: String) async throws {
+    func startVM(configuration: LaunchConfiguration) async throws {
         try createWorkingDirectoriesIfNeeded()
-
-        let launchConfiguration = LaunchConfiguration(name: name, sharedPaths: [])
-        try await XPCService.startVM(withLaunchConfiguration: launchConfiguration)
+        try await ensureLocalVMExists(named: configuration.name)
+        try await XPCService.startVM(withLaunchConfiguration: configuration)
     }
 
     func stopVM(name: String) async throws {
@@ -22,9 +21,10 @@ struct AppleSiliconVMManager: VMManager {
     }
 
     func removeVM(name: String) async throws {
-        try FileManager.default.removeItem(at: Paths.toAppleSiliconVM(named: name))
-        try FileManager.default.removeItem(at: Paths.toArchivedVM(named: name))
-        try FileManager.default.removeItem(at: Paths.toVMTemplate(named: name))
+        try FileManager.default.removeItemIfExists(at: Paths.toAppleSiliconVM(named: name))
+        try FileManager.default.removeItemIfExists(at: Paths.toArchivedVM(named: name))
+        try FileManager.default.removeItemIfExists(at: Paths.toVMTemplate(named: name))
+        try FileManager.default.removeItemIfExists(at: Paths.toWorkingAppleSiliconVM(named: name))
     }
 
     func unpackVM(name: String) async throws {
@@ -42,30 +42,51 @@ struct AppleSiliconVMManager: VMManager {
     }
 
     func resetVMWorkingDirectory() async throws {
-        for path in FileManager.default.subpaths(at: Paths.vmWorkingStorageDirectory) {
-            try FileManager.default.removeItem(atPath: path)
-        }
+        try FileManager.default.removeItemIfExists(at: Paths.vmWorkingStorageDirectory)
+        try FileManager.default.createDirectory(at: Paths.vmWorkingStorageDirectory, withIntermediateDirectories: true)
     }
 
     func cloneVM(from source: String, to destination: String) async throws {
         try FileManager.default.copyItem(
-            at: Paths.toAppleSiliconVM(named: source),
+            at: try Paths.resolveVM(withNameOrHandle: source),
             to: Paths.toAppleSiliconVM(named: destination)
         )
+
+        #if arch(arm64)
+        try VMBundle.renamingClonedBundle(at: Paths.toAppleSiliconVM(named: destination), to: destination)
+        #endif
     }
 
     func waitForVMStartup(name: String) async throws {
-        let address = try await ipAddress(forVmWithName: name)
-        try await waitForSSHServer(forAddress: address)
+        Task.retrying(times: 5) {
+            let address = try await ipAddress(forVmWithName: name)
+            try await waitForSSHServer(forAddress: address)
+        }
     }
 
     func ipAddress(forVmWithName name: String) async throws -> IPv4Address {
-        let vmBundle = try VMBundle.fromExistingBundle(at: Paths.toAppleSiliconVM(named: name))
-        return try DHCPLease.mostRecentLease(forMACaddress: vmBundle.macAddress).ipAddress
+        #if arch(arm64)
+        let vmBundlePath = try Paths.resolveVM(withNameOrHandle: name)
+        let vmBundle = try VMBundle.fromExistingBundle(at: vmBundlePath)
+
+        return try await Task.retrying(times: 5) {
+            return try DHCPLease.mostRecentLease(forMACaddress: vmBundle.macAddress).ipAddress
+        }.value
+
+        #else
+        preconditionFailure("Only use AppleSiliconVMManager on Apple Silicon hardware")
+        #endif
     }
 
     func purgeUnusedImages() async throws {
         // Not yet implemented
+    }
+
+    func vmTemplateName(forVmWithName name: String) async throws -> String? {
+        let vmBundlePath = try Paths.resolveVM(withNameOrHandle: name)
+        let vmBundle = try VMBundle.fromExistingBundle(at: vmBundlePath)
+
+        return vmBundle.templateName
     }
 
     func waitForSSHServer(forAddress address: IPv4Address, timeout: TimeInterval = 30) async throws {
@@ -93,3 +114,4 @@ struct AppleSiliconVMManager: VMManager {
         }
     }
 }
+#endif

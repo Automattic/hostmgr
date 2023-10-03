@@ -13,7 +13,7 @@ public class DIContainer {
     private static var dependencies: [String: Any] = [
         "VMManager": ParallelsVMManager(parallels: parallels),
         "Parallels": parallels,
-        "RemoteVMLibrary": ParallelsRemoteVMRepository()
+        "RemoteVMLibrary": ParallelsVMLibrary()
     ]
     #endif
 

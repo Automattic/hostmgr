@@ -5,3 +5,10 @@
     identifier=1,6e:97:39:e2:b9:28
     lease=0x63fadb10
 }
+{
+    name=AppleViMachine1
+    ip_address=192.168.65.9
+    hw_address=1,92:50:29:22:66:8b
+    identifier=1,92:50:29:22:66:8b
+    lease=0x64f2200b
+}

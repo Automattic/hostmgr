@@ -3,7 +3,6 @@ import Network
 import Virtualization
 import TSCBasic
 
-#if arch(arm64)
 public struct VMBundle {
 
     enum Errors: Error {
@@ -18,7 +17,9 @@ public struct VMBundle {
         case unableToCloseDiskImage
     }
 
+    #if arch(arm64)
     struct ConfigFile: Codable {
+        let name: String?
         let hardwareModelData: Data
         let machineIdentifierData: Data
         let macAddress: String
@@ -41,23 +42,34 @@ public struct VMBundle {
         }
     }
 
-    public let root: URL
     private let hardwareModel: VZMacHardwareModel
     private let machineIdentifier: VZMacMachineIdentifier
     public let macAddress: VZMACAddress
+    #endif
 
-    /// Persist the VM configuration to the local disk
-    func saveConfiguration() throws {
-        try ConfigFile(
-            hardwareModelData: self.hardwareModel.dataRepresentation,
-            machineIdentifierData: self.machineIdentifier.dataRepresentation,
-            macAddress: self.macAddress.string
-        )
-        .write(to: self.configurationFilePath)
-    }
+    public let root: URL
+    public let templateName: String?
 
     var name: String {
         self.root.deletingPathExtension().lastPathComponent
+    }
+}
+
+#if arch(arm64)
+extension VMBundle: Bundle {
+
+    init(
+        root: URL,
+        hardwareModel: VZMacHardwareModel,
+        machineIdentifier: VZMacMachineIdentifier,
+        macAddress: VZMACAddress,
+        templateName: String? = nil
+    ) {
+        self.root = root
+        self.hardwareModel = hardwareModel
+        self.machineIdentifier = machineIdentifier
+        self.macAddress = macAddress
+        self.templateName = templateName
     }
 
     /// Look up details of this VM's most recent DHCP lease.
@@ -70,21 +82,17 @@ public struct VMBundle {
         }
     }
 
-    init(
-        root: URL,
-        hardwareModel: VZMacHardwareModel,
-        machineIdentifier: VZMacMachineIdentifier,
-        macAddress: VZMACAddress
-    ) {
-        self.root = root
-        self.hardwareModel = hardwareModel
-        self.machineIdentifier = machineIdentifier
-        self.macAddress = macAddress
+    /// Persist the VM configuration to the local disk
+    func saveConfiguration() throws {
+        try ConfigFile(
+            name: self.root.deletingPathExtension().lastPathComponent,
+            hardwareModelData: self.hardwareModel.dataRepresentation,
+            machineIdentifierData: self.machineIdentifier.dataRepresentation,
+            macAddress: self.macAddress.string
+        )
+        .write(to: self.configurationFilePath)
     }
-}
 
-@available(macOS 11.0, *)
-extension VMBundle: Bundle {
     /// Instantiate a VMBundle from an existing VM package
     ///
     public static func fromExistingBundle(at url: URL) throws -> VMBundle {
@@ -98,8 +106,28 @@ extension VMBundle: Bundle {
             root: url,
             hardwareModel: configuration.hardwareModel,
             machineIdentifier: configuration.machineIdentifier,
-            macAddress: macAddress
+            macAddress: macAddress,
+            templateName: configuration.name
         )
+    }
+
+    /// Update a cloned VMBundle to record its new name and have a unique MAC address
+    ///
+    @discardableResult
+    public static func renamingClonedBundle(at url: URL, to name: String) throws -> VMBundle {
+        let oldBundle = try fromExistingBundle(at: url)
+
+        let bundle = VMBundle(
+            root: oldBundle.root,
+            hardwareModel: oldBundle.hardwareModel,
+            machineIdentifier: oldBundle.machineIdentifier,
+            macAddress: .randomLocallyAdministered(),
+            templateName: oldBundle.templateName
+        )
+
+        try bundle.saveConfiguration()
+
+        return bundle
     }
 
     /// Create a new VMBundle based on a restore image
@@ -110,10 +138,7 @@ extension VMBundle: Bundle {
         withStorageCapacity capacity: Measurement<UnitInformationStorage>
     ) throws -> VMBundle {
         guard let macOSConfiguration = image.mostFeaturefulSupportedConfiguration else {
-            Console.crash(
-                message: "This Mac cannot create a VM from the disk image at \(image.url)",
-                reason: .fileNotFound
-            )
+            throw HostmgrError.invalidVMSourceImage(image.url)
         }
 
         Console.log("Loaded VM Configuration from Restore Image")

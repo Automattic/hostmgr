@@ -7,6 +7,8 @@ public protocol LocalVMImage: Equatable, FilterableByName {
     var fileSize: Int { get throws }
 
     init?(path: URL)
+
+    static var validVMExtensions: [String] { get }
 }
 
 public enum VMImageState {

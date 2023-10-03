@@ -16,11 +16,29 @@ public struct LaunchConfiguration: Codable {
         }
     }
 
+    /// The name of the VM to launch
     public let name: String
+
+    /// The VM handle – the cloned VM will use this handle, allowing multiple VMs with the same name
+    /// to be launched and individually terminated as needed
+    public let handle: String
+
+    /// Launch the VM persistently
+    ///
+    /// Setting this flag to `true` will skip creating an ephemeral copy of this VM – instead, it will
+    /// boot the VM image directly, causing any changes made to the VM to persist after shutdown.
+    /// This is useful for creating VM templates.
+    public let persistent: Bool
+
+    /// Paths that should be mounted into the VM
+    ///
+    /// Uses appropriate folder-sharing mechanisms to mirror host directories into the VM on launch. Useful for caches.
     let sharedPaths: [SharedPath]
 
-    public init(name: String, sharedPaths: [SharedPath]) {
+    public init(name: String, handle: String, persistent: Bool = false, sharedPaths: [SharedPath] = []) {
         self.name = name
+        self.handle = handle
+        self.persistent = persistent
         self.sharedPaths = sharedPaths
     }
 

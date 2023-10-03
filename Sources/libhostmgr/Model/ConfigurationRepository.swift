@@ -14,8 +14,7 @@ public struct ConfigurationRepository {
         try createConfigurationDirectoryIfNeeded()
 
         guard FileManager.default.fileExists(at: Paths.configurationFilePath) else {
-            let message = "No configuration file found. Create one at \(Paths.configurationFilePath.path)"
-            Console.crash(message: message, reason: .fileNotFound)
+            throw HostmgrError.missingConfigurationFile(Paths.configurationFilePath)
         }
 
         let data = try Data(contentsOf: Paths.configurationFilePath)

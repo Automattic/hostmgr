@@ -38,7 +38,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        Logger.helper.trace("didFinishLaunching")
+        Logger.helper.log("didFinishLaunching")
 
         self.listener.delegate = self
         self.listener.resume()
@@ -66,7 +66,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 #if arch(arm64)
     @MainActor
     func launchVM(withLaunchConfiguration config: LaunchConfiguration) async throws {
-        Logger.helper.trace("Launching VM: \(config.name, privacy: .public)")
+        Logger.helper.log("Launching VM: \(config.name, privacy: .public)")
 
         let virtualMachine = try await setupVirtualMachine(for: config)
         virtualMachine.delegate = self
@@ -104,25 +104,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func setupVirtualMachine(for launchConfiguration: LaunchConfiguration) async throws -> VZVirtualMachine {
-        let configuration = try await prepareBundle(named: launchConfiguration.name).virtualMachineConfiguration()
+        let configuration = try await prepareBundle(for: launchConfiguration).virtualMachineConfiguration()
         configuration.directorySharingDevices = [launchConfiguration.sharedDirectoryConfiguration]
 
         try configuration.validate()
         return VZVirtualMachine(configuration: configuration)
     }
 
-    func prepareBundle(named name: String) async throws -> VMBundle {
-        if try await vmManager.hasLocalVM(name: name, state: .packaged) {
-            let tmpName = name + UUID().uuidString
-            try await vmManager.cloneVM(from: name, to: tmpName)
-            return try VMBundle.fromExistingBundle(at:  Paths.toAppleSiliconVM(named: tmpName))
+    func prepareBundle(for launchConfiguration: LaunchConfiguration) async throws -> VMBundle {
+        guard !launchConfiguration.persistent else {
+            return try VMBundle.fromExistingBundle(at: Paths.toAppleSiliconVM(named: launchConfiguration.name))
         }
 
-        if try await vmManager.hasLocalVM(name: name, state: .ready) {
-            return try VMBundle.fromExistingBundle(at: Paths.toAppleSiliconVM(named: name))
+        if try await vmManager.hasLocalVM(name: launchConfiguration.name, state: .packaged) {
+            Logger.helper.log("Using local packaged VM")
+            try await vmManager.cloneVM(from: launchConfiguration.name, to: launchConfiguration.handle)
+            return try VMBundle.fromExistingBundle(at: Paths.toWorkingAppleSiliconVM(named: launchConfiguration.handle))
         }
 
-        preconditionFailure("Unable to find bundle named \(name)")
+        if try await vmManager.hasLocalVM(name: launchConfiguration.name, state: .ready) {
+            Logger.helper.log("Using local unpackaged VM")
+            try await vmManager.cloneVM(from: launchConfiguration.name, to: launchConfiguration.handle)
+            return try VMBundle.fromExistingBundle(at: Paths.toWorkingAppleSiliconVM(named: launchConfiguration.handle))
+        }
+
+        preconditionFailure("Unable to find bundle named \(launchConfiguration.name)")
     }
 
 #endif
@@ -156,7 +162,10 @@ extension AppDelegate {
         Task {
             do {
                 switch action {
-                case .startVM: try await launchVM(withLaunchConfiguration: LaunchConfiguration(name: vmName, sharedPaths: [
+                case .startVM: try await launchVM(withLaunchConfiguration: LaunchConfiguration(
+                    name: vmName,
+                    handle: UUID().uuidString,
+                    sharedPaths: [
                     .init(source: URL(fileURLWithPath: "/Users/jkmassel/Downloads"))
                 ]))
                 case .stopVM: try await stopVM()

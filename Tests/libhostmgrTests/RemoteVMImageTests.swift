@@ -63,7 +63,7 @@ final class RemoteVMImageTests: XCTestCase {
 //    }
 //
 //    func testThatRemoteArm64PackagedImageFileNameIsCorrect() throws {
-//        XCTAssertEqual(RemoteVMImage.with(key: "xcode-12.5.1.vmpackage.aar").basename, "xcode-12.5.1")
+//        XCTAssertEqual(RemoteVMImage.with(key: "xcode-12.5.1.vmtemplate.aar").basename, "xcode-12.5.1")
 //    }
 //
 //    func testThatRemoteX64PackagedImageFileNameIsCorrect() throws {

@@ -1,6 +1,7 @@
 import Foundation
 import ConsoleKit
 import tinys3
+import OSLog
 
 public struct Console {
 
@@ -106,9 +107,11 @@ public class ProgressBar {
         case installation
     }
 
-    init(title: String, type: ProgressType) {
+    init(title: String, type: ProgressType, initialProgress: Progress) {
         self.title = title
         self.type = type
+
+        self.update(initialProgress)
     }
 
     public func update(_ progress: Progress) {
@@ -194,22 +197,49 @@ public class ProgressBar {
 // MARK: Static Helpers
 extension Console {
 
+    public typealias ProgressUpdateCallback = (ProgressBar) async throws -> Void
+
     public static func startProgress(_ string: String, type: ProgressBar.ProgressType) -> ProgressBar {
-        ProgressBar(title: string, type: type)
+        ProgressBar(title: string, type: type, initialProgress: .discreteProgress(totalUnitCount: 0))
     }
 
-    public static func startImageDownload(_ image: any RemoteVMImage) -> ProgressBar {
+    public static func startImageDownload(_ image: any RemoteVMImage, _ callback: ProgressUpdateCallback) async rethrows {
         let size = Format.fileBytes(image.size)
-        return ProgressBar(title: "Downloading \(image.fileName) (\(size))", type: .download)
+        let bar = ProgressBar(
+            title: "Downloading \(image.fileName) (\(size))",
+            type: .download,
+            initialProgress: Progress.discreteProgress(totalUnitCount: Int64(image.size))
+        )
+        try await callback(bar)
+        bar.succeed()
+    }
+
+    public static func startImageUpload(_ path: URL) throws -> ProgressBar {
+        let rawSize = try FileManager.default.size(ofObjectAt: path)
+        let size = Format.fileBytes(rawSize)
+
+        return ProgressBar(
+            title: "Uploading \(path.lastPathComponent) (\(size))",
+            type: .upload,
+            initialProgress: Progress.discreteProgress(totalUnitCount: Int64(rawSize))
+        )
     }
 
     public static func startFileDownload(_ file: S3Object) -> ProgressBar {
         let size = Format.fileBytes(file.size)
-        return ProgressBar(title: "Downloading \(file.key) (\(size))", type: .download)
+        return ProgressBar(
+            title: "Downloading \(file.key) (\(size))",
+            type: .download,
+            initialProgress: Progress.discreteProgress(totalUnitCount: Int64(file.size))
+        )
     }
 
     public static func startFileDownload(_ url: URL) -> ProgressBar {
-        return ProgressBar(title: "Downloading \(url)", type: .download)
+        return ProgressBar(
+            title: "Downloading \(url)",
+            type: .download,
+            initialProgress: .discreteProgress(totalUnitCount: 0)
+        )
     }
 
     public static func startIndeterminateProgress(_ string: String) -> ActivityIndicator<CustomActivity> {
@@ -224,22 +254,27 @@ extension Console {
     }
 
     @discardableResult public static func success(_ message: String) -> Self {
+        Logger(OSLog.default).info("\(message)")
         return Console().success(message)
     }
 
     @discardableResult public static func error(_ message: String) -> Self {
+        Logger(OSLog.default).error("\(message)")
         return Console().error(message)
     }
 
     @discardableResult public static func warn(_ message: String) -> Self {
+        Logger(OSLog.default).warning("\(message)")
         return Console().warn(message)
     }
 
     @discardableResult public static func info(_ message: String) -> Self {
+        Logger(OSLog.default).info("\(message)")
         return Console().info(message)
     }
 
     @discardableResult public static func log(_ message: String) -> Self {
+        Logger(OSLog.default).info("\(message)")
         return Console().log(message)
     }
 
@@ -251,12 +286,15 @@ extension Console {
         return Console().printTable(data: data, columnTitles: columnTitles)
     }
 
-    public static func crash(message: String, reason error: ExitCode) -> Never {
-        Console().error(message)
-        Foundation.exit(error.rawValue)
+    public static func crash(_ error: HostmgrError) -> Never {
+        if let description = error.errorDescription {
+            Console.error(description)
+        }
+
+        Foundation.exit(error.exitCode)
     }
 
-    public static func exit(message: String = "", style: ConsoleStyle = .plain) -> Never {
+    public static func exit(_ message: String = "", style: ConsoleStyle = .plain) -> Never {
         Console().message(message, style: style)
         Foundation.exit(0)
     }

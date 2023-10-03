@@ -3,33 +3,38 @@ import XCTest
 
 final class LocalVMImageTests: XCTestCase {
 
-//    func testThatCompressedAppleSiliconImageIsDetectedAsArm64() {
-//        XCTAssertEqual(LocalVMImage(path: URL(fileURLWithPath: "/test.vmpackage.aar"))?.architecture, .arm64)
-//    }
-//
-//    func testThatCompressedIntelImageIsDetected() {
-//        XCTAssertEqual(LocalVMImage(path: URL(fileURLWithPath: "/test.pvmp.aar"))?.architecture, .x64)
-//    }
-//
-//    func testThatCompressedAppleSiliconImageWithoutVMPackageExtensionPrefixIsInvalid() {
-//        XCTAssertNil(LocalVMImage(path: URL(fileURLWithPath: "/test.aar")))
-//    }
-//
-//    func testThatPackagedAppleSiliconImageIsDetectedAsArm64() {
-//        XCTAssertEqual(LocalVMImage(path: URL(fileURLWithPath: "/test.vmtemplate"))?.architecture, .arm64)
-//    }
-//
-//    func testThatBundlesWithXcodeMinorVersionIsParsedCorrectly() {
-//        XCTAssertEqual(
-//            LocalVMImage(path: URL(fileURLWithPath: "/xcode-14.3.bundle"))?.basename,
-//            "xcode-14.3"
-//        )
-//    }
-//
-//    func testThatPackageWithXcodeMinorVersionIsParsedCorrectly() {
-//        XCTAssertEqual(
-//            LocalVMImage(path: URL(fileURLWithPath: "/xcode-14.3.vmpackage.aar"))?.basename,
-//            "xcode-14.3"
-//        )
-//    }
+    func testThatVMNameIsProperlyExtractedFromVersionNumber() throws {
+        let path = try XCTUnwrap(URL(filePath: "/opt/ci/vm-images/macos-13.5.1.bundle"))
+        XCTAssertEqual("macos-13.5.1", AppleSiliconVMImage(path: path)?.name)
+    }
+
+    func testThatVMNameIsProperlyExtractedFromVMTemplate() throws {
+        let path = try XCTUnwrap(URL(filePath: "/opt/ci/vm-images/macos-13.5.1.vmtemplate"))
+        XCTAssertEqual("macos-13.5.1", AppleSiliconVMImage(path: path)?.name)
+    }
+
+    func testThatCompressedAppleSiliconImageIsDetectedAsArm64() throws {
+        let path = try XCTUnwrap(URL(filePath: "/opt/ci/vm-images/macos-13.5.1.vmtemplate.aar"))
+        XCTAssertEqual("macos-13.5.1", AppleSiliconVMImage(path: path)?.name)
+    }
+
+    func testThatInvalidFileExtensionReturnsNil() throws {
+        let path = try XCTUnwrap(URL(filePath: "/opt/ci/vm-images/macos-13.5.1.vmbundle"))
+        XCTAssertNil(AppleSiliconVMImage(path: path))
+    }
+
+    func testThatPackagedImageReturnsCorrectState() throws {
+        let path = try XCTUnwrap(URL(filePath: "/opt/ci/vm-images/macos-13.5.1.vmtemplate.aar"))
+        XCTAssertEqual(AppleSiliconVMImage(path: path)?.state, .packaged)
+    }
+
+    func testThatVMTemplateReturnsCorrectState() throws {
+        let path = try XCTUnwrap(URL(filePath: "/opt/ci/vm-images/macos-13.5.1.vmtemplate"))
+        XCTAssertEqual(AppleSiliconVMImage(path: path)?.state, .ready)
+    }
+
+    func testThatVMReturnsCorrectState() throws {
+        let path = try XCTUnwrap(URL(filePath: "/opt/ci/vm-images/macos-13.5.1.bundle"))
+        XCTAssertEqual(AppleSiliconVMImage(path: path)?.state, .ready)
+    }
 }

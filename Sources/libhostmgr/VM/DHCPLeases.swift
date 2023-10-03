@@ -46,7 +46,7 @@ public struct DHCPLease {
     }
 
     var isExpired: Bool {
-        expirationDate < Date()
+        expirationDate > Date()
     }
 }
 

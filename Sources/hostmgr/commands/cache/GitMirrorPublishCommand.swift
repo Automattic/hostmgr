@@ -27,11 +27,11 @@ struct GitMirrorPublishCommand: AsyncParsableCommand {
         Console.info("Publishing the Git Mirror for \(gitMirror.url)")
 
         guard try gitMirror.existsLocally else {
-            Console.exit(message: "There is no local Git Mirror at \(gitMirror.localPath)", style: .error)
+            Console.exit("There is no local Git Mirror at \(gitMirror.localPath)", style: .error)
         }
 
         guard try await !server.hasFile(at: gitMirror.remoteFilename) else {
-            Console.exit(message: "Remote mirror already exists – exiting", style: .error)
+            Console.exit("Remote mirror already exists – exiting", style: .error)
         }
 
         Console.info("Compressing \(gitMirror.localPath)")

@@ -63,6 +63,10 @@ public struct S3Server: ReadWriteRemoteFileProvider, BytewiseRemoteFileProvider 
         try await !s3Client.listObjects(startingWith: path).isEmpty
     }
 
+    public func fileDetails(forPath path: String) async throws -> RemoteFile? {
+        try await s3Client.lookupObject(atPath: path)?.asFile
+    }
+
     var s3Client: S3Manager {
         get throws {
             try S3Manager(

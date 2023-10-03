@@ -5,6 +5,9 @@ public struct VMTemplate: TemplateBundle {
     let root: URL
 
     enum Errors: Error {
+        case vmDoesNotExist
+        case vmIsNotATemplate
+
         case invalidDiskImageHash
         case invalidAuxImageHash
         case missingConfigFile
@@ -26,12 +29,16 @@ public struct VMTemplate: TemplateBundle {
         }
     }
 
-    public init(named name: String) {
-        self.root = Paths.toVMTemplate(named: name)
+    init(at url: URL) {
+        self.root = url
     }
 
-    public init(at url: URL) {
-        self.root = url
+    var isCompressed: Bool {
+        self.root.absoluteString.hasSuffix(".vmtemplate.aar")
+    }
+
+    public var basename: String {
+        self.root.lastPathComponent
     }
 
     @discardableResult
@@ -39,28 +46,20 @@ public struct VMTemplate: TemplateBundle {
         let fileName = self.root.deletingPathExtension().lastPathComponent
         let destination = self.root.deletingLastPathComponent()
             .appendingPathComponent(fileName)
-            .appendingPathExtension("vmpackage")
+            .appendingPathExtension("vmtemplate")
             .appendingPathExtension("aar")
 
-        Console.info("Compressing VM Package")
         try Compressor.compress(directory: self.root, to: destination)
-        Console.success("Compression Complete")
 
         return self
     }
 
     func hashDiskImage() throws -> Data {
-        Console.info("Hashing Disk Image")
-        let hash: Data = try FileHasher.hash(fileAt: self.diskImageFilePath)
-        Console.success("Hashing Disk Image Complete")
-        return hash
+        try FileHasher.hash(fileAt: self.diskImageFilePath)
     }
 
     func hashAuxData() throws -> Data {
-        Console.info("Hashing Aux Data")
-        let hash: Data = try FileHasher.hash(fileAt: self.auxImageFilePath)
-        Console.success("Hashing Aux Data Complete")
-        return hash
+        try FileHasher.hash(fileAt: self.auxImageFilePath)
     }
 
     /// Validate this VM template by:
@@ -137,6 +136,26 @@ public struct VMTemplate: TemplateBundle {
         ).write(to: template.manifestFilePath)
 
         return try template.applyBundleBit()
+    }
+
+    public static func existingTemplate(named name: String) throws -> VMTemplate {
+
+        let vmArchivePath = Paths.toArchivedVM(named: name)
+        let vmTemplatePath = Paths.toVMTemplate(named: name)
+
+        if FileManager.default.fileExists(at: vmArchivePath) {
+            return VMTemplate(at: vmArchivePath)
+        }
+
+        if try FileManager.default.directoryExists(at: vmTemplatePath) {
+            return VMTemplate(at: vmTemplatePath)
+        }
+
+        if try FileManager.default.directoryExists(at: Paths.toAppleSiliconVM(named: name)) {
+            throw Errors.vmIsNotATemplate
+        }
+
+        throw Errors.vmDoesNotExist
     }
 
     func applyBundleBit() throws -> Self {

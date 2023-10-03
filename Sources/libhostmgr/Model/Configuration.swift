@@ -48,6 +48,9 @@ public struct Configuration: Codable {
     public var allowAWSAcceleratedTransfer: Bool! = Defaults.defaultAWSAcceleratedTransferAllowed
     public var awsConfigurationMethod: AWSConfigurationType! = Defaults.defaultAWSConfigurationMethod
 
+    /// VM Memory Settings
+    public var hostReservedRAM = 1024 * 1024 * 4096 // Leave 4GB for the VM host
+
     enum CodingKeys: String, CodingKey {
         case version
 
@@ -114,11 +117,7 @@ public extension Configuration {
 
     static var shared: Configuration {
         get {
-            do {
-                return try ConfigurationRepository.getConfiguration()
-            } catch {
-                Console.crash(message: error.localizedDescription, reason: .fileNotFound)
-            }
+            try! ConfigurationRepository.getConfiguration()
         }
     }
 

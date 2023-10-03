@@ -3,7 +3,6 @@ import Network
 import prlctl
 
 public struct ParallelsVMManager: VMManager {
-
     public typealias VM = ParallelsVMImage
 
     private let parallels: Parallels
@@ -12,17 +11,24 @@ public struct ParallelsVMManager: VMManager {
         self.parallels = parallels
     }
 
-    public func startVM(name: String) async throws {
+    public func startVM(configuration: LaunchConfiguration) async throws {
         try createWorkingDirectoriesIfNeeded()
-        try await self.parallels.startVM(withHandle: name, wait: true)
+
+        try await ensureLocalVMExists(named: configuration.name)
+
+        guard !configuration.persistent else {
+            try await self.parallels.startVM(withHandle: configuration.name)
+            return
+        }
+
+        let tempName = configuration.name + "-" + UUID().uuidString
+        try await cloneVM(from: configuration.name, to: tempName)
+        try await self.parallels.startVM(withHandle: tempName, wait: true)
     }
 
     public func stopVM(name: String) async throws {
         guard try await parallels.lookupVM(named: name)?.isRunningVM == true else {
-            Console.exit(
-                message: "\(name) is not running, so it can't be stopped",
-                style: .warning
-            )
+            Console.exit("\(name) is not running, so it can't be stopped", style: .warning)
         }
 
         Console.info("Shutting down \(name)")
@@ -63,41 +69,39 @@ public struct ParallelsVMManager: VMManager {
             .appendingPathComponent(source)
             .appendingPathExtension(".pvm")
 
-        let destinationFilePath = FileManager.default.temporaryFilePath(named: destination + ".tmp.pvm")
+        let destinationFilePath = Paths.toWorkingParallelsVM(named: destination)
         try FileManager.default.removeItemIfExists(at: destinationFilePath)
         try FileManager.default.copyItem(at: sourcePath, to: destinationFilePath)
         Console.info("Created temporary VM at \(destinationFilePath)")
 
         guard let parallelsVM = try await self.parallels.importVM(at: destinationFilePath)?.asStoppedVM() else {
-            Console.crash(message: "Unable to import VM: \(destination)", reason: .unableToImportVM)
+            throw HostmgrError.unableToImportVM(destination)
         }
 
         Console.success("Successfully Imported \(parallelsVM.name) with UUID \(parallelsVM.uuid)")
-
-        try await applyVMSettings([
-            .memorySize(Int(ProcessInfo().physicalMemory / 1024 / 1024) - 4096),  // We should make this configurable
-            .cpuCount(ProcessInfo().physicalProcessorCount),
-            .hypervisorType(.apple),
-            .networkType(.shared),
-            .isolateVM(.on),
-            .sharedCamera(.off)
-        ], toVMWithName: destination)
-    }
-
-    public func applyVMSettings(_ settings: [VMOption], toVMWithName name: String) async throws {
-        Console.info("Applying VM Settings")
-
-        // Always leave 4GB available to the VM host – the VM can have the rest
-        let dedicatedMemoryForVM = ProcessInfo().physicalMemory - (4096 * 1024 * 1024) // We should make this configurable
-        let cpuCoreCount = ProcessInfo().physicalProcessorCount
 
         Console.printTable(data: [
             ["Total System Memory", Format.memoryBytes(ProcessInfo().physicalMemory)],
             ["VM System Memory", Format.memoryBytes(dedicatedMemoryForVM)],
             ["VM CPU Cores", "\(cpuCoreCount)"],
-            ["Hypervisor Type", "apple"],
-            ["Networking Type", "bridged"]
+            ["Hypervisor Type", hypervisorType.rawValue],
+            ["Networking Type", networkType.rawValue],
+            ["VM Isolation", vmIsolation.rawValue],
+            ["Camera Sharing", cameraSharing.rawValue]
         ])
+
+        try await applyVMSettings([
+            .memorySize(dedicatedMemoryForVM),
+            .cpuCount(cpuCoreCount),
+            .hypervisorType(hypervisorType),
+            .networkType(networkType),
+            .isolateVM(vmIsolation),
+            .sharedCamera(cameraSharing)
+        ], toVMWithName: destination)
+    }
+
+    public func applyVMSettings(_ settings: [VMOption], toVMWithName name: String) async throws {
+        Console.info("Applying VM Settings")
 
         for setting in settings {
             try await self.parallels.setVMOption(setting, onVirtualMachineWithHandle: name)
@@ -118,11 +122,11 @@ public struct ParallelsVMManager: VMManager {
         let path = pathToPackagedVM(named: name)
 
         guard let importedVirtualMachine = try await self.parallels.importVM(at: path) else {
-            Console.crash(message: "Unable to import VM at: \(path)", reason: .unableToImportVM)
+            throw HostmgrError.unableToImportVM(name)
         }
 
         guard importedVirtualMachine.status == .packaged, let package = importedVirtualMachine.asPackagedVM() else {
-            Console.crash(message: "VM \(name) is not a packaged VM", reason: .invalidVMStatus)
+            throw HostmgrError.vmIsNotPackaged(name)
         }
 
         let vmUUID = importedVirtualMachine.uuid
@@ -157,21 +161,35 @@ public struct ParallelsVMManager: VMManager {
 
     public func ipAddress(forVmWithName name: String) async throws -> IPv4Address {
         guard let virtualMachine = try await self.parallels.lookupVM(named: name) else {
-            Console.crash(message: "There is no local VM named \(name)", reason: .fileNotFound)
+            throw HostmgrError.localVMNotFound(name)
         }
 
         guard let runningVM = virtualMachine.asRunningVM() else {
-            Console.crash(message: "There is no running VM named \(name)", reason: .invalidVMStatus)
+            throw HostmgrError.vmIsNotRunning(name)
         }
 
         let rawAddress = runningVM.ipAddress
 
         guard let address = IPv4Address(rawAddress) else {
-            Console.crash(message: "VM \(name) has an invalid IP address", reason: .invalidVMStatus)
+            throw HostmgrError.vmHasInvalidIpAddress(name)
         }
 
         return address
     }
+
+    public func vmTemplateName(forVmWithName: String) async throws -> String? {
+        nil
+    }
+
+    var dedicatedMemoryForVM: Int {
+        Int(ProcessInfo().physicalMemory) - Configuration.shared.hostReservedRAM // We should make this configurable
+    }
+
+    let cpuCoreCount: Int = ProcessInfo.processInfo.physicalProcessorCount
+    let hypervisorType: HypervisorType = .apple
+    let networkType: NetworkType = .shared
+    let vmIsolation: State = .on
+    let cameraSharing: State = .off
 }
 
 // MARK: On-Disk Storage
@@ -179,7 +197,7 @@ extension ParallelsVMManager {
 
     func removeTempVM(name: String) async throws {
         guard let path = try lookupTempVM(name: name)?.path else {
-            Console.crash(message: "There is no VM named \(name)", reason: .fileNotFound)
+            throw HostmgrError.localVMNotFound(name)
         }
 
         Console.info("Removing temp VM file for \(name)")

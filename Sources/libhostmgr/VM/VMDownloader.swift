@@ -4,8 +4,6 @@ import Virtualization
 #if arch(arm64)
 public struct VMDownloader {
 
-    public typealias ProgressCallback = (Progress) -> Void
-
     public static func fetchLatestRestoreImage() async throws -> VZMacOSRestoreImage {
         Console.info("Fetching latest restore image")
         return try await withCheckedThrowingContinuation {
