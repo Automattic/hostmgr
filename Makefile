@@ -10,7 +10,7 @@ lintfix:
 
 build:
 	@echo "--- Building Release"
-	swift build -c release --arch arm64 --arch x86_64
+	swift build -c release --arch arm64
 
 	mkdir -p .build/artifacts/release
 	cp .build/apple/Products/Release/hostmgr .build/artifacts/release/hostmgr

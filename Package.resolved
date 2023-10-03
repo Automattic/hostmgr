@@ -19,24 +19,6 @@
       }
     },
     {
-      "identity" : "prlctl",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/jkmassel/prlctl.git",
-      "state" : {
-        "revision" : "98cc09b34d3645a30f2a94b7d0c4741780daf81c",
-        "version" : "1.23.0"
-      }
-    },
-    {
-      "identity" : "shellout",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/JohnSundell/ShellOut",
-      "state" : {
-        "revision" : "e1577acf2b6e90086d01a6d5e2b8efdaae033568",
-        "version" : "2.3.0"
-      }
-    },
-    {
       "identity" : "swift-argument-parser",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-argument-parser",

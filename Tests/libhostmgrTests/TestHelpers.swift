@@ -4,38 +4,6 @@ import Virtualization
 @testable import libhostmgr
 @testable import tinys3
 
-extension ParallelsVMImage {
-    static func with(
-        key: String,
-        size: Int = Int.random(in: 0...Int.max),
-        checksumKey: String = UUID().uuidString
-    ) -> ParallelsVMImage? {
-        let image = S3Object(key: key, size: size, eTag: "", lastModifiedAt: Date.distantPast, storageClass: "")
-        let checksum = S3Object(
-            key: checksumKey,
-            size: 64,
-            eTag: "",
-            lastModifiedAt: Date.distantPast,
-            storageClass: ""
-        )
-
-        return ParallelsVMImage.with(
-            imageObject: image,
-            checksumObject: checksum
-        )
-    }
-
-    static func with(imageObject: S3Object, checksumObject: S3Object) -> ParallelsVMImage? {
-        ParallelsVMImage(path: URL(fileURLWithPath: imageObject.key))
-    }
-}
-
-// extension LocalVMImage {
-//    static func with(path: String) -> any LocalVMImage? {
-//        LocalVMImage(path: URL(fileURLWithPath: path))
-//    }
-// }
-
 extension S3Object {
     static func with(
         key: String,

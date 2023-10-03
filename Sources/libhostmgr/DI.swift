@@ -1,21 +1,11 @@
 import Foundation
-import prlctl
 
 public class DIContainer {
 
-    #if arch(arm64)
     private static var dependencies: [String: Any] = [
         "VMManager": AppleSiliconVMManager(),
         "RemoteVMLibrary": AppleSiliconVMLibrary()
     ]
-    #else
-    private static let parallels = Parallels()
-    private static var dependencies: [String: Any] = [
-        "VMManager": ParallelsVMManager(parallels: parallels),
-        "Parallels": parallels,
-        "RemoteVMLibrary": ParallelsVMLibrary()
-    ]
-    #endif
 
     public static func resolve<Service>(_ type: Service.Type) -> Service {
         let serviceName = String(describing: type.self)
