@@ -1,5 +1,6 @@
 import Foundation
 import prlctl
+import ShellOut
 
 /// Downloads and registers an image by name
 ///
@@ -106,6 +107,8 @@ public func resetVMStorage() throws {
         Console.info("Removing temp VM file for \(localVM.filename)")
         try repository.delete(image: localVM)
     }
+
+    try unregisterInvalidVMs()
 
     try ParallelsVMRepository().lookupVMs().forEach { parallelsVM in
         Console.info("Removing Registered VM \(parallelsVM.name)")
@@ -309,4 +312,16 @@ func applyVMSettings(_ settings: [StoppedVM.VMOption], to parallelsVM: StoppedVM
     } catch {
         Console.warn("Unable to remove device: \(error.localizedDescription)")
     }
+}
+
+func unregisterInvalidVMs() throws {
+    let invalidVMs = try ParallelsVMRepository().lookupInvalidVMs()
+    guard !invalidVMs.isEmpty else { return }
+
+    Console.info("Found \(invalidVMs.count) invalid VMs")
+    Console.info("Killing running virtual machines")
+    // The command failure is ignored because there may not be any running VM.
+    _ = try? shellOut(to: "pkill", arguments: ["-9", "-f", #"Parallels VM\.app/Contents/MacOS/prl_vm_app"#])
+    Console.info("Unregistering invalid VMs")
+    try invalidVMs.forEach { try $0.unregister() }
 }
