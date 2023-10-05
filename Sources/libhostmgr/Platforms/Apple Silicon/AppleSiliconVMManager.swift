@@ -2,22 +2,24 @@ import Foundation
 import Network
 import Virtualization
 
-#if arch(arm64)
-struct AppleSiliconVMManager: VMManager {
+struct AppleSiliconVMManager: VMManager {    
     typealias VM = AppleSiliconVMImage
+
+    let vmUsageTracker = VMUsageTracker()
 
     func startVM(configuration: LaunchConfiguration) async throws {
         try createWorkingDirectoriesIfNeeded()
         try await ensureLocalVMExists(named: configuration.name)
+        try await vmUsageTracker.trackUsageOf(vm: configuration.name)
         try await XPCService.startVM(withLaunchConfiguration: configuration)
     }
 
-    func stopVM(name: String) async throws {
-        try await XPCService.stopVM()
+    func stopVM(handle: String) async throws {
+        try await XPCService.stopVM(handle: handle)
     }
 
     func stopAllRunningVMs() async throws {
-        try await XPCService.stopVM()
+        try await XPCService.stopAllVMs()
     }
 
     func removeVM(name: String) async throws {
@@ -52,9 +54,16 @@ struct AppleSiliconVMManager: VMManager {
             to: Paths.toAppleSiliconVM(named: destination)
         )
 
-        #if arch(arm64)
         try VMBundle.renamingClonedBundle(at: Paths.toAppleSiliconVM(named: destination), to: destination)
-        #endif
+    }
+
+    func cloneVM(for launchConfiguration: LaunchConfiguration) async throws {
+        try FileManager.default.copyItem(
+            at: try launchConfiguration.vmSourcePath,
+            to: launchConfiguration.destinationPath
+        )
+
+        try VMBundle.renamingClonedBundle(at: launchConfiguration.destinationPath, to: launchConfiguration.handle)
     }
 
     func waitForVMStartup(name: String) async throws {
@@ -78,8 +87,14 @@ struct AppleSiliconVMManager: VMManager {
         #endif
     }
 
-    func purgeUnusedImages() async throws {
-        // Not yet implemented
+    func getVMImages(unusedSince cutoff: Date) async throws -> [VMUsageAggregate] {
+        try await getVMUsageStats()
+            .grouped()
+            .unused(since: cutoff)
+    }
+
+    func getVMUsageStats() async throws -> [VMUsageRecord] {
+        try await vmUsageTracker.usageStats()
     }
 
     func vmTemplateName(forVmWithName name: String) async throws -> String? {
@@ -114,4 +129,3 @@ struct AppleSiliconVMManager: VMManager {
         }
     }
 }
-#endif

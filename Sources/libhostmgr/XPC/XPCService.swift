@@ -1,40 +1,9 @@
 import Foundation
 
 @objc
-public class XPCService: NSObject, HostmgrXPCProtocol {
+public class XPCService: NSObject {
     enum Errors: Error {
         case unableToCreateRemoteObjectProxy
-    }
-
-    private let delegate: XPCServiceDelegate
-
-    public init(delegate: XPCServiceDelegate) {
-        self.delegate = delegate
-    }
-
-    /// This method should never be called directly – it's the entry point into the `startVM` command
-    /// when called via XPC.
-    public func startVM(withLaunchConfiguration config: String, reply: @escaping (Error?) -> Void) {
-        Task {
-            do {
-                try await self.delegate.service(withLaunchConfiguration: .from(string: config))
-                reply(nil)
-            } catch {
-                reply(error)
-            }
-        }
-    }
-
-    /// This method should never be called directly – it's the entry point into the `stopVM` command when called via XPC
-    public func stopVM(reply: @escaping (Error?) -> Void) {
-        Task {
-            do {
-                try await self.delegate.serviceShouldStopVM()
-                reply(nil)
-            } catch {
-                reply(error)
-            }
-        }
     }
 
     /// The XPC service name – you must use this same string in your `LaunchAgent.plist` file's `MachServices` key
@@ -67,11 +36,19 @@ extension XPCService {
     }
 
     /// Send a message to the XPC service running on the local machine, asking it to stop the running virtual machine.
-    public static func stopVM() async throws {
+    public static func stopVM(handle: String) async throws {
         let protocolObject = try getProtocolObject()
 
         try await withCheckedThrowingContinuation { continuation in
-            protocolObject.stopVM { handle(error: $0, for: continuation) }
+            protocolObject.stopVM(withHandle: handle) { self.handle(error: $0, for: continuation) }
+        }
+    }
+
+    public static func stopAllVMs() async throws {
+        let protocolObject = try getProtocolObject()
+
+        try await withCheckedThrowingContinuation { continuation in
+            protocolObject.stopAllVMs { self.handle(error: $0, for: continuation) }
         }
     }
 

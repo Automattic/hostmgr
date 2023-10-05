@@ -2,7 +2,7 @@ import Foundation
 import ArgumentParser
 import libhostmgr
 
-struct VMPublish: AsyncParsableCommand {
+struct VMPublishCommand: AsyncParsableCommand {
 
     static let configuration = CommandConfiguration(
         commandName: "publish",

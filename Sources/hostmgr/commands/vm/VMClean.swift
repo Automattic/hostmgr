@@ -6,7 +6,7 @@ struct VMCleanCommand: AsyncParsableCommand {
 
     static let configuration = CommandConfiguration(
         commandName: "clean",
-        abstract: "Clean up the VM environment prior to running another job"
+        abstract: "Remove VMs that haven't been used recently"
     )
 
     @DIInjected
@@ -15,9 +15,21 @@ struct VMCleanCommand: AsyncParsableCommand {
     enum CodingKeys: CodingKey {}
 
     func run() async throws {
-        try await vmManager.resetVMWorkingDirectory()
+        let cutoff = Date(timeIntervalSinceNow: 90 * 24 * 60 * 60 * -1) // 90 days
 
-        // Clean up no-longer-needed local images
-        try await vmManager.purgeUnusedImages()
+        let unusedImages = try await vmManager.getVMImages(unusedSince: cutoff)
+
+        if unusedImages.isEmpty {
+            Console.exit("No VMs to clean", style: .success)
+        }
+
+        Console.info("Removing VMs not used since \(Format.date(cutoff, style: .short))")
+
+        for image in unusedImages {
+            try await vmManager.removeVM(name: image.vm)
+            Console.success("Removed \(image.vm)")
+        }
+
+        Console.success("Finished cleaning VMs")
     }
 }

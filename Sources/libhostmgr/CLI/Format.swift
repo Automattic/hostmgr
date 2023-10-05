@@ -76,6 +76,10 @@ public struct Format {
         return formatter.string(from: Date(), to: Date() + interval) ?? "a while"
     }
 
+    public static func date(_ date: Date, style: DateFormatter.Style) -> String {
+        DateFormatter.localizedString(from: date, dateStyle: style, timeStyle: .none)
+    }
+
     public static func percentage(_ number: Decimal) -> String {
         return percentage(NSDecimalNumber(decimal: number))
     }

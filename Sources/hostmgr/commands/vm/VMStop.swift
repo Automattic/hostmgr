@@ -39,6 +39,6 @@ struct VMStopCommand: AsyncParsableCommand {
             throw CleanExit.helpRequest()
         }
 
-        try await vmManager.stopVM(name: identifier)
+        try await vmManager.stopVM(handle: identifier)
     }
 }

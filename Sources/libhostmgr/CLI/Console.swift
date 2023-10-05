@@ -282,8 +282,8 @@ extension Console {
         return Console().printList(list, title: title)
     }
 
-    @discardableResult public static func printTable(data: Table, columnTitles: [String] = []) -> Self {
-        return Console().printTable(data: data, columnTitles: columnTitles)
+    @discardableResult public static func printTable(data: TableConvertable, columnTitles: [String] = []) -> Self {
+        return Console().printTable(data: data.asTable(), columnTitles: columnTitles)
     }
 
     public static func crash(_ error: HostmgrError) -> Never {
@@ -333,4 +333,14 @@ extension Console {
 
 public extension ProgressKind {
     static let installation = ProgressKind(rawValue: "installation")
+}
+
+public protocol TableConvertable {
+    func asTable() -> Console.Table
+}
+
+extension Console.Table: TableConvertable {
+    public func asTable() -> Console.Table {
+        return self
+    }
 }

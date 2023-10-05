@@ -74,6 +74,8 @@ public struct Paths {
             .appendingPathComponent(storageDirectoryIdentifier)
     }
 
+    public static var vmUsageFile = stateRoot.appending(path: "vm-usage")
+
     public static func toAppleSiliconVM(named name: String) -> URL {
         Paths.vmImageStorageDirectory.appendingPathComponent(name).appendingPathExtension("bundle")
     }

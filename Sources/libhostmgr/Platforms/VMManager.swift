@@ -13,7 +13,7 @@ public protocol VMManager {
 
     /// Immediately terminate a VM
     /// 
-    func stopVM(name: String) async throws
+    func stopVM(handle: String) async throws
 
     /// Immediately terminates all running VMs
     func stopAllRunningVMs() async throws
@@ -47,6 +47,12 @@ public protocol VMManager {
     ///   - to: The name of the resulting VM
     func cloneVM(from: String, to: String) async throws
 
+    /// Copy a VM template to a temporary location, making the VM ready for use
+    ///
+    /// - Parameters:
+    ///   - launchConfiguration: The launch configuration for the bundle, which will determine how it should be set up
+    func cloneVM(for launchConfiguration: LaunchConfiguration) async throws
+
     /// Wait for the VM with the given name to finish starting up
     ///
     func waitForVMStartup(name: String) async throws
@@ -54,24 +60,27 @@ public protocol VMManager {
     /// Get details about a VM
     func ipAddress(forVmWithName: String) async throws -> IPv4Address
 
-    /// Free up disk space by removing unused images
-    func purgeUnusedImages() async throws
-
     /// Find the template for a given VM name
     func vmTemplateName(forVmWithName: String) async throws -> String?
+
+    /// Retrieve VMs that haven't been used since the given Date
+    func getVMImages(unusedSince: Date) async throws -> [VMUsageAggregate]
+
+    /// Retrieve usage stats for VMs
+    func getVMUsageStats() async throws -> [VMUsageRecord]
 }
 
-extension VMManager {
+public extension VMManager {
 
-    public func list(sortedBy strategy: LocalVMImageSortingStrategy = .name) async throws -> [any LocalVMImage] {
+    func list(sortedBy strategy: LocalVMImageSortingStrategy = .name) async throws -> [any LocalVMImage] {
         try (lookupVMImages() + lookupTempVMs()).sorted(by: strategy.sortMethod)
     }
 
-    public func hasLocalVM(name: String, state: VMImageState) async throws -> Bool {
+    func hasLocalVM(name: String, state: VMImageState) async throws -> Bool {
         try lookupVMImages().contains { $0.name == name && $0.state == state }
     }
 
-    public func hasTempVM(named name: String) async throws -> Bool {
+    func hasTempVM(named name: String) async throws -> Bool {
         try lookupTempVMs().contains { $0.name == name }
     }
 

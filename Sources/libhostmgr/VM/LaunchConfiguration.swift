@@ -58,6 +58,20 @@ public struct LaunchConfiguration: Codable {
         }
     }
 
+    var vmSourcePath: URL {
+        get throws {
+            try Paths.resolveVM(withNameOrHandle: self.name)
+        }
+    }
+
+    var destinationPath: URL {
+        if self.persistent {
+            return Paths.toAppleSiliconVM(named: self.handle)
+        } else {
+            return Paths.toWorkingAppleSiliconVM(named: self.handle)
+        }
+    }
+
     func toJSON() throws -> String {
         let data = try JSONEncoder().encode(self)
         guard let jsonString = String(bytes: data, encoding: .utf8) else {
