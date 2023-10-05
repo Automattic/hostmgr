@@ -38,18 +38,20 @@ struct VMStartCommand: AsyncParsableCommand {
     var vmManager: any VMManager
 
     func run() async throws {
-        try await vmManager.resetVMWorkingDirectory()
+        do {
+            try await vmManager.startVM(configuration: LaunchConfiguration(
+                name: self.name,
+                handle: self.handle,
+                persistent: self.persistent,
+                sharedPaths: self.sharedPaths
+            ))
 
-        try await vmManager.startVM(configuration: LaunchConfiguration(
-            name: self.name,
-            handle: self.handle,
-            persistent: self.persistent,
-            sharedPaths: self.sharedPaths
-        ))
+            try await vmManager.waitForVMStartup(name: name)
 
-        try await vmManager.waitForVMStartup(name: name)
-
-        Console.success("Booted \(name) in \(Format.elapsedTime(between: startTime, and: .now))")
+            Console.success("Booted \(name) in \(Format.elapsedTime(between: startTime, and: .now))")
+        } catch let error as HostmgrXPCError {
+            Console.crash(error)
+        }
     }
 
     var sharedPaths: [LaunchConfiguration.SharedPath] {

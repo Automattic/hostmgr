@@ -9,6 +9,7 @@ struct VMCommand: AsyncParsableCommand {
         subcommands: [
             VMCleanCommand.self,
             VMCloneCommand.self,
+            VMConnectCommand.self,
             VMCreateCommand.self,
             VMDetailsCommand.self,
             VMExistsCommand.self,

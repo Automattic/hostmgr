@@ -1,7 +1,7 @@
 import Foundation
 
 @objc
-public class XPCService: NSObject {
+public class HostmgrXPCService: NSObject {
     enum Errors: Error {
         case unableToCreateRemoteObjectProxy
     }
@@ -24,7 +24,7 @@ public class XPCService: NSObject {
 }
 
 // MARK: – Public Call Sites
-extension XPCService {
+extension HostmgrXPCService {
     /// Send a message to the XPC service running on the local machine, asking it to start the `named` virtual machine.
     public static func startVM(withLaunchConfiguration config: LaunchConfiguration) async throws {
         let protocolObject = try getProtocolObject()
@@ -53,9 +53,9 @@ extension XPCService {
     }
 
     /// A DRY helper around processing XPC errors with Swift Concurrency
-    private static func handle(error: Error?, for continuation: CheckedContinuation<Void, Error>) {
+    private static func handle(error: String?, for continuation: CheckedContinuation<Void, Error>) {
         if let error {
-            continuation.resume(throwing: error)
+            continuation.resume(throwing: HostmgrXPCError(error))
             return
         }
 

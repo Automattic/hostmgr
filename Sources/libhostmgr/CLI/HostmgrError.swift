@@ -1,8 +1,9 @@
 import Foundation
 
-public enum HostmgrError: Error {
+public enum HostmgrError: Error, LocalizedError {
     case missingConfigurationFile(URL)
     case localVMNotFound(String)
+    case workingVMAlreadyExists(String)
     case unableToFindRemoteImage(String)
     case unableToImportVM(String)
     case invalidVMStatus(URL)
@@ -25,6 +26,8 @@ public enum HostmgrError: Error {
             return "No configuration file found. Create one at \(path.path)"
         case .localVMNotFound(let name):
             return "There is no local VM named \(name)"
+        case .workingVMAlreadyExists(let handle):
+            return "There is already a working VM called \(handle)"
         case .unableToFindRemoteImage(let name):
             return "Unable to find remote image: \(name)"
         case .unableToImportVM(let name):
@@ -58,6 +61,14 @@ public enum HostmgrError: Error {
         case .helperIsMissing(let path):
             return "`hostmgr-helper` is missing – please reinstall `hostmgr` (should be at \(path))"
         }
+    }
+
+    var description: String {
+        self.errorDescription ?? "foo"
+    }
+
+    var localizedDescription: String {
+        self.errorDescription ?? ""
     }
 
     public var exitCode: Int32 {

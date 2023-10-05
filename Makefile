@@ -8,13 +8,17 @@ lint:
 lintfix:
 	docker run -it --rm -v `pwd`:`pwd` -w `pwd` ghcr.io/realm/swiftlint:0.50.0 swiftlint --autocorrect
 
+clean:
+	rm -rf .build
+
 build:
 	@echo "--- Building Release"
 	swift build -c release --arch arm64
 
+	rm -rf .build/artifacts/release
 	mkdir -p .build/artifacts/release
-	cp .build/apple/Products/Release/hostmgr .build/artifacts/release/hostmgr
-	cp .build/apple/Products/Release/hostmgr-helper .build/artifacts/release/hostmgr-helper
+	cp .build/arm64-apple-macosx/release/hostmgr .build/artifacts/release/hostmgr
+	cp .build/arm64-apple-macosx/release/hostmgr-helper .build/artifacts/release/hostmgr-helper
 
 	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API (886NX39KP6)" .build/artifacts/release/hostmgr --force --verbose
 	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API (886NX39KP6)" .build/artifacts/release/hostmgr-helper --force --verbose
@@ -48,7 +52,7 @@ build-helper-debug:
 	swift build
 	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API" .build/arm64-apple-macosx/debug/hostmgr-helper -v
 
-run-helper-debug: build-helper-debug
+run-helper-debug: build-debug build-helper-debug
 	./.build/arm64-apple-macosx/debug/hostmgr-helper --debug true
 
 reload-helper-debug: build-helper-debug

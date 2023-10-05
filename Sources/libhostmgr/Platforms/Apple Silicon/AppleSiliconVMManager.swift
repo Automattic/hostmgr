@@ -11,15 +11,16 @@ struct AppleSiliconVMManager: VMManager {
         try createWorkingDirectoriesIfNeeded()
         try await ensureLocalVMExists(named: configuration.name)
         try await vmUsageTracker.trackUsageOf(vm: configuration.name)
-        try await XPCService.startVM(withLaunchConfiguration: configuration)
+        try await HostmgrXPCService.startVM(withLaunchConfiguration: configuration)
     }
 
     func stopVM(handle: String) async throws {
-        try await XPCService.stopVM(handle: handle)
+        try await HostmgrXPCService.stopVM(handle: handle)
+        try FileManager.default.removeItemIfExists(at: Paths.toWorkingAppleSiliconVM(named: handle))
     }
 
     func stopAllRunningVMs() async throws {
-        try await XPCService.stopAllVMs()
+        try await HostmgrXPCService.stopAllVMs()
     }
 
     func removeVM(name: String) async throws {
@@ -43,7 +44,7 @@ struct AppleSiliconVMManager: VMManager {
         )
     }
 
-    func resetVMWorkingDirectory() async throws {
+    func resetVMWorkingDirectory() throws {
         try FileManager.default.removeItemIfExists(at: Paths.vmWorkingStorageDirectory)
         try FileManager.default.createDirectory(at: Paths.vmWorkingStorageDirectory, withIntermediateDirectories: true)
     }
@@ -58,6 +59,11 @@ struct AppleSiliconVMManager: VMManager {
     }
 
     func cloneVM(for launchConfiguration: LaunchConfiguration) async throws {
+
+        if try FileManager.default.directoryExists(at: launchConfiguration.destinationPath) {
+            throw HostmgrError.workingVMAlreadyExists(launchConfiguration.handle)
+        }
+
         try FileManager.default.copyItem(
             at: try launchConfiguration.vmSourcePath,
             to: launchConfiguration.destinationPath
@@ -74,17 +80,12 @@ struct AppleSiliconVMManager: VMManager {
     }
 
     func ipAddress(forVmWithName name: String) async throws -> IPv4Address {
-        #if arch(arm64)
         let vmBundlePath = try Paths.resolveVM(withNameOrHandle: name)
         let vmBundle = try VMBundle.fromExistingBundle(at: vmBundlePath)
 
         return try await Task.retrying(times: 5) {
             return try DHCPLease.mostRecentLease(forMACaddress: vmBundle.macAddress).ipAddress
         }.value
-
-        #else
-        preconditionFailure("Only use AppleSiliconVMManager on Apple Silicon hardware")
-        #endif
     }
 
     func getVMImages(unusedSince cutoff: Date) async throws -> [VMUsageAggregate] {

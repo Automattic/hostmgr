@@ -38,7 +38,7 @@ public protocol VMManager {
     ///
     /// This helps the node to be resilient against errors in the VM – if there's some consistent failure that prevents cleanup, we
     /// can ensure that the disk won't fill up.
-    func resetVMWorkingDirectory() async throws
+    func resetVMWorkingDirectory() throws
 
     /// Copy a VM template to a temporary location, making the VM ready for use
     ///
@@ -97,8 +97,13 @@ public extension VMManager {
     }
 
     func createWorkingDirectoriesIfNeeded() throws {
-        try FileManager.default.createDirectory(at: Paths.vmImageStorageDirectory, withIntermediateDirectories: true)
-        try FileManager.default.createDirectory(at: Paths.vmWorkingStorageDirectory, withIntermediateDirectories: true)
+        if try !FileManager.default.directoryExists(at: Paths.vmImageStorageDirectory) {
+            try FileManager.default.createDirectory(at: Paths.vmImageStorageDirectory, withIntermediateDirectories: true)
+        }
+
+        if try !FileManager.default.directoryExists(at: Paths.vmWorkingStorageDirectory) {
+            try FileManager.default.createDirectory(at: Paths.vmWorkingStorageDirectory, withIntermediateDirectories: true)
+        }
     }
 
     private func resolveVMs(_ paths: [URL]) -> [VM] {

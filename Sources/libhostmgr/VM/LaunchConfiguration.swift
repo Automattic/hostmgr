@@ -1,5 +1,6 @@
 import Foundation
 import Virtualization
+import OSLog
 
 /// An object describing the runtime configuration properties available to a VM
 ///
@@ -72,7 +73,7 @@ public struct LaunchConfiguration: Codable {
         }
     }
 
-    func toJSON() throws -> String {
+    public func toJSON() throws -> String {
         let data = try JSONEncoder().encode(self)
         guard let jsonString = String(bytes: data, encoding: .utf8) else {
             throw CocoaError(.coderReadCorrupt)
@@ -83,4 +84,35 @@ public struct LaunchConfiguration: Codable {
     public static func from(string: String) throws -> LaunchConfiguration {
         try JSONDecoder().decode(Self.self, from: Data(string.utf8))
     }
+
+    public func setupVirtualMachine() async throws -> VZVirtualMachine {
+        let configuration = try await prepareBundle(for: self).virtualMachineConfiguration()
+        configuration.directorySharingDevices = [self.sharedDirectoryConfiguration]
+
+        try configuration.validate()
+        return VZVirtualMachine(configuration: configuration)
+    }
+
+    func prepareBundle(for launchConfiguration: LaunchConfiguration) async throws -> VMBundle {
+        guard !launchConfiguration.persistent else {
+            return try VMBundle.fromExistingBundle(at: Paths.toAppleSiliconVM(named: launchConfiguration.name))
+        }
+
+        let vmManager = AppleSiliconVMManager()
+
+        if try await vmManager.hasLocalVM(name: launchConfiguration.name, state: .packaged) {
+            Logger.lib.log("Using local packaged VM")
+            try await vmManager.cloneVM(for: launchConfiguration)
+            return try VMBundle.fromExistingBundle(at: Paths.toWorkingAppleSiliconVM(named: launchConfiguration.handle))
+        }
+
+        if try await vmManager.hasLocalVM(name: launchConfiguration.name, state: .ready) {
+            Logger.lib.log("Using local unpackaged VM")
+            try await vmManager.cloneVM(for: launchConfiguration)
+            return try VMBundle.fromExistingBundle(at: Paths.toWorkingAppleSiliconVM(named: launchConfiguration.handle))
+        }
+
+        preconditionFailure("Unable to find bundle named \(launchConfiguration.name)")
+    }
+
 }

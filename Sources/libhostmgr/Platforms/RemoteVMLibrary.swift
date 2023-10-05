@@ -63,7 +63,7 @@ extension RemoteVMLibrary {
     }
 
     public func getManifest() async throws -> [String] {
-        let objects = try await S3Server.vmImages.listFiles(startingWith: "/images-v2")
+        let objects = try await S3Server.vmImages.listFiles(startingWith: "/images/")
         return remoteImagesFrom(objects: objects).map { $0.name }
     }
 
@@ -97,7 +97,7 @@ extension RemoteVMLibrary {
     }
 
     public func listImages(sortedBy strategy: RemoteVMImageSortingStrategy = .name) async throws -> [VM] {
-        let objects = try await S3Server.vmImages.listFiles(startingWith: "images-v2/")
+        let objects = try await S3Server.vmImages.listFiles(startingWith: "images/")
         return remoteImagesFrom(objects: objects)
     }
 
@@ -120,7 +120,7 @@ extension RemoteVMLibrary {
     public func publish(vmNamed name: String, progressCallback: @escaping ProgressCallback) async throws {
         try await S3Server.vmImages.uploadFile(
             at: Paths.toArchivedVM(named: name),
-            to: "/images-v2/" + Paths.toVMTemplate(named: name).lastPathComponent,
+            to: "/images/" + Paths.toArchivedVM(named: name).lastPathComponent,
             progress: progressCallback
         )
     }
