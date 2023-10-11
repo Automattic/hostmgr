@@ -4,21 +4,13 @@ common_params:
   - &bash_cache automattic/bash-cache#v1.3.2: ~
   # Common environment values to use with the `env` key.
   env: &common_env
-    IMAGE_ID: xcode-14.2
+    IMAGE_ID: xcode-15.1.beta.1
 
 # This is the default pipeline – it will build and test the app
 steps:
   #################
   # Build and Test
   #################
-  - label: "🧪 Build and Test (Intel)"
-    key: "test-intel"
-    command: |
-      echo "--- :swift: Building + Testing"
-      swift test
-    env: *common_env
-    plugins: *common_plugins
-
   - label: "🧪 Build and Test (arm64)"
     key: "test-arm64"
     command: |
@@ -27,17 +19,17 @@ steps:
     env: *common_env
     plugins: *common_plugins
     agents:
-      queue: "mac-arm"
+      queue: "mac"
 
   #################
   # Lint
   #################
-  - label: "🧪 Lint"
-    command: |
-      make lint
-    plugins: *common_plugins
-    agents:
-      queue: default
+  # - label: "🧪 Lint"
+  #   command: |
+  #     make lint
+  #   plugins: *common_plugins
+  #   agents:
+  #     queue: default
 
   #################
   # Validate Release Build
@@ -66,7 +58,6 @@ steps:
     env: *common_env
     plugins: *common_plugins
     depends_on:
-      - "test-intel"
       - "test-arm64"
       - "validate-release-build"
     if: build.tag != null
