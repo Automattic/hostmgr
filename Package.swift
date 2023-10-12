@@ -25,6 +25,7 @@ let package = Package(
         .package(url: "https://github.com/jkmassel/kcpassword-swift.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-tools-support-core", from: "0.2.5"),
         .package(url: "https://github.com/vapor/console-kit.git", .upToNextMajor(from: "4.9.0")),
+        .package(url: "https://github.com/swhitty/FlyingFox.git", .upToNextMajor(from: "0.12.2")),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -58,6 +59,7 @@ let package = Package(
                 .product(name: "TSCBasic", package: "swift-tools-support-core"),
                 .product(name: "tinys3", package: "tinys3"),
                 .product(name: "ConsoleKit", package: "console-kit"),
+                .product(name: "FlyingFox", package: "FlyingFox")
             ],
             swiftSettings: sharedSettings
         ),

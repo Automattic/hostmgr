@@ -46,10 +46,10 @@ struct VMStartCommand: AsyncParsableCommand {
                 sharedPaths: self.sharedPaths
             ))
 
-            try await vmManager.waitForVMStartup(name: name)
+            try await vmManager.waitForVMStartup(name: self.handle)
 
             Console.success("Booted \(name) in \(Format.elapsedTime(between: startTime, and: .now))")
-        } catch let error as HostmgrXPCError {
+        } catch let error as HostmgrError {
             Console.crash(error)
         }
     }

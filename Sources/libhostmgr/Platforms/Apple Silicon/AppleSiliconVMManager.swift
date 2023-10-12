@@ -11,16 +11,17 @@ struct AppleSiliconVMManager: VMManager {
         try createWorkingDirectoriesIfNeeded()
         try await ensureLocalVMExists(named: configuration.name)
         try await vmUsageTracker.trackUsageOf(vm: configuration.name)
-        try await HostmgrXPCService.startVM(withLaunchConfiguration: configuration)
+        try await HostmgrClient.start(launchConfiguration: configuration)
     }
 
     func stopVM(handle: String) async throws {
-        try await HostmgrXPCService.stopVM(handle: handle)
+        try await HostmgrClient.stop(handle: handle)
         try FileManager.default.removeItemIfExists(at: Paths.toWorkingAppleSiliconVM(named: handle))
     }
 
     func stopAllRunningVMs() async throws {
-        try await HostmgrXPCService.stopAllVMs()
+        try await HostmgrClient.stopAllVMs()
+        try resetVMWorkingDirectory()
     }
 
     func removeVM(name: String) async throws {
@@ -35,6 +36,8 @@ struct AppleSiliconVMManager: VMManager {
             archiveAt: Paths.toArchivedVM(named: name),
             to: Paths.toVMTemplate(named: name)
         )
+
+        try VMTemplate(at: Paths.toVMTemplate(named: name)).validate()
     }
 
     func packageVM(name: String) async throws {

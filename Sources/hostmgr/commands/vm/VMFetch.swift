@@ -31,7 +31,9 @@ struct VMFetchCommand: AsyncParsableCommand {
 
         // If it just needs to be unpacked, try that
         if try await vmManager.hasLocalVM(name: name, state: .packaged) {
+            Console.info("Existing package found – extracting")
             try await vmManager.unpackVM(name: name)
+            Console.exit("VM is present locally", style: .success)
         }
 
         // Otherwise download the whole thing
@@ -43,5 +45,7 @@ struct VMFetchCommand: AsyncParsableCommand {
 
         // Then unpack it
         try await vmManager.unpackVM(name: name)
+
+        Console.exit("VM is present locally", style: .success)
     }
 }

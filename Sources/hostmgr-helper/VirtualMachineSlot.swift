@@ -5,6 +5,7 @@ import OSLog
 import Network
 import libhostmgr
 
+@MainActor
 class VirtualMachineSlot: NSObject, ObservableObject, VZVirtualMachineDelegate {
 
     enum Status: Sendable {
@@ -20,7 +21,7 @@ class VirtualMachineSlot: NSObject, ObservableObject, VZVirtualMachineDelegate {
 
     private var virtualMachine: VZVirtualMachine?
 
-    @Published
+    @Published @MainActor
     var status: Status = .empty
 
     @MainActor
@@ -32,12 +33,8 @@ class VirtualMachineSlot: NSObject, ObservableObject, VZVirtualMachineDelegate {
             let virtualMachine = try await launchConfiguration.setupVirtualMachine()
             virtualMachine.delegate = self
 
-            Logger.helper.log("Setup complete")
-
-            Logger.helper.log("Starting up VM")
             self.virtualMachine = virtualMachine
             try await virtualMachine.start()
-            Logger.helper.log("Startup in progress")
 
             let ipAddress = try await vmManager.ipAddress(forVmWithName: launchConfiguration.handle)
             Logger.helper.log("Startup complete – IP Address: \(ipAddress.debugDescription, privacy: .public)")
@@ -47,7 +44,7 @@ class VirtualMachineSlot: NSObject, ObservableObject, VZVirtualMachineDelegate {
             Logger.helper.error("Error launching VM: \(error.localizedDescription, privacy: .public)")
             Logger.helper.error("Attempting Cleanup of \(launchConfiguration.handle, privacy: .public)")
             try await vmManager.removeVM(name: launchConfiguration.handle)
-            Logger.helper.error("Cleanup complete – forwarding original error")
+
             self.status = .crashed(error)
             throw error
         }
@@ -99,24 +96,24 @@ class VirtualMachineSlot: NSObject, ObservableObject, VZVirtualMachineDelegate {
         default: return false
         }
     }
-
-    /// Called when a VM is stopped gracefully
-    func guestDidStop(_ virtualMachine: VZVirtualMachine) {
-        Logger.helper.log("Virtual Machine Stopped")
-
-        assert(Thread.isMainThread)
-
-        self.status = .empty
-        self.virtualMachine = nil
-    }
-
-    func virtualMachine(_ virtualMachine: VZVirtualMachine, didStopWithError error: Error) {
-        assert(Thread.isMainThread)
-        self.status = .crashed(error)
-    }
-
-    func virtualMachine(_ virtualMachine: VZVirtualMachine, networkDevice: VZNetworkDevice, attachmentWasDisconnectedWithError error: Error) {
-        debugPrint("Network attachment was disconnected")
-        Logger.helper.log("Network attachment was disconnected: \(error.localizedDescription)")
-    }
+//
+//    /// Called when a VM is stopped gracefully
+//    func guestDidStop(_ virtualMachine: VZVirtualMachine) {
+//        Logger.helper.log("Virtual Machine Stopped")
+//
+//        assert(Thread.isMainThread)
+//
+////        self.status = .empty
+////        self.virtualMachine = nil
+//    }
+//
+//    func virtualMachine(_ virtualMachine: VZVirtualMachine, didStopWithError error: Error) {
+//        assert(Thread.isMainThread)
+////        self.status = .crashed(error)
+//    }
+//
+//    func virtualMachine(_ virtualMachine: VZVirtualMachine, networkDevice: VZNetworkDevice, attachmentWasDisconnectedWithError error: Error) {
+//        debugPrint("Network attachment was disconnected")
+//        Logger.helper.log("Network attachment was disconnected: \(error.localizedDescription)")
+//    }
 }

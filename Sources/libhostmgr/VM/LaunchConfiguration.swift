@@ -94,15 +94,11 @@ public struct LaunchConfiguration: Sendable, Codable {
 // MARK: Packing and unpacking across the XPC bridge
 extension LaunchConfiguration {
 
-    public func packed() throws -> String {
-        let data = try JSONEncoder().encode(self)
-        guard let jsonString = String(bytes: data, encoding: .utf8) else {
-            throw CocoaError(.coderReadCorrupt)
-        }
-        return jsonString
+    public func packed() throws -> Data {
+        try JSONEncoder().encode(self)
     }
 
-    public static func unpack(_ string: String) throws -> LaunchConfiguration {
-        try JSONDecoder().decode(LaunchConfiguration.self, from: Data(string.utf8))
+    public static func unpack(_ data: Data) throws -> LaunchConfiguration {
+        try JSONDecoder().decode(LaunchConfiguration.self, from: data)
     }
 }

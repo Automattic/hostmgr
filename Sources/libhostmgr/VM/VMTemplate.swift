@@ -101,7 +101,7 @@ public struct VMTemplate: TemplateBundle {
         }
 
         /// Ensure that the bundle bit is applied
-        return try self.applyBundleBit()
+        return try self.applyingBundleBit()
     }
 
     
@@ -125,10 +125,10 @@ public struct VMTemplate: TemplateBundle {
             auxilaryDataHash: try template.hashAuxData()
         ).write(to: template.manifestFilePath)
 
-        return try template.applyBundleBit()
+        return try template.applyingBundleBit()
     }
 
-    func applyBundleBit() throws -> Self {
+    func applyingBundleBit() throws -> Self {
         try FileManager.default.setBundleBit(forDirectoryAt: self.root, to: true)
         return self
     }

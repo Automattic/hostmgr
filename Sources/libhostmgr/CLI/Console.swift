@@ -294,14 +294,6 @@ extension Console {
         Foundation.exit(error.exitCode)
     }
 
-    public static func crash(_ error: HostmgrXPCError) -> Never {
-        if let description = error.errorDescription {
-            Console.error(description)
-        }
-
-        Foundation.exit(-1)
-    }
-
     public static func exit(_ message: String = "", style: ConsoleStyle = .plain) -> Never {
         Console().message(message, style: style)
         Foundation.exit(0)

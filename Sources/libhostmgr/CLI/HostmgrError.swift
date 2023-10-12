@@ -1,6 +1,6 @@
 import Foundation
 
-public enum HostmgrError: Error, LocalizedError {
+public enum HostmgrError: Error, LocalizedError, Codable {
     case missingConfigurationFile(URL)
     case localVMNotFound(String)
     case workingVMAlreadyExists(String)
@@ -12,6 +12,7 @@ public enum HostmgrError: Error, LocalizedError {
     case vmHasInvalidIpAddress(String)
     case notEnoughLocalDiskSpaceToDownloadFile(String, Int, Int64)
     case helperIsMissing(URL)
+    case noVMSlotsAvailable
 //    case parallelsVirtualMachineDoesNotExist
 //    case parallelsVirtualMachineIsNotStopped
 //    case parallelsVirtualMachineAlreadyExists
@@ -19,6 +20,8 @@ public enum HostmgrError: Error, LocalizedError {
 //    case deprecated
 
     case invalidVMSourceImage(URL)
+
+    case xpcError(String)
 
     public var errorDescription: String? {
         switch self {
@@ -60,6 +63,10 @@ public enum HostmgrError: Error, LocalizedError {
 
         case .helperIsMissing(let path):
             return "`hostmgr-helper` is missing – please reinstall `hostmgr` (should be at \(path))"
+        case .noVMSlotsAvailable:
+            return "Unable to launch more VMs – maximum reached"
+        case .xpcError(let string):
+            return string
         }
     }
 

@@ -4,6 +4,7 @@ import libhostmgr
 import OSLog
 import Network
 
+@MainActor
 class VMHost: NSObject, ObservableObject {
     static let shared = VMHost()
 
@@ -14,9 +15,10 @@ class VMHost: NSObject, ObservableObject {
 
     @Published
     var secondaryVMSlot = VirtualMachineSlot()
+}
 
-    @MainActor
-    func startVM(launchConfiguration: LaunchConfiguration) async throws {
+extension VMHost: HostmgrServerDelegate {
+    func start(launchConfiguration: libhostmgr.LaunchConfiguration) async throws {
         Logger.helper.log("Launching VM: \(launchConfiguration.name, privacy: .public)")
 
         if self.primaryVMSlot.isAvailable {
@@ -31,11 +33,10 @@ class VMHost: NSObject, ObservableObject {
             return
         }
 
-        throw HostmgrXPCError("No VM slots available")
+        throw HostmgrError.noVMSlotsAvailable
     }
-
-    @MainActor
-    func stopVM(handle: String) async throws {
+    
+    func stop(handle: String) async throws {
         Logger.helper.log("Received stop request for \(handle, privacy: .public)")
 
         if self.primaryVMSlot.isRunningVM(withHandle: handle) {
@@ -46,10 +47,8 @@ class VMHost: NSObject, ObservableObject {
             try await secondaryVMSlot.stopVirtualMachine()
         }
     }
-
-    @MainActor
-    func stopAllVMs() async throws {
-
+    
+    func stopAll() async throws {
         var count = 0
 
         repeat {

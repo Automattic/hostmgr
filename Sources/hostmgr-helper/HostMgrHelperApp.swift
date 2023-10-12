@@ -11,13 +11,12 @@ struct HostMgrHelperApp: App {
     @ObservedObject
     private var vmHost = VMHost.shared
 
-    private let listener: HostmgrXPCListener
-
     @DIInjected
     private var vmManager: any VMManager
 
+    private var serverTask: Task<Void, Error>!
+
     init() {
-        self.listener = HostmgrXPCListener(vmHost: VMHost.shared)
 
         // Do some cleanup before we get started
         do {
@@ -26,8 +25,9 @@ struct HostMgrHelperApp: App {
             preconditionFailure(error.localizedDescription)
         }
 
-        // Now we're ready to start listening for commands
-        self.listener.resume()
+        self.serverTask = Task {
+            try await HostmgrServer(delegate: VMHost.shared).start()
+        }
     }
 
     var body: some Scene {

@@ -20,8 +20,6 @@ struct VMCreateCommand: AsyncParsableCommand {
     @Option(help: "The disk size of machine that should be created, in GB")
     var diskSize: Int = 92
 
-    private var continuation: CheckedContinuation<Void, Error>!
-
     private enum CodingKeys: String, CodingKey {
         case name
         case diskSize
