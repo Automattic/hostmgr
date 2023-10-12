@@ -30,7 +30,7 @@ public protocol VMManager {
 
     /// Package a VM for use on other machines
     ///
-    /// This method expects that the VM to be packaged is located in the `vm-images` directory – referencing it by name will attempt to pack
+    /// This method expects that the VM to be packaged is a template located in the `vm-images` directory – referencing it by name will attempt to pack
     /// the VM in the directory with that name. If there is no VM at that location, an error will be emitted.
     func packageVM(name: String) async throws
 
@@ -46,12 +46,6 @@ public protocol VMManager {
     ///   - from: The name of the VM template to copy. The VM template is expected to be located in the `vm-images` directory. If there is no VM at that location, an error will be emitted.
     ///   - to: The name of the resulting VM
     func cloneVM(from: String, to: String) async throws
-
-    /// Copy a VM template to a temporary location, making the VM ready for use
-    ///
-    /// - Parameters:
-    ///   - launchConfiguration: The launch configuration for the bundle, which will determine how it should be set up
-    func cloneVM(for launchConfiguration: LaunchConfiguration) async throws
 
     /// Wait for the VM with the given name to finish starting up
     ///

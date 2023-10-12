@@ -34,7 +34,7 @@ struct GitMirrorPublishCommand: AsyncParsableCommand {
             Console.exit("Remote mirror already exists – exiting", style: .error)
         }
 
-        Console.info("Compressing \(gitMirror.localPath)")
+        Console.info("Compressing \(gitMirror.localPath.path()) to \(gitMirror.archivePath)")
         try gitMirror.compress()
 
         let progress = Console.startProgress("Uploading mirror to \(gitMirror.remoteFilename)", type: .upload)

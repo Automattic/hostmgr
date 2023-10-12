@@ -16,7 +16,8 @@ struct VMPackageCommand: AsyncParsableCommand {
     var name: String
 
     mutating func run() async throws {
-        let bundle = try VMBundle.fromExistingBundle(at: Paths.toAppleSiliconVM(named: name))
+        let path = Paths.toAppleSiliconVM(named: name)
+        let bundle = VMBundle(at: path)
         Console.info("Creating Template")
 
         let template = try VMTemplate.creatingTemplate(fromBundle: bundle)

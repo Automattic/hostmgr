@@ -6,7 +6,7 @@ import libhostmgr
 @main
 struct Hostmgr: AsyncParsableCommand {
 
-    private static var appVersion = "0.50.0-beta.1"
+    private static let appVersion = "0.50.0-beta.2"
 
     static var configuration = CommandConfiguration(
         abstract: "A utility for managing VM hosts",
@@ -34,8 +34,6 @@ struct Hostmgr: AsyncParsableCommand {
     }
 
     mutating func run() async throws {
-        Logger.initializeLoggingSystem()
-
         logger.trace("Starting Up")
 
         try Configuration.validate()

@@ -1,4 +1,5 @@
 import Foundation
+import Virtualization
 
 #if arch(arm64)
 public struct VMTemplate: TemplateBundle {
@@ -39,6 +40,12 @@ public struct VMTemplate: TemplateBundle {
 
     public var basename: String {
         self.root.lastPathComponent
+    }
+
+    public var macAddress: VZMACAddress {
+        get throws {
+            return try VMBundle(at: self.root).macAddress
+        }
     }
 
     @discardableResult
@@ -98,27 +105,11 @@ public struct VMTemplate: TemplateBundle {
         return try self.applyBundleBit()
     }
 
-    /// Use this template to produce an identical virtual machine
-    ///
-    /// Doesn't alter the template in any way, and ensures that each copy has a unique place on the file system.
-    /// By default, this method creates the copy in the system temp directory, but the destination can be overridden
-    /// using the `url` parameter.
-    public func createEphemeralCopy(at url: URL? = nil) throws -> VMBundle {
-        let filename = self.root.lastPathComponent + "-" + UUID().uuidString
-        let destination = url ?? Paths.ephemeralVMStorageDirectory.appendingPathComponent(filename)
-
-        try Paths.createEphemeralVMStorageIfNeeded()
-        try FileManager.default.copyItem(atPath: self.root.path, toPath: destination.path)
-        return try VMBundle.fromExistingBundle(at: destination)
-    }
-
+    
     /// Create a read-only template on disk from an existing VM bundle
     public static func creatingTemplate(fromBundle bundle: VMBundle) throws -> VMTemplate {
-        let templateRoot = bundle.root
-            .deletingPathExtension()
-            .appendingPathExtension("vmtemplate")
 
-        let template = VMTemplate(at: templateRoot)
+        let template = VMTemplate(at: bundle.derivedTemplatePath)
 
         guard try !FileManager.default.directoryExists(at: template.root) else {
             throw CocoaError(.fileWriteFileExists)
@@ -136,26 +127,6 @@ public struct VMTemplate: TemplateBundle {
         ).write(to: template.manifestFilePath)
 
         return try template.applyBundleBit()
-    }
-
-    public static func existingTemplate(named name: String) throws -> VMTemplate {
-
-        let vmArchivePath = Paths.toArchivedVM(named: name)
-        let vmTemplatePath = Paths.toVMTemplate(named: name)
-
-        if FileManager.default.fileExists(at: vmArchivePath) {
-            return VMTemplate(at: vmArchivePath)
-        }
-
-        if try FileManager.default.directoryExists(at: vmTemplatePath) {
-            return VMTemplate(at: vmTemplatePath)
-        }
-
-        if try FileManager.default.directoryExists(at: Paths.toAppleSiliconVM(named: name)) {
-            throw Errors.vmIsNotATemplate
-        }
-
-        throw Errors.vmDoesNotExist
     }
 
     func applyBundleBit() throws -> Self {

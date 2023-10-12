@@ -56,7 +56,19 @@ struct VMConfiguration {
         let networkAttachment = VZNATNetworkDeviceAttachment()
         networkDevice.attachment = networkAttachment
         networkDevice.macAddress = macAddress
+
         return [networkDevice]
+    }
+
+    var bridgedNetworkConfiguration: [VZVirtioNetworkDeviceConfiguration] {
+        let networkDevice = VZVirtioNetworkDeviceConfiguration()
+
+        let interface = VZBridgedNetworkInterface.networkInterfaces.first!
+        networkDevice.attachment = VZBridgedNetworkDeviceAttachment(interface: interface)
+        networkDevice.macAddress = macAddress
+
+        return [networkDevice]
+
     }
 
     var blockDeviceConfiguration: VZVirtioBlockDeviceConfiguration {

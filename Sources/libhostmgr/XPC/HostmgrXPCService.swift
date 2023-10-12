@@ -25,41 +25,26 @@ public class HostmgrXPCService: NSObject {
 
 // MARK: – Public Call Sites
 extension HostmgrXPCService {
+
+
     /// Send a message to the XPC service running on the local machine, asking it to start the `named` virtual machine.
     public static func startVM(withLaunchConfiguration config: LaunchConfiguration) async throws {
         let protocolObject = try getProtocolObject()
-        let configurationString = try config.toJSON()
+        let configuration = try config.packed()
 
-        try await withCheckedThrowingContinuation { continuation in
-            protocolObject.startVM(withLaunchConfiguration: configurationString) { handle(error: $0, for: continuation) }
-        }
+        try await protocolObject.startVM(withLaunchConfiguration: configuration)
     }
 
     /// Send a message to the XPC service running on the local machine, asking it to stop the running virtual machine.
     public static func stopVM(handle: String) async throws {
         let protocolObject = try getProtocolObject()
-
-        try await withCheckedThrowingContinuation { continuation in
-            protocolObject.stopVM(withHandle: handle) { self.handle(error: $0, for: continuation) }
-        }
+        try await protocolObject.stopVM(withHandle: handle)
     }
 
     public static func stopAllVMs() async throws {
         let protocolObject = try getProtocolObject()
+        try await protocolObject.stopAllVMs()
 
-        try await withCheckedThrowingContinuation { continuation in
-            protocolObject.stopAllVMs { self.handle(error: $0, for: continuation) }
-        }
-    }
-
-    /// A DRY helper around processing XPC errors with Swift Concurrency
-    private static func handle(error: String?, for continuation: CheckedContinuation<Void, Error>) {
-        if let error {
-            continuation.resume(throwing: HostmgrXPCError(error))
-            return
-        }
-
-        continuation.resume()
     }
 
     /// A DRY helper around setting up the XPC Connection

@@ -52,6 +52,8 @@ public struct GitMirror {
     }
 
     public func compress() throws {
+        try ensureTempDirectoryExists()
+
         try Compressor.compress(
             directory: localPath,
             to: archivePath
@@ -85,6 +87,14 @@ public struct GitMirror {
         }
 
         return GitMirror(url: url)
+    }
+
+    func ensureTempDirectoryExists() throws {
+        let archiveParentDirectory = archivePath.deletingLastPathComponent()
+
+        if try !FileManager.default.directoryExists(at: archiveParentDirectory) {
+            try FileManager.default.createDirectory(at: archiveParentDirectory, withIntermediateDirectories: true)
+        }
     }
 }
 

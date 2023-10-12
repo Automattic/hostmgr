@@ -1,6 +1,7 @@
 import Foundation
 import Network
 import Virtualization
+import OSLog
 
 public struct DHCPLease {
     public let name: String
@@ -19,7 +20,7 @@ public struct DHCPLease {
     }
 
     public static func mostRecentLease(forMACaddress address: VZMACAddress) throws -> DHCPLease {
-
+        Logger.helper.debug("Fetching lease for \(address.string, privacy: .public)")
         let leases = try leases(for: address)
 
         guard !leases.isEmpty else {
@@ -34,9 +35,13 @@ public struct DHCPLease {
     }
 
     static func leases(for address: VZMACAddress) throws -> [DHCPLease] {
-        try leasesFrom(file: URL(fileURLWithPath: "/private/var/db/dhcpd_leases"))
-            .lazy
-            .filter { $0.hwAddress == address }
+        let allLeases = try leasesFrom(file: URL(fileURLWithPath: "/private/var/db/dhcpd_leases"))
+        Logger.helper.debug("\(allLeases.count, privacy: .public) found")
+
+        let filteredLeases = allLeases.filter { $0.hwAddress == address }
+        Logger.helper.debug("\(filteredLeases.count, privacy: .public) for \(address, privacy: .public)")
+
+        return filteredLeases
     }
 
     static func leasesFrom(file url: URL) throws -> [DHCPLease] {

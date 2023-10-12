@@ -34,40 +34,18 @@ class HostmgrXPCListener: NSObject, NSXPCListenerDelegate {
 }
 
 extension HostmgrXPCListener: HostmgrXPCProtocol {
-    func startVM(withLaunchConfiguration config: String, reply: @escaping (String?) -> Void) {
-        Task {
-            do {
-                let launchConfiguration = try LaunchConfiguration.from(string: config)
-                try await vmHost.startVM(launchConfiguration:launchConfiguration)
-                reply(nil)
+    func startVM(withLaunchConfiguration config: String) async throws {
+        Logger.helper.log("XPC Listener received start")
 
-            } catch {
-                Logger.helper.error("\(error.localizedDescription, privacy: .public)")
-                reply(error.localizedDescription)
-            }
-        }
+        let launchConfiguration = try LaunchConfiguration.unpack(config)
+        try await vmHost.startVM(launchConfiguration:launchConfiguration)
     }
 
-    func stopVM(withHandle handle: String, reply: @escaping (String?) -> Void) {
-        Task {
-            do {
-                try await vmHost.stopVM(handle: handle)
-                reply(nil)
-            } catch {
-                reply(error.localizedDescription)
-            }
-        }
+    func stopVM(withHandle handle: String) async throws {
+        try await vmHost.stopVM(handle: handle)
     }
 
-    func stopAllVMs(reply: @escaping (String?) -> Void) {
-        Task {
-            do {
-                try await vmHost.stopAllVMs()
-                reply(nil)
-            } catch {
-                reply(error.localizedDescription)
-            }
-        }
+    func stopAllVMs() async throws {
+        try await vmHost.stopAllVMs()
     }
-
 }

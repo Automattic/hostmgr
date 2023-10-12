@@ -57,12 +57,3 @@ public struct AppleSiliconVMImage: LocalVMImage {
     }
 
 }
-
-// MARK: Apple Silicon-specific code
-#if arch(arm64)
-extension AppleSiliconVMImage {
-    func asBundle() throws -> VMBundle {
-        try VMBundle.fromExistingBundle(at: self.path)
-    }
-}
-#endif

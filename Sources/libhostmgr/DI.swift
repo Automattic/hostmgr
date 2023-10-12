@@ -2,7 +2,7 @@ import Foundation
 
 public class DIContainer {
 
-    private static var dependencies: [String: Any] = [
+    private static let dependencies: [String: Any] = [
         "VMManager": AppleSiliconVMManager(),
         "RemoteVMLibrary": AppleSiliconVMLibrary()
     ]

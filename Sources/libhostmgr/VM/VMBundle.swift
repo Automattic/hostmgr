@@ -3,73 +3,68 @@ import Network
 import Virtualization
 import TSCBasic
 
-public struct VMBundle {
-
+public struct VMBundle: Sendable {
+    
     enum Errors: Error {
         /// We couldn't create the disk image – usually because there were no file descriptors available
         case unableToCreateDiskImage
-
+        
         /// We couldn't create the disk image – probably because there isn't enough space available on disk
         case unableToProvisionDiskSpace
-
+        
         /// We created the disk image successfully, but couldn't properly close the file descriptor.
         /// The disk image is probably fine, but you should really try creating it again.
         case unableToCloseDiskImage
     }
-
-    #if arch(arm64)
-    struct ConfigFile: Codable {
-        let name: String?
-        let hardwareModelData: Data
-        let machineIdentifierData: Data
-        let macAddress: String
-
-        var hardwareModel: VZMacHardwareModel {
-            VZMacHardwareModel(dataRepresentation: hardwareModelData)!
-        }
-
-        var machineIdentifier: VZMacMachineIdentifier {
-            VZMacMachineIdentifier(dataRepresentation: machineIdentifierData)!
-        }
-
-        func write(to url: URL) throws {
-            try JSONEncoder().encode(self).write(to: url, options: .atomic)
-        }
-
-        static func from(url: URL) throws -> ConfigFile {
-            let data = try Data(contentsOf: url)
-            return try JSONDecoder().decode(ConfigFile.self, from: data)
-        }
-    }
-
-    private let hardwareModel: VZMacHardwareModel
-    private let machineIdentifier: VZMacMachineIdentifier
-    public let macAddress: VZMACAddress
-    #endif
-
+    
     public let root: URL
-    public let templateName: String?
 
-    var name: String {
-        self.root.deletingPathExtension().lastPathComponent
+    public init(at root: URL) {
+        self.root = root
     }
 }
 
-#if arch(arm64)
 extension VMBundle: Bundle {
 
-    init(
-        root: URL,
-        hardwareModel: VZMacHardwareModel,
-        machineIdentifier: VZMacMachineIdentifier,
-        macAddress: VZMACAddress,
-        templateName: String? = nil
-    ) {
-        self.root = root
-        self.hardwareModel = hardwareModel
-        self.machineIdentifier = machineIdentifier
-        self.macAddress = macAddress
-        self.templateName = templateName
+    var hardwareModel: VZMacHardwareModel {
+        get throws {
+            try getConfig().hardwareModel
+        }
+    }
+
+    var machineIdentifier: VZMacMachineIdentifier {
+        get throws {
+            try getConfig().machineIdentifier
+        }
+    }
+
+    var macAddress: VZMACAddress {
+        get throws {
+            try getConfig().macAddress
+        }
+    }
+
+    /// The name of the template that this bundle was created from
+    ///
+    /// If this bundle wasn't created from a template, this field is `nil`
+    var templateName: String? {
+        get throws {
+            try getConfig().templateName
+        }
+    }
+
+    /// The path to this bundle if it were converted into a template
+    ///
+    var derivedTemplatePath: URL {
+        root.deletingPathExtension().appendingPathExtension("vmtemplate")
+    }
+
+    func getConfig() throws -> VMConfigFile {
+        try VMConfigFile.from(url: Self.configurationFilePath(for: self.root))
+    }
+
+    func set(config: VMConfigFile) throws {
+        try config.write(to: self.configurationFilePath)
     }
 
     /// Look up details of this VM's most recent DHCP lease.
@@ -82,52 +77,18 @@ extension VMBundle: Bundle {
         }
     }
 
-    /// Persist the VM configuration to the local disk
-    func saveConfiguration() throws {
-        try ConfigFile(
-            name: self.root.deletingPathExtension().lastPathComponent,
-            hardwareModelData: self.hardwareModel.dataRepresentation,
-            machineIdentifierData: self.machineIdentifier.dataRepresentation,
-            macAddress: self.macAddress.string
-        )
-        .write(to: self.configurationFilePath)
-    }
-
-    /// Instantiate a VMBundle from an existing VM package
-    ///
-    public static func fromExistingBundle(at url: URL) throws -> VMBundle {
-        let configuration = try ConfigFile.from(url: Self.configurationFilePath(for: url))
-
-        guard let macAddress = VZMACAddress(string: configuration.macAddress) else {
-            throw CocoaError(.coderInvalidValue)
-        }
-
-        return VMBundle(
-            root: url,
-            hardwareModel: configuration.hardwareModel,
-            machineIdentifier: configuration.machineIdentifier,
-            macAddress: macAddress,
-            templateName: configuration.name
-        )
-    }
-
     /// Update a cloned VMBundle to record its new name and have a unique MAC address
     ///
     @discardableResult
-    public static func renamingClonedBundle(at url: URL, to name: String) throws -> VMBundle {
-        let oldBundle = try fromExistingBundle(at: url)
+    public func withRandomizedHardwareAddress() throws -> VMBundle {
+        let oldBundle = VMBundle(at: self.root)
 
-        let bundle = VMBundle(
-            root: oldBundle.root,
-            hardwareModel: oldBundle.hardwareModel,
-            machineIdentifier: oldBundle.machineIdentifier,
-            macAddress: .randomLocallyAdministered(),
-            templateName: oldBundle.templateName
-        )
+        try oldBundle.getConfig()
+            .settingUniqueMacAddress()
+            .settingUniqueMachineIdentifier()
+            .write(to: oldBundle.configurationFilePath)
 
-        try bundle.saveConfiguration()
-
-        return bundle
+        return oldBundle
     }
 
     /// Create a new VMBundle based on a restore image
@@ -150,15 +111,17 @@ extension VMBundle: Bundle {
         try FileManager.default.createDirectory(at: bundleRoot, withIntermediateDirectories: true)
         Console.success("Created bundle at \(bundleRoot.path)")
 
-        let bundle = VMBundle(
-            root: bundleRoot,
+        let bundle = VMBundle(at: bundleRoot)
+
+        let configFile = VMConfigFile(
+            name: name,
             hardwareModel: macOSConfiguration.hardwareModel,
             machineIdentifier: VZMacMachineIdentifier(),
             macAddress: .randomLocallyAdministered()
         )
 
+        try bundle.set(config: configFile)
         try bundle.initializeStorageVolume(withSize: capacity)
-        try bundle.saveConfiguration()
 
         return bundle
     }
@@ -187,8 +150,8 @@ extension VMBundle: Bundle {
 
     private func macPlatformConfiguration() throws -> VZMacPlatformConfiguration {
         let platform = VZMacPlatformConfiguration()
-        platform.hardwareModel = self.hardwareModel
-        platform.machineIdentifier = self.machineIdentifier
+        platform.hardwareModel = try self.hardwareModel
+        platform.machineIdentifier = try self.machineIdentifier
         platform.auxiliaryStorage = try auxilaryStorage(for: self.hardwareModel)
         return platform
     }
@@ -217,4 +180,3 @@ extension VMBundle: Bundle {
         )
     }
 }
-#endif

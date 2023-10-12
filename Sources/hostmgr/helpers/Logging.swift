@@ -23,21 +23,18 @@ struct logger {
 // swiftlint:enable type_name
 
 extension Logger {
-    static var shared = Logger(label: "com.automattic.hostmgr")
-
-    static func initializeLoggingSystem() {
+    static let shared = Logger(label: "com.automattic.hostmgr") { label in
+        var logHandler = MultiplexLogHandler([
+            StreamLogHandler.standardError(label: label)
+        ])
 
         #if DEBUG
-        Logger.shared.logLevel = .trace
+        logHandler.logLevel = .trace
         #else
         let logLevelFromEnv = ProcessInfo.processInfo.environment["LOG_LEVEL"].flatMap { Logger.Level(rawValue: $0) }
-        Logger.shared.logLevel = logLevelFromEnv ?? .info
+        logHandler.logLevel = logLevelFromEnv ?? .info
         #endif
 
-        LoggingSystem.bootstrap { label in
-            MultiplexLogHandler([
-                StreamLogHandler.standardError(label: label)
-            ])
-        }
+        return logHandler
     }
 }

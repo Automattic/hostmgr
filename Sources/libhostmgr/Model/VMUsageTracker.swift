@@ -10,9 +10,7 @@ actor VMUsageTracker {
     }
 
     func trackUsageOf(vm: String, on date: Date = Date()) throws {
-        if !FileManager.default.fileExists(at: usageFilePath) {
-            try FileManager.default.createFile(at: usageFilePath, contents: Data())
-        }
+        try createUsageFileIfNotExists()
 
         let fileHandle = try FileHandle(forWritingTo: self.usageFilePath)
         try fileHandle.seekToEnd()
@@ -24,6 +22,8 @@ actor VMUsageTracker {
     }
 
     func usageCountFor(vm: String, since date: Date) async throws -> Int {
+        try createUsageFileIfNotExists()
+
         let fileHandle = try FileHandle(forReadingFrom: self.usageFilePath)
 
         var count = 0
@@ -44,9 +44,7 @@ actor VMUsageTracker {
     }
 
     func usageStats() async throws -> [VMUsageRecord] {
-        guard FileManager.default.fileExists(at: self.usageFilePath) else {
-            return []
-        }
+        try createUsageFileIfNotExists()
 
         let fileHandle = try FileHandle(forReadingFrom: self.usageFilePath)
 
@@ -57,6 +55,18 @@ actor VMUsageTracker {
         try fileHandle.close()
 
         return records
+    }
+
+    func createUsageFileIfNotExists() throws {
+        let parentDirectory = usageFilePath.deletingLastPathComponent()
+
+        if try !FileManager.default.directoryExists(at: parentDirectory) {
+            try FileManager.default.createDirectory(at: parentDirectory, withIntermediateDirectories: true)
+        }
+
+        if !FileManager.default.fileExists(at: usageFilePath) {
+            try FileManager.default.createFile(at: usageFilePath, contents: Data())
+        }
     }
 
     @Sendable

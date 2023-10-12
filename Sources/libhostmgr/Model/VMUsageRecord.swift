@@ -1,6 +1,6 @@
 import Foundation
 
-public struct VMUsageRecord {
+public struct VMUsageRecord: Sendable {
     public let vm: String
     public let date: Date
 
@@ -39,7 +39,7 @@ public struct VMUsageAggregate {
     }
 }
 
-extension [VMUsageRecord] {
+extension [VMUsageRecord]: Sendable {
     public func grouped() -> [VMUsageAggregate] {
         var aggregatedRecords = [String: VMUsageAggregate]()
 

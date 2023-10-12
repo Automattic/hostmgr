@@ -117,7 +117,12 @@ public extension Configuration {
 
     static var shared: Configuration {
         get {
-            try! ConfigurationRepository.getConfiguration()
+            do {
+                return try ConfigurationRepository.getConfiguration()
+            } catch {
+                Console.error("Unable to load configuration: \(error.localizedDescription)")
+                Foundation.exit(-1)
+            }
         }
     }
 

@@ -17,7 +17,7 @@ protocol BytewiseRemoteFileProvider: RemoteFileProvider {
     func fetchFileBytes(forFileAt path: String) async throws -> Data
 }
 
-extension [ReadOnlyRemoteFileProvider] {
+public extension [ReadOnlyRemoteFileProvider] {
     func first(havingFileAtPath path: String) async throws -> ReadOnlyRemoteFileProvider? {
         for server in self {
             do {

@@ -3,6 +3,10 @@
 
 import PackageDescription
 
+let sharedSettings: [SwiftSetting] = [
+//    .enableExperimentalFeature("StrictConcurrency")
+]
+
 let package = Package(
     name: "hostmgr",
     platforms: [
@@ -20,7 +24,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
         .package(url: "https://github.com/jkmassel/kcpassword-swift.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-tools-support-core", from: "0.2.5"),
-        .package(url: "https://github.com/vapor/console-kit.git", .upToNextMajor(from: "4.5.0")),
+        .package(url: "https://github.com/vapor/console-kit.git", .upToNextMajor(from: "4.9.0")),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -35,7 +39,8 @@ let package = Package(
             ],
             exclude: [
                 "hostmgr.entitlements",
-            ]
+            ],
+            swiftSettings: sharedSettings
         ),
         .executableTarget(
             name: "hostmgr-helper",
@@ -43,7 +48,8 @@ let package = Package(
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Logging", package: "swift-log"),
                 .target(name: "libhostmgr")
-            ]
+            ],
+            swiftSettings: sharedSettings
         ),
         .target(
             name: "libhostmgr",
@@ -52,7 +58,8 @@ let package = Package(
                 .product(name: "TSCBasic", package: "swift-tools-support-core"),
                 .product(name: "tinys3", package: "tinys3"),
                 .product(name: "ConsoleKit", package: "console-kit"),
-            ]
+            ],
+            swiftSettings: sharedSettings
         ),
         .testTarget(
             name: "libhostmgrTests",
@@ -68,10 +75,14 @@ let package = Package(
                 .copy("resources/buildkite-environment-variables-with-code-quotes.env"),
                 .copy("resources/buildkite-commit-message-original.txt"),
                 .copy("resources/buildkite-commit-message-expected.txt"),
-                .copy("resources/dhcpd_leases"),
+                .copy("resources/dhcpd_leases-1"),
+                .copy("resources/dhcpd_leases-2"),
                 .copy("resources/dotenv-fixtures.env"),
                 .copy("resources/file-hasher-test-1"),
                 .copy("resources/mac-hardware-model-data.dat"),
+                .copy("resources/vm-config-file-sample-1.json"),
+                .copy("resources/vm-config-file-sample-2.json"),
+                .copy("resources/vm-config-file-sample-3.json")
             ]
         ),
     ]

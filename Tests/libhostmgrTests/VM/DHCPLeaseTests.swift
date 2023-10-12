@@ -48,6 +48,6 @@ final class DHCPLeaseTests: XCTestCase {
     }
 
     private func parseLeases() throws -> [DHCPLease] {
-        try DHCPLease.leasesFrom(file: pathForResource(named: "dhcpd_leases"))
+        try DHCPLease.leasesFrom(file: pathForResource(named: "dhcpd_leases-1"))
     }
 }

@@ -5,9 +5,9 @@ import OSLog
 /// An object describing the runtime configuration properties available to a VM
 ///
 /// These are distinct from the options baked into its internal configuration
-public struct LaunchConfiguration: Codable {
+public struct LaunchConfiguration: Sendable, Codable {
 
-    public struct SharedPath: Codable {
+    public struct SharedPath: Sendable, Codable {
         let source: URL
         let readOnly: Bool
 
@@ -44,7 +44,6 @@ public struct LaunchConfiguration: Codable {
     }
 
     public var sharedDirectoryConfiguration: VZDirectorySharingDeviceConfiguration {
-
         let tag = VZVirtioFileSystemDeviceConfiguration.macOSGuestAutomountTag
 
         let sharingConfiguration = VZVirtioFileSystemDeviceConfiguration(tag: tag)
@@ -61,7 +60,7 @@ public struct LaunchConfiguration: Codable {
 
     var vmSourcePath: URL {
         get throws {
-            try Paths.resolveVM(withNameOrHandle: self.name)
+            try VMResolver.resolveBundle(named: self.name).root
         }
     }
 
@@ -73,7 +72,29 @@ public struct LaunchConfiguration: Codable {
         }
     }
 
-    public func toJSON() throws -> String {
+    public func createBundle() throws -> VMBundle {
+        if self.persistent {
+            return try VMBundle(at: vmSourcePath)
+        }
+
+        return try VMResolver.resolveBundle(named: name)
+            .createEphemeralCopy(at: destinationPath)
+    }
+
+    public func setupVirtualMachine() async throws -> VZVirtualMachine {
+        let configuration = try createBundle().virtualMachineConfiguration()
+        configuration.directorySharingDevices = [self.sharedDirectoryConfiguration]
+
+        try configuration.validate()
+
+        return VZVirtualMachine(configuration: configuration)
+    }
+}
+
+// MARK: Packing and unpacking across the XPC bridge
+extension LaunchConfiguration {
+
+    public func packed() throws -> String {
         let data = try JSONEncoder().encode(self)
         guard let jsonString = String(bytes: data, encoding: .utf8) else {
             throw CocoaError(.coderReadCorrupt)
@@ -81,38 +102,7 @@ public struct LaunchConfiguration: Codable {
         return jsonString
     }
 
-    public static func from(string: String) throws -> LaunchConfiguration {
-        try JSONDecoder().decode(Self.self, from: Data(string.utf8))
+    public static func unpack(_ string: String) throws -> LaunchConfiguration {
+        try JSONDecoder().decode(LaunchConfiguration.self, from: Data(string.utf8))
     }
-
-    public func setupVirtualMachine() async throws -> VZVirtualMachine {
-        let configuration = try await prepareBundle(for: self).virtualMachineConfiguration()
-        configuration.directorySharingDevices = [self.sharedDirectoryConfiguration]
-
-        try configuration.validate()
-        return VZVirtualMachine(configuration: configuration)
-    }
-
-    func prepareBundle(for launchConfiguration: LaunchConfiguration) async throws -> VMBundle {
-        guard !launchConfiguration.persistent else {
-            return try VMBundle.fromExistingBundle(at: Paths.toAppleSiliconVM(named: launchConfiguration.name))
-        }
-
-        let vmManager = AppleSiliconVMManager()
-
-        if try await vmManager.hasLocalVM(name: launchConfiguration.name, state: .packaged) {
-            Logger.lib.log("Using local packaged VM")
-            try await vmManager.cloneVM(for: launchConfiguration)
-            return try VMBundle.fromExistingBundle(at: Paths.toWorkingAppleSiliconVM(named: launchConfiguration.handle))
-        }
-
-        if try await vmManager.hasLocalVM(name: launchConfiguration.name, state: .ready) {
-            Logger.lib.log("Using local unpackaged VM")
-            try await vmManager.cloneVM(for: launchConfiguration)
-            return try VMBundle.fromExistingBundle(at: Paths.toWorkingAppleSiliconVM(named: launchConfiguration.handle))
-        }
-
-        preconditionFailure("Unable to find bundle named \(launchConfiguration.name)")
-    }
-
 }

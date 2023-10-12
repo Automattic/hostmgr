@@ -33,13 +33,13 @@ struct AppleSiliconVMManager: VMManager {
     func unpackVM(name: String) async throws {
         try Compressor.decompress(
             archiveAt: Paths.toArchivedVM(named: name),
-            to: Paths.toAppleSiliconVM(named: name)
+            to: Paths.toVMTemplate(named: name)
         )
     }
 
     func packageVM(name: String) async throws {
         try Compressor.compress(
-            directory: Paths.toAppleSiliconVM(named: name),
+            directory: Paths.toVMTemplate(named: name),
             to: Paths.toArchivedVM(named: name)
         )
     }
@@ -50,42 +50,37 @@ struct AppleSiliconVMManager: VMManager {
     }
 
     func cloneVM(from source: String, to destination: String) async throws {
-        try FileManager.default.copyItem(
-            at: try Paths.resolveVM(withNameOrHandle: source),
-            to: Paths.toAppleSiliconVM(named: destination)
-        )
-
-        try VMBundle.renamingClonedBundle(at: Paths.toAppleSiliconVM(named: destination), to: destination)
-    }
-
-    func cloneVM(for launchConfiguration: LaunchConfiguration) async throws {
-
-        if try FileManager.default.directoryExists(at: launchConfiguration.destinationPath) {
-            throw HostmgrError.workingVMAlreadyExists(launchConfiguration.handle)
-        }
-
-        try FileManager.default.copyItem(
-            at: try launchConfiguration.vmSourcePath,
-            to: launchConfiguration.destinationPath
-        )
-
-        try VMBundle.renamingClonedBundle(at: launchConfiguration.destinationPath, to: launchConfiguration.handle)
+        let bundle = try VMResolver.resolveBundle(named: source)
+        _ = try bundle.createEphemeralCopy(at: Paths.toWorkingAppleSiliconVM(named: destination))
     }
 
     func waitForVMStartup(name: String) async throws {
-        Task.retrying(times: 5) {
-            let address = try await ipAddress(forVmWithName: name)
-            try await waitForSSHServer(forAddress: address)
-        }
+        let address = try await ipAddress(forVmWithName: name)
+        try await waitForSSHServer(forAddress: address)
     }
 
     func ipAddress(forVmWithName name: String) async throws -> IPv4Address {
-        let vmBundlePath = try Paths.resolveVM(withNameOrHandle: name)
-        let vmBundle = try VMBundle.fromExistingBundle(at: vmBundlePath)
+        let vmBundle: VMResolver.Result = try VMResolver.resolve(name)
 
-        return try await Task.retrying(times: 5) {
-            return try DHCPLease.mostRecentLease(forMACaddress: vmBundle.macAddress).ipAddress
-        }.value
+        switch vmBundle {
+            case .bundle(let bundle): return try await ipAddress(for: bundle.macAddress)
+            case .template(let template): return try await ipAddress(for: template.macAddress)
+        }
+    }
+
+    func ipAddress(for macAddress: VZMACAddress) async throws -> IPv4Address {
+        var tries = 0
+
+        repeat {
+            do {
+                return try DHCPLease.mostRecentLease(forMACaddress: macAddress).ipAddress
+            } catch {
+                try await Task.sleep(for: .seconds(1))
+                tries += 1
+            }
+        } while(tries < 25)
+
+        return try DHCPLease.mostRecentLease(forMACaddress: macAddress).ipAddress
     }
 
     func getVMImages(unusedSince cutoff: Date) async throws -> [VMUsageAggregate] {
@@ -99,10 +94,10 @@ struct AppleSiliconVMManager: VMManager {
     }
 
     func vmTemplateName(forVmWithName name: String) async throws -> String? {
-        let vmBundlePath = try Paths.resolveVM(withNameOrHandle: name)
-        let vmBundle = try VMBundle.fromExistingBundle(at: vmBundlePath)
-
-        return vmBundle.templateName
+        switch try VMResolver.resolve(name) {
+            case .bundle(let bundle): return try bundle.templateName
+            case .template(let template): return template.basename
+        }
     }
 
     func waitForSSHServer(forAddress address: IPv4Address, timeout: TimeInterval = 30) async throws {

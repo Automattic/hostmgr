@@ -3,9 +3,9 @@ import Foundation
 /// The protocol used by the XPC framework to communicate between `hostmgr` and its helper.
 @objc
 public protocol HostmgrXPCProtocol {
-    func startVM(withLaunchConfiguration config: String, reply: @escaping (String?) -> Void)
-    func stopVM(withHandle handle: String, reply: @escaping (String?) -> Void)
-    func stopAllVMs(reply: @escaping (String?) -> Void)
+    func startVM(withLaunchConfiguration config: String) async throws
+    func stopVM(withHandle handle: String) async throws
+    func stopAllVMs() async throws
 }
 
 public struct HostmgrXPCError: LocalizedError {
@@ -20,7 +20,7 @@ public struct HostmgrXPCError: LocalizedError {
         errorMessage
     }
 
-    init(_ errorMessage: String) {
+    public init(_ errorMessage: String) {
         self.errorMessage = errorMessage
     }
 }

@@ -35,7 +35,7 @@ final class VMUsageRecordTests: XCTestCase {
     }
 
     func testThatQueryingGroupedRecordsForUnusedReturnsCorrectResult() throws {
-        XCTAssert(records.grouped().unused(since: Date(timeIntervalSince1970: 2)).isEmpty)
+        XCTAssertTrue(records.grouped().unused(since: Date(timeIntervalSince1970: 2)).isEmpty)
         XCTAssertEqual(1, records.grouped().unused(since: Date(timeIntervalSince1970: 3)).count)
     }
 }

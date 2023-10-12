@@ -84,7 +84,7 @@ public struct CacheServer: ReadOnlyRemoteFileProvider {
     public func downloadFile(
         at path: String,
         to destination: URL,
-        progress: @escaping (Progress) -> Void)
+        progress: @escaping ProgressCallback)
     async throws {
         let url = baseURL.appendingPathComponent(path)
 

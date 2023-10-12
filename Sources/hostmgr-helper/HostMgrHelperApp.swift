@@ -1,5 +1,6 @@
 import SwiftUI
 import Virtualization
+import Network
 import libhostmgr
 
 @main
@@ -8,7 +9,7 @@ struct HostMgrHelperApp: App {
     private var showMenuBarExtra = true
 
     @ObservedObject
-    private var vmHost: VMHost
+    private var vmHost = VMHost.shared
 
     private let listener: HostmgrXPCListener
 
@@ -16,9 +17,7 @@ struct HostMgrHelperApp: App {
     private var vmManager: any VMManager
 
     init() {
-        let vmHost = VMHost()
-        self.vmHost = vmHost
-        self.listener = HostmgrXPCListener(vmHost: vmHost)
+        self.listener = HostmgrXPCListener(vmHost: VMHost.shared)
 
         // Do some cleanup before we get started
         do {
@@ -34,43 +33,93 @@ struct HostMgrHelperApp: App {
     var body: some Scene {
         MenuBarExtra("Hostmgr Helper", systemImage: "play.desktopcomputer", isInserted: $showMenuBarExtra) {
             VStack(alignment: .leading) {
-                VMListItem(vm: vmHost.primaryVM, number: 1, vmHost: self.vmHost)
+                VMListItem(slot: vmHost.primaryVMSlot, number: 1)
                 Divider().padding()
-                VMListItem(vm: vmHost.secondaryVM, number: 2, vmHost: self.vmHost)
+                VMListItem(slot: vmHost.secondaryVMSlot, number: 2)
             }.padding()
         }.menuBarExtraStyle(.window)
     }
 }
 
-struct VMListItem: View {
-
-    @ObservedObject
-    var vm: VMHost.VirtualMachineSlot
-
+struct EmptyVMListItem: View {
     let number: Int
 
-    let vmHost: VMHost
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text("Slot \(number)").font(.footnote)
 
-    @State
-    var isShuttingDown: Bool = false
+            Spacer()
+            HStack {
+                Spacer()
+                Text("No VM Running").font(.title2)
+                Spacer()
+            }
+            Spacer()
+        }
+    }
+}
+
+struct ErrorVMListItem: View {
+    let number: Int
+
+    let error: Error
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text("Slot \(number)").font(.footnote)
+
+            Spacer()
+            HStack {
+                Spacer()
+                Image(systemName: "exclamationmark.triangle.fill")
+                Text(error.localizedDescription)
+                Spacer()
+            }
+            Spacer()
+
+        }
+    }
+}
+
+struct PendingVMListItem: View {
+    let number: Int
+    let launchConfiguration: LaunchConfiguration
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text("Slot \(number)")
+                .font(.footnote)
+
+            Text(launchConfiguration.name)
+                .font(.title)
+                .fontWeight(.medium)
+
+            ProgressView()
+        }
+    }
+}
+
+struct RunningVMListItem: View {
+    let number: Int
+    let launchConfiguration: LaunchConfiguration
+    let ipAddress: IPv4Address
+
+    @ObservedObject
+    var slot: VirtualMachineSlot
 
     func openVNCSession() {
-        let vncURL = URL(string: "vnc://\(self.vm.ipAddress!.debugDescription)")!
+        let vncURL = URL(string: "vnc://\(ipAddress.debugDescription)")!
         NSWorkspace.shared.open(vncURL)
     }
 
     func openSSHSession() {
-        let sshURL = URL(string: "ssh://\(self.vm.ipAddress!.debugDescription)")!
+        let sshURL = URL(string: "ssh://\(ipAddress.debugDescription)")!
         NSWorkspace.shared.open(sshURL)
     }
 
     func shutdown() {
         Task {
-            if let handle = self.vm.handle {
-                self.isShuttingDown = true
-                try await self.vmHost.stopVM(handle: handle)
-                self.isShuttingDown = false
-            }
+            try await slot.stopVirtualMachine()
         }
     }
 
@@ -79,49 +128,51 @@ struct VMListItem: View {
             Text("Slot \(number)")
                 .font(.footnote)
 
-            if let name = vm.name, let handle = vm.handle {
-                    Text(name)
-                        .font(.title)
-                        .fontWeight(.medium)
+            Text(launchConfiguration.name)
+                .font(.title)
+                .fontWeight(.medium)
 
-                    VMListItemDataItem(key: "Handle", value: handle)
-                    VMListItemDataItem(key: "IP Address", value: vm.ipAddress?.debugDescription)
+            VMListItemDataItem(key: "Handle", value: launchConfiguration.handle)
+            VMListItemDataItem(key: "IP Address", value: ipAddress.debugDescription)
 
-                    HStack(alignment: .top) {
-                        Button(action: self.openVNCSession, label: {
-                            Label("VNC", systemImage: "play.display")
-                                .foregroundStyle(.white)
-                                .disabled(vm.ipAddress == nil)
-                        }).disabled(vm.ipAddress == nil)
+            HStack(alignment: .top) {
+                Button(action: self.openVNCSession, label: {
+                    Label("VNC", systemImage: "play.display")
+                })
 
-                        Button(action: self.openSSHSession, label: {
-                            Label("SSH", systemImage: "terminal")
-                                .foregroundStyle(.white)
-                                .disabled(vm.ipAddress == nil)
-                        }).disabled(vm.ipAddress == nil)
+                Button(action: self.openSSHSession, label: {
+                    Label("SSH", systemImage: "terminal").foregroundStyle(.white)
+                })
 
-                        Button(action: self.shutdown, label: {
-                            if self.isShuttingDown {
-                                ProgressView().controlSize(.small)
-                            } else {
-                                Label("Stop", systemImage: "stop.circle").foregroundStyle(.white)
-                            }
-                        })
-                    }.frame(maxWidth: .infinity)
-            } else {
-                HStack {
-                    Spacer()
-                    Text("No VM Running").font(.title2)
-                    Spacer()
-                }
-            }
+                Button(action: self.shutdown, label: {
+                    Label("Stop", systemImage: "stop.circle").foregroundStyle(.white)
+                })
+            }.frame(maxWidth: .infinity)
         }
+
     }
 }
 
-extension String: Identifiable {
-    public var id: String {
-        return self
+struct VMListItem: View {
+
+    @ObservedObject
+    var slot: VirtualMachineSlot
+
+    let number: Int
+
+    var body: some View {
+        switch slot.status {
+            case .empty:
+            EmptyVMListItem(number: number)
+            case .starting(let launchConfiguration):
+            PendingVMListItem(number: number, launchConfiguration: launchConfiguration)
+            case .running(let launchConfiguration, let ipAddress):
+            RunningVMListItem(number: number, launchConfiguration: launchConfiguration, ipAddress: ipAddress, slot: slot)
+            case .stopping:
+            EmptyVMListItem(number: number)
+            case .crashed(let error):
+            ErrorVMListItem(number: number, error: error)
+        }
     }
 }
 

@@ -74,7 +74,7 @@ public struct Paths {
             .appendingPathComponent(storageDirectoryIdentifier)
     }
 
-    public static var vmUsageFile = stateRoot.appending(path: "vm-usage")
+    public static let vmUsageFile = stateRoot.appending(path: "vm-usage")
 
     public static func toAppleSiliconVM(named name: String) -> URL {
         Paths.vmImageStorageDirectory.appendingPathComponent(name).appendingPathExtension("bundle")
@@ -101,42 +101,6 @@ public struct Paths {
 
     public static func toGitMirror(atURL url: URL) -> URL {
         gitMirrorStorageDirectory.appendingPathComponent(url.absoluteString.slugify())
-    }
-
-    public static func createEphemeralVMStorageIfNeeded() throws {
-        guard try !FileManager.default.directoryExists(at: ephemeralVMStorageDirectory) else {
-            return
-        }
-
-        try FileManager.default.createDirectory(at: ephemeralVMStorageDirectory, withIntermediateDirectories: true)
-    }
-
-    public static func resolveVM(withNameOrHandle identifier: String) throws -> URL {
-        let workingVMPath = Paths.toWorkingAppleSiliconVM(named: identifier)
-
-        if try FileManager.default.directoryExists(at: workingVMPath) {
-            return workingVMPath
-        }
-
-        let vmBundlePath = Paths.toAppleSiliconVM(named: identifier)
-
-        if try FileManager.default.directoryExists(at: vmBundlePath) {
-            return vmBundlePath
-        }
-
-        let vmTemplatePath = Paths.toVMTemplate(named: identifier)
-
-        if try FileManager.default.directoryExists(at: vmTemplatePath) {
-            return vmTemplatePath
-        }
-
-        let vmArchivePath = Paths.toArchivedVM(named: identifier)
-
-        if FileManager.default.fileExists(at: vmArchivePath) {
-            return vmArchivePath
-        }
-
-        throw HostmgrError.localVMNotFound(identifier)
     }
 }
 
