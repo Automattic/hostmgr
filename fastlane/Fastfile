@@ -53,12 +53,11 @@ lane :upload_release do |_options|
 end
 
 desc 'Download the development signing certificates to this machine'
-lane :development_signing do |_options|
+lane :set_up_signing do |_options|
   sync_code_signing(
     platform: 'macos',
     app_identifier: APPLE_BUNDLE_IDENTIFIER,
     team_id: APPLE_TEAM_ID,
-    api_key: api_key,
     type: 'development',
 
     storage_mode: 's3',
@@ -67,15 +66,4 @@ lane :development_signing do |_options|
 
     readonly: true
   )
-end
-
-def api_key
-  Aws::S3::Client.new.get_object(
-    {
-      bucket: get_required_env('BUILDKITE_PLUGIN_S3_SECRETS_BUCKET'),
-      key: 'hostmgr/app_store_connect_fastlane_api_key.json'
-    }
-  ).body.read
-rescue StandardError => e
-  UI.user_error!("Unable to fetch App Store Connect API Key from S3: #{e}")
 end

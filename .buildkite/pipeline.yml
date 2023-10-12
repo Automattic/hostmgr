@@ -38,7 +38,7 @@ steps:
     key: "validate-release-build"
     command: |
       install_gems
-      bundle exec fastlane development_signing
+      bundle exec fastlane set_up_signing
       make build-release
     env: *common_env
     plugins: *common_plugins
@@ -52,8 +52,8 @@ steps:
     key: "publish"
     command: |
       install_gems
-      bundle exec fastlane development_signing
-      make build-release
+      bundle exec fastlane set_up_signing
+      make build
       bundle exec fastlane upload_release
     env: *common_env
     plugins: *common_plugins
