@@ -4,7 +4,6 @@ import ArgumentParser
 import Cocoa
 import libhostmgr
 
-#if arch(arm64)
 struct VMCreateCommand: AsyncParsableCommand {
 
     static let configuration = CommandConfiguration(
@@ -84,5 +83,3 @@ struct VMCreateCommand: AsyncParsableCommand {
         }
     }
 }
-
-#endif

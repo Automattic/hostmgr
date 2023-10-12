@@ -1,6 +1,5 @@
 import Virtualization
 
-#if arch(arm64)
 public class VMInstaller {
 
     enum Errors: Error {
@@ -56,4 +55,3 @@ public class VMInstaller {
         try await virtualMachine.stop()
     }
 }
-#endif

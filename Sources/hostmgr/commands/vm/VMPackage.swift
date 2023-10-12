@@ -4,7 +4,6 @@ import ArgumentParser
 import Cocoa
 import libhostmgr
 
-#if arch(arm64)
 struct VMPackageCommand: AsyncParsableCommand {
 
     static let configuration = CommandConfiguration(
@@ -28,4 +27,3 @@ struct VMPackageCommand: AsyncParsableCommand {
         Console.success("Compression Complete")
     }
 }
-#endif

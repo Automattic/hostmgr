@@ -1,6 +1,5 @@
 import Virtualization
 
-#if arch(arm64)
 struct VMConfiguration {
 
     enum NetworkingType {
@@ -75,4 +74,3 @@ struct VMConfiguration {
         VZVirtioBlockDeviceConfiguration(attachment: diskImage)
     }
 }
-#endif

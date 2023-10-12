@@ -32,10 +32,6 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
     func run() throws {
         var scriptBuilder = BuildkiteScriptBuilder()
 
-        #if arch(x86_64)
-        scriptBuilder.addDependency(atPath: "~/.circ")
-        #endif
-
         scriptBuilder.addEnvironmentVariable(named: "BUILDKITE", value: "true")
         scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_")
 
@@ -75,14 +71,6 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
 
         // Required to convince `fastlane` that we're running in CI
         scriptBuilder.addEnvironmentVariable(named: "CI", value: "true")
-
-        #if arch(x86_64)
-        // Used by the S3 Git Mirror plugin
-        scriptBuilder.addEnvironmentVariable(
-            named: "GIT_MIRROR_SERVER_ROOT",
-            value: "http://\(try getIpAddress()):\( Configuration.shared.gitMirrorPort)"
-        )
-        #endif
 
         let scriptText = scriptBuilder.build()
 

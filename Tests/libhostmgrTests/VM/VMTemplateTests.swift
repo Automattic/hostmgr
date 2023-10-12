@@ -1,7 +1,6 @@
 import XCTest
 @testable import libhostmgr
 
-#if arch(arm64)
 final class VMTemplateTests: XCTestCase {
 
     func testThatManifestCanBeRead() throws {
@@ -12,4 +11,3 @@ final class VMTemplateTests: XCTestCase {
         XCTAssertEqual(try VMTemplate.ManifestFile.from(url: url), manifest)
     }
 }
-#endif

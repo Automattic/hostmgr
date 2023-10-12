@@ -23,13 +23,11 @@ extension XCTest {
     }
 }
 
-#if arch(arm64)
 extension VZMacHardwareModel {
     static func createTestFixture() throws -> VZMacHardwareModel {
         try VZMacHardwareModel(dataRepresentation: dataForResource(named: "mac-hardware-model-data"))!
     }
 }
-#endif
 
 func getPathForEnvFile(named key: String) -> URL {
     Bundle.module.url(forResource: key, withExtension: "env")!

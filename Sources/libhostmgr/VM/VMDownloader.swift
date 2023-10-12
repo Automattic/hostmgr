@@ -1,7 +1,6 @@
 import Foundation
 import Virtualization
 
-#if arch(arm64)
 public struct VMDownloader {
 
     public static func fetchLatestRestoreImage() async throws -> VZMacOSRestoreImage {
@@ -35,4 +34,3 @@ public struct VMDownloader {
         return try await VZMacOSRestoreImage.image(from: destination)
     }
 }
-#endif

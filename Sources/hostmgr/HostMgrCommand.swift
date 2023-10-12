@@ -15,23 +15,14 @@ struct Hostmgr: AsyncParsableCommand {
             VMCommand.self,
             SyncCommand.self,
             InitCommand.self,
+            InstallCommand.self,
             RunCommand.self,
             SetCommand.self,
             BenchmarkCommand.self,
             ConfigCommand.self,
             CacheCommand.self
-        ] + appleSiliconCommands
-    )
-
-    static var appleSiliconCommands: [ParsableCommand.Type] {
-        #if arch(arm64)
-        return [
-            InstallCommand.self
         ]
-        #else
-        return []
-        #endif
-    }
+    )
 
     mutating func run() async throws {
         logger.trace("Starting Up")
