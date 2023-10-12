@@ -3,6 +3,8 @@ import Virtualization
 import Network
 import libhostmgr
 
+import Sentry
+
 @main
 struct HostMgrHelperApp: App {
     @AppStorage("showMenuBarExtra")
@@ -17,6 +19,7 @@ struct HostMgrHelperApp: App {
     private var serverTask: Task<Void, Error>!
 
     init() {
+        SentrySDK.start(options: sentryOptions)
 
         // Do some cleanup before we get started
         do {
@@ -39,6 +42,15 @@ struct HostMgrHelperApp: App {
             }.padding()
         }.menuBarExtraStyle(.window)
     }
+
+    let sentryOptions: Sentry.Options = {
+        var options = Sentry.Options()
+        options.dsn = ProcessInfo.processInfo.environment["SENTRY_DSN"] ?? ""
+        options.releaseName = libhostmgr.hostmgrVersion
+        options.enableSwizzling = false
+
+        return options
+    }()
 }
 
 struct EmptyVMListItem: View {

@@ -26,6 +26,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-tools-support-core", from: "0.2.5"),
         .package(url: "https://github.com/vapor/console-kit.git", .upToNextMajor(from: "4.9.0")),
         .package(url: "https://github.com/swhitty/FlyingFox.git", .upToNextMajor(from: "0.12.2")),
+        .package(url: "https://github.com/getsentry/sentry-cocoa.git", .upToNextMajor(from: "8.13.1")),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -48,6 +49,7 @@ let package = Package(
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Logging", package: "swift-log"),
+                .product(name: "Sentry", package: "sentry-cocoa"),
                 .target(name: "libhostmgr")
             ],
             swiftSettings: sharedSettings
