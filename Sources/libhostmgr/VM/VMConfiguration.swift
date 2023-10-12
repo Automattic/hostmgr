@@ -9,8 +9,6 @@ struct VMConfiguration {
 
     let bootloader = VZMacOSBootLoader()
 
-    let cpuCount: Int = VZVirtualMachineConfiguration.maximumAllowedCPUCount
-    let memorySize: UInt64 = VZVirtualMachineConfiguration.maximumAllowedMemorySize
     let diskImage: VZDiskImageStorageDeviceAttachment
     let macAddress: VZMACAddress
 
@@ -41,6 +39,28 @@ struct VMConfiguration {
         virtualMachineConfiguration.keyboards = [self.keyboard]
 
         return virtualMachineConfiguration
+    }
+
+    var cpuCount: Int {
+        VZVirtualMachineConfiguration.maximumAllowedCPUCount - 1
+    }
+
+    func calculateMemorySize(
+        min _min: UInt64 = VZVirtualMachineConfiguration.minimumAllowedMemorySize,
+        max _max: UInt64 = VZVirtualMachineConfiguration.maximumAllowedMemorySize,
+        shared: Bool
+    ) -> UInt64 {
+        let vmReservedSize = _min - Configuration.shared.hostReservedRAM
+
+        guard !Configuration.shared.useSharedMemoryCapacity else {
+            return min(max(_min, vmReservedSize), _max)
+        }
+
+        return min(max(_min, vmReservedSize.quotientAndRemainder(dividingBy: 2).quotient), _max)
+    }
+
+    var memorySize: UInt64 {
+        calculateMemorySize(shared: Configuration.shared.useSharedMemoryCapacity)
     }
 
     var graphicsConfiguration: [VZMacGraphicsDeviceConfiguration] {
