@@ -15,6 +15,7 @@ steps:
     key: "test-arm64"
     command: |
       echo "--- :swift: Building + Testing"
+      install_swiftpm_dependencies
       swift test
     env: *common_env
     plugins: *common_plugins
