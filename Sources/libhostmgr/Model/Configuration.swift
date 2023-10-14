@@ -49,7 +49,7 @@ public struct Configuration: Codable {
     public var awsConfigurationMethod: AWSConfigurationType! = Defaults.defaultAWSConfigurationMethod
 
     /// VM Memory Settings
-    public var hostReservedRAM: UInt64 = 1024 * 1024 * 4096 // Leave 4GB for the VM host
+    public static let hostReservedRAM: UInt64 = 1024 * 1024 * 4096 // Leave 4GB for the VM host
     public var useSharedMemoryCapacity: Bool = false
 
     enum CodingKeys: String, CodingKey {
