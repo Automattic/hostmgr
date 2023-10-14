@@ -23,7 +23,7 @@ extension XPCRequest {
         }
 
         request.httpBody = try self.pack()
-//        request.timeoutInterval = 120
+        request.timeoutInterval = 120
         return request
     }
 
@@ -94,7 +94,11 @@ public struct UnknownErrorResponse: XPCResponse {
 }
 
 public struct HostmgrServer {
-    private let server = HTTPServer(address: .loopback(port: 23604))
+    private let server = HTTPServer(
+        address: .loopback(port: 23604),
+        timeout: 360 // How long to allow a handler to run before assuming it won't finish
+    )
+
     private let delegate: HostmgrServerDelegate
 
     public init(delegate: HostmgrServerDelegate) {

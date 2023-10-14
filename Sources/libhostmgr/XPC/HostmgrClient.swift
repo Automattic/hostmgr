@@ -44,6 +44,10 @@ struct HostmgrClient {
             throw HostmgrError.xpcError(response.error)
         }
 
+        if statusCode == 500 {
+            throw HostmgrError.xpcError("Unknown server error")
+        }
+
         throw HostmgrError.helperIsMissing(baseURL)
     }
 }
