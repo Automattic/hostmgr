@@ -39,7 +39,7 @@ steps:
     command: |
       install_gems
       bundle exec fastlane set_up_signing
-      make build-release
+      make build
     env: *common_env
     plugins: *common_plugins
     agents:
