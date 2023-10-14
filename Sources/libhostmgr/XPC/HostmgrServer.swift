@@ -1,5 +1,6 @@
 import Foundation
 import FlyingFox
+import OSLog
 
 public protocol HostmgrServerDelegate {
     func start(launchConfiguration: LaunchConfiguration) async throws
@@ -8,15 +9,21 @@ public protocol HostmgrServerDelegate {
 }
 
 protocol XPCRequest: Codable {
+    static var method: HTTPMethod { get }
     static var path: String { get }
 }
 
 extension XPCRequest {
     func asUrlRequest(relativeTo baseURL: URL) throws -> URLRequest {
         var request = URLRequest(url: baseURL.appending(path: Self.path))
-        request.httpMethod = "POST"
+        request.httpMethod = Self.method.rawValue
+
+        if Self.method == .GET {
+            return request
+        }
+
         request.httpBody = try self.pack()
-        request.timeoutInterval = 120
+//        request.timeoutInterval = 120
         return request
     }
 
@@ -34,19 +41,27 @@ extension XPCRequest {
     }
 }
 
+public struct VMServerPingRequest: XPCRequest {
+    static let method: HTTPMethod = .GET
+    static let path: String = "/"
+}
+
 public struct VMStartRequest: XPCRequest {
+    static let method: HTTPMethod = .POST
     static let path: String = "/start"
 
     let launchConfiguration: LaunchConfiguration
 }
 
 public struct VMStopRequest: XPCRequest {
+    static let method: HTTPMethod = .POST
     static let path: String = "/stop"
 
     let handle: String
 }
 
 public struct VMStopAllRequest: XPCRequest {
+    static let method: HTTPMethod = .POST
     static let path: String = "/stop-all"
 }
 
@@ -87,6 +102,7 @@ public struct HostmgrServer {
     }
 
     public func start() async throws {
+        await self.server.appendRoute(HTTPRoute(method: .GET, path: "/"), handler: self.ping)
         await self.server.appendRoute(HTTPRoute(method: .POST, path: "/start"), handler: self.startVMHandler)
         await self.server.appendRoute(HTTPRoute(method: .POST, path: "/stop"), handler: self.stopVMHandler)
         await self.server.appendRoute(HTTPRoute(method: .POST, path: "/stop-all"), handler: self.stopAllVMs)
@@ -95,9 +111,18 @@ public struct HostmgrServer {
     }
 
     @Sendable
+    func ping(request: HTTPRequest) async throws -> HTTPResponse {
+        return HTTPResponse(statusCode: .ok, body: Data("Server is running".utf8))
+    }
+
+    @Sendable
     func startVMHandler(request: HTTPRequest) async throws -> HTTPResponse {
+        Logger.helper.log("Received Start Request")
+
         do {
             let startRequest = try await VMStartRequest.extract(from: request)
+            Logger.helper.log("Parsed launch configuration from request")
+
             try await self.delegate.start(launchConfiguration: startRequest.launchConfiguration)
             return HTTPResponse(statusCode: .ok)
         } catch let error as HostmgrError {

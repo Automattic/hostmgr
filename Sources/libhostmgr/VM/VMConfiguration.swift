@@ -50,13 +50,13 @@ struct VMConfiguration {
         max _max: UInt64 = VZVirtualMachineConfiguration.maximumAllowedMemorySize,
         shared: Bool
     ) -> UInt64 {
-        let vmReservedSize = _min - Configuration.shared.hostReservedRAM
+        let vmReservedSize = _max - Configuration.shared.hostReservedRAM
 
-        guard !Configuration.shared.useSharedMemoryCapacity else {
-            return min(max(_min, vmReservedSize), _max)
+        if shared {
+            return min(max(_min, vmReservedSize.quotientAndRemainder(dividingBy: 2).quotient), _max)
         }
 
-        return min(max(_min, vmReservedSize.quotientAndRemainder(dividingBy: 2).quotient), _max)
+        return max(vmReservedSize, _min)
     }
 
     var memorySize: UInt64 {
