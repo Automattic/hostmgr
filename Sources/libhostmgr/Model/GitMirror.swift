@@ -47,7 +47,16 @@ public struct GitMirror {
     ///
     public var existsLocally: Bool {
         get throws {
-            try FileManager.default.directoryExists(at: localPath)
+            return try FileManager.default.directoryExists(at: localPath)
+        }
+    }
+
+    /// Does this Git Mirror's archive exist on disk?
+    ///
+    public var archiveExistsLocally: Bool {
+        get throws {
+            try ensureTempDirectoryExists()
+            return FileManager.default.fileExists(at: archivePath)
         }
     }
 
