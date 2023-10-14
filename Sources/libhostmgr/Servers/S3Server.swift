@@ -26,7 +26,7 @@ public struct S3Server: ReadWriteRemoteFileProvider, BytewiseRemoteFileProvider 
     public static let vmImages: S3Server = S3Server(
         bucketName: Configuration.shared.vmImagesBucket,
         region: Configuration.shared.vmImagesRegion,
-        endpoint: Configuration.shared.vmImagesEndpoint
+        endpoint: .accelerated
     )
 
     public init(bucketName: String, region: String, endpoint: S3Endpoint) {
