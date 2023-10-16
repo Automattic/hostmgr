@@ -52,9 +52,13 @@ public struct Configuration: Codable {
     public var allowAWSAcceleratedTransfer: Bool! = Defaults.defaultAWSAcceleratedTransferAllowed
     public var awsConfigurationMethod: AWSConfigurationType! = Defaults.defaultAWSConfigurationMethod
 
-    /// VM Memory Settings
-    public static let hostReservedRAM: UInt64 = 1024 * 1024 * 4096 // Leave 4GB for the VM host
-    public var useSharedMemoryCapacity: Bool = false
+    // MARK: VM Resource Settings
+
+    /// Should this node run more than one concurrent VM?
+    public let isSharedNode: Bool = false
+
+    /// How much RAM should be reserved for the host (and not allocated to VMs)
+    public let hostReservedRAM: UInt64 = 1024 * 1024 * 2048 // Leave 2GB for the VM host
 
     enum CodingKeys: String, CodingKey {
         case version
