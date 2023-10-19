@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 fastlane_require 'digest'
+fastlane_require 'zip'
 
 UI.user_error!('Please run fastlane via `bundle exec`') unless FastlaneCore::Helper.bundler?
 
@@ -10,9 +11,9 @@ UI.user_error!('Please run fastlane via `bundle exec`') unless FastlaneCore::Hel
 PROJECT_ROOT_FOLDER = File.dirname(File.expand_path(__dir__))
 SECRETS_FOLDER = File.join(PROJECT_ROOT_FOLDER, '.secrets')
 
-ARTIFACT_PATHS = Dir.glob(File.join(PROJECT_ROOT_FOLDER, '.build', 'artifacts', 'release', '*'))
-ZIP_FILE_PATH = File.join(PROJECT_ROOT_FOLDER, '.build', 'artifacts', 'artifacts.zip')
-
+ARTIFACTS_ROOT = File.join(PROJECT_ROOT_FOLDER, '.build', 'artifacts', 'release')
+ARTIFACT_PATHS = Dir.glob(File.join(ARTIFACTS_ROOT, '*'))
+ZIP_FILE_PATH = File.join(PROJECT_ROOT_FOLDER, '.build', 'artifacts', 'hostmgr.zip')
 GITHUB_REPO = 'automattic/hostmgr'
 
 APPLE_TEAM_ID = 'PZYM8XX95Q'
@@ -32,12 +33,8 @@ end
 desc 'Upload the Release Build products to Github under a new release'
 lane :upload_release do |_options|
   UI.user_error!('No build products are present – did you run `make build-release`?') if ARTIFACT_PATHS.empty?
-  File.delete(ZIP_FILE_PATH) if File.file? ZIP_FILE_PATH
 
-  zip(
-    path: File.join(PROJECT_ROOT_FOLDER, '.build', 'artifacts', 'release'),
-    output_path: ZIP_FILE_PATH
-  )
+  create_release_zip
 
   tag = ENV['BUILDKITE_TAG'] ||= prompt(text: "Enter the tag name you'd like to use")
 
@@ -66,4 +63,16 @@ lane :set_up_signing do |_options|
 
     readonly: true
   )
+end
+
+def create_release_zip
+  File.delete(ZIP_FILE_PATH) if File.file? ZIP_FILE_PATH
+
+  Dir.chdir(ARTIFACTS_ROOT) do
+    Zip::File.open(ZIP_FILE_PATH, Zip::File::CREATE) do |zipfile|
+      ['hostmgr', 'hostmgr-helper'].each do |f|
+        zipfile.add(File.basename(f), File.join(ARTIFACTS_ROOT, f))
+      end
+    end
+  end
 end
