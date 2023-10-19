@@ -25,12 +25,20 @@ steps:
   #################
   # Lint
   #################
-  # - label: "🧪 Lint"
-  #   command: |
-  #     make lint
-  #   plugins: *common_plugins
-  #   agents:
-  #     queue: default
+  - label: "🧪 Lint Swift"
+    command: |
+      make lint-swift
+    plugins: *common_plugins
+    agents:
+      queue: default
+
+  - label: "🧪 Lint Ruby"
+    command: |
+      install_gems
+      make lint-ruby
+    plugins: *common_plugins
+    agents:
+      queue: default
 
   #################
   # Validate Release Build
