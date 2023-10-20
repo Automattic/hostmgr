@@ -70,7 +70,7 @@ def create_release_zip
 
   Dir.chdir(ARTIFACTS_ROOT) do
     Zip::File.open(ZIP_FILE_PATH, Zip::File::CREATE) do |zipfile|
-      ['hostmgr', 'hostmgr-helper'].each do |f|
+      %w[hostmgr hostmgr-helper].each do |f|
         zipfile.add(File.basename(f), File.join(ARTIFACTS_ROOT, f))
       end
     end

@@ -35,10 +35,11 @@ steps:
   - label: "🧪 Lint Ruby"
     command: |
       install_gems
-      make lint-ruby
+      bundle exec rubocop
+    env: *common_env
     plugins: *common_plugins
     agents:
-      queue: default
+      queue: mac
 
   #################
   # Validate Release Build
