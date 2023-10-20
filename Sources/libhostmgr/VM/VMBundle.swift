@@ -80,12 +80,15 @@ extension VMBundle: Bundle {
     /// Update a cloned VMBundle to record its new name and have a unique MAC address
     ///
     @discardableResult
-    public func withRandomizedHardwareAddress() throws -> VMBundle {
+    public func preparedForReuse() throws -> VMBundle {
         let oldBundle = VMBundle(at: self.root)
+
+
 
         try oldBundle.getConfig()
             .settingUniqueMacAddress()
             .settingUniqueMachineIdentifier()
+            .settingTemplateName(to: oldBundle.getConfig().name)
             .write(to: oldBundle.configurationFilePath)
 
         return oldBundle

@@ -87,20 +87,4 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
     var buildkitePipelineSlug: String {
         ProcessInfo.processInfo.environment["BUILDKITE_PIPELINE_SLUG"]!
     }
-
-    // A somewhat hack-ey way to get the device's IP address, but it should continue
-    // to work in future macOS versions for some time
-    func getIpAddress(forInterface name: String = "en0") throws -> String {
-
-        let output = Pipe()
-
-        let task = Process()
-        task.launchPath = "/usr/sbin/ipconfig"
-        task.arguments = ["getifaddr", name]
-        task.standardOutput = output
-        try task.run()
-
-        let data = output.fileHandleForReading.readDataToEndOfFile()
-        return String(data: data, encoding: .utf8)!.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
 }

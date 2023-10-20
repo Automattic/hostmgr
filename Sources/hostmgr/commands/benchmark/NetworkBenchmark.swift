@@ -3,8 +3,6 @@ import ArgumentParser
 import Logging
 import libhostmgr
 
-private let startDate = Date()
-
 struct NetworkBenchmark: ParsableCommand {
 
     static let configuration = CommandConfiguration(

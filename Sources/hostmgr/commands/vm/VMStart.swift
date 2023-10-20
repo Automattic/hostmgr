@@ -60,6 +60,10 @@ struct VMStartCommand: AsyncParsableCommand {
                 return []
             }
 
+            guard self.withGitMirrors == true else {
+                return []
+            }
+
             return [
                 LaunchConfiguration.SharedPath(source: Paths.gitMirrorStorageDirectory, readOnly: true)
             ]

@@ -4,17 +4,6 @@ import Virtualization
 public struct VMTemplate: TemplateBundle {
     let root: URL
 
-    enum Errors: Error {
-        case vmDoesNotExist
-        case vmIsNotATemplate
-
-        case invalidDiskImageHash
-        case invalidAuxImageHash
-        case missingConfigFile
-        case missingManifest
-        case invalidManifest
-    }
-
     struct ManifestFile: Equatable, Codable {
         let imageHash: Data
         let auxilaryDataHash: Data
@@ -31,10 +20,6 @@ public struct VMTemplate: TemplateBundle {
 
     init(at url: URL) {
         self.root = url
-    }
-
-    var isCompressed: Bool {
-        self.root.absoluteString.hasSuffix(".vmtemplate.aar")
     }
 
     public var basename: String {
@@ -81,23 +66,23 @@ public struct VMTemplate: TemplateBundle {
     public func validate() throws -> Self {
 
         guard FileManager.default.fileExists(at: manifestFilePath) else {
-            throw Errors.missingManifest
+            throw HostmgrError.vmManifestFileNotFound(manifestFilePath)
         }
 
-        guard let manifest = try ManifestFile.from(url: self.manifestFilePath) else {
-            throw Errors.invalidManifest
+        guard let manifest = try ManifestFile.from(url: manifestFilePath) else {
+            throw HostmgrError.vmManifestFileInvalid(manifestFilePath)
         }
 
         guard try manifest.imageHash == hashDiskImage() else {
-            throw Errors.invalidDiskImageHash
+            throw HostmgrError.vmDiskImageCorrupt(root)
         }
 
         guard try manifest.auxilaryDataHash == hashAuxData() else {
-            throw Errors.invalidAuxImageHash
+            throw HostmgrError.vmAuxDataCorrupt(root)
         }
 
-        guard FileManager.default.fileExists(at: self.configurationFilePath) else {
-            throw Errors.missingConfigFile
+        guard FileManager.default.fileExists(at: configurationFilePath) else {
+            throw HostmgrError.vmConfigurationFileMissing(configurationFilePath)
         }
 
         /// Ensure that the bundle bit is applied

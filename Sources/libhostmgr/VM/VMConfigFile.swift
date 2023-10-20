@@ -53,7 +53,7 @@ extension VMConfigFile {
         )
     }
 
-    func settingTemplateName(to newValue: String) -> VMConfigFile {
+    func settingTemplateName(to newValue: String?) -> VMConfigFile {
         VMConfigFile(
             name: self.name,
             hardwareModel: self.hardwareModel,

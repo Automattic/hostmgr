@@ -2,11 +2,6 @@ import Virtualization
 
 struct VMConfiguration {
 
-    enum NetworkingType {
-        case nat
-        case bridged(interface: String)
-    }
-
     let bootloader = VZMacOSBootLoader()
 
     let diskImage: VZDiskImageStorageDeviceAttachment
@@ -86,17 +81,6 @@ struct VMConfiguration {
         networkDevice.macAddress = macAddress
 
         return [networkDevice]
-    }
-
-    var bridgedNetworkConfiguration: [VZVirtioNetworkDeviceConfiguration] {
-        let networkDevice = VZVirtioNetworkDeviceConfiguration()
-
-        let interface = VZBridgedNetworkInterface.networkInterfaces.first!
-        networkDevice.attachment = VZBridgedNetworkDeviceAttachment(interface: interface)
-        networkDevice.macAddress = macAddress
-
-        return [networkDevice]
-
     }
 
     var blockDeviceConfiguration: VZVirtioBlockDeviceConfiguration {

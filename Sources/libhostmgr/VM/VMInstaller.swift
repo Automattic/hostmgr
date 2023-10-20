@@ -4,9 +4,7 @@ public class VMInstaller {
 
     enum Errors: Error {
         case unsupportedRestoreImage
-        case invalidHardwareModel
         case unsupportedHardware
-        case invalidMachineIdentifier
     }
 
     private var installationObserver: NSKeyValueObservation?

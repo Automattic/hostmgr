@@ -21,28 +21,6 @@ actor VMUsageTracker {
         try fileHandle.close()
     }
 
-    func usageCountFor(vmNamed name: String, since date: Date) async throws -> Int {
-        try createUsageFileIfNotExists()
-
-        let fileHandle = try FileHandle(forReadingFrom: self.usageFilePath)
-
-        var count = 0
-
-        for try await line in fileHandle.bytes.lines {
-            guard line.hasPrefix(name), let usageRecord = await parseLine(line: line) else {
-                continue
-            }
-
-            if usageRecord.isAfter(date: date) {
-                count += 1
-            }
-        }
-
-        try fileHandle.close()
-
-        return count
-    }
-
     func usageStats() async throws -> [VMUsageRecord] {
         try createUsageFileIfNotExists()
 

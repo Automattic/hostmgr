@@ -2,10 +2,6 @@ import Foundation
 
 public struct ConfigurationRepository {
 
-    enum Errors: Error {
-        case configurationFileNotFound
-    }
-
     public static var configurationFileExists: Bool {
         FileManager.default.fileExists(at: Paths.configurationFilePath)
     }

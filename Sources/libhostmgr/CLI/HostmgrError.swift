@@ -13,14 +13,12 @@ public enum HostmgrError: Error, LocalizedError, Codable {
     case notEnoughLocalDiskSpaceToDownloadFile(String, Int, Int64)
     case helperIsMissing(URL)
     case noVMSlotsAvailable
-//    case parallelsVirtualMachineDoesNotExist
-//    case parallelsVirtualMachineIsNotStopped
-//    case parallelsVirtualMachineAlreadyExists
-//    case missingArgument
-//    case deprecated
-
+    case vmManifestFileNotFound(URL)
+    case vmManifestFileInvalid(URL)
+    case vmDiskImageCorrupt(URL)
+    case vmAuxDataCorrupt(URL)
+    case vmConfigurationFileMissing(URL)
     case invalidVMSourceImage(URL)
-
     case xpcError(String)
 
     public var errorDescription: String? {
@@ -48,23 +46,22 @@ public enum HostmgrError: Error, LocalizedError, Codable {
                 "Unable to download \(fileName) (\(Format.fileBytes(requested)))",
                 "not enough local storage available (\(Format.fileBytes(available)))"
             ].joined(separator: " - ")
-//        case .parallelsVirtualMachineDoesNotExist:
-//
-//        case .parallelsVirtualMachineIsNotStopped:
-//
-//        case .parallelsVirtualMachineAlreadyExists:
-//
-//        case .missingArgument:
-//
-//        case .deprecated:
-
-        case .invalidVMSourceImage(let url):
-            return  "This Mac cannot create a VM from the disk image at \(url)"
-
         case .helperIsMissing(let path):
             return "`hostmgr-helper` is missing – please reinstall `hostmgr` (should be at \(path))"
         case .noVMSlotsAvailable:
             return "Unable to launch more VMs – maximum reached"
+        case .vmManifestFileNotFound(let path):
+            return "VM Manifest file not found at \(path.path())"
+        case .vmManifestFileInvalid(let path):
+            return "The VM Manifest file at \(path.path()) cannot be read – it may be the wrong format"
+        case .vmDiskImageCorrupt(let path):
+            return "The VM disk image at \(path.path()) has the wrong hash – it may be corrupt. Please re-download it"
+        case .vmAuxDataCorrupt(let path):
+            return "The VM aux data at \(path.path()) has the wrong hash – it may be corrupt. Please re-download it"
+        case .vmConfigurationFileMissing(let path):
+            return "No VM configuration file found at \(path.path()). Please re-download the image"
+        case .invalidVMSourceImage(let url):
+            return  "This Mac cannot create a VM from the disk image at \(url)"
         case .xpcError(let string):
             return string
         }

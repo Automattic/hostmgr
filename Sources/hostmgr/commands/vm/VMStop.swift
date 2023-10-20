@@ -12,9 +12,6 @@ struct VMStopCommand: AsyncParsableCommand {
     @Argument(help: "The Name, ID, or Handle of the VM you'd like to stop")
     var identifier: String?
 
-    @Flag(help: "Kill the VM immediately, without waiting for it to shut down")
-    var immediately: Bool = false
-
     @Flag(help: "Shutdown all VMs")
     var all: Bool = false
 
@@ -23,7 +20,6 @@ struct VMStopCommand: AsyncParsableCommand {
 
     enum CodingKeys: CodingKey {
         case identifier
-        case immediately
         case all
     }
 

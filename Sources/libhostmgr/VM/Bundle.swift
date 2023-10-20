@@ -42,7 +42,7 @@ extension Bundle {
         try FileManager.default.createParentDirectoryIfNotExists(for: destination)
         try FileManager.default.copyItem(at: self.root, to: destination)
 
-        return try VMBundle(at: destination).withRandomizedHardwareAddress()
+        return try VMBundle(at: destination).preparedForReuse()
     }
 }
 

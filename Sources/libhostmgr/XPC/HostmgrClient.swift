@@ -1,17 +1,6 @@
 import Foundation
 
 struct HostmgrClient {
-
-    enum XPCError: Error {
-        case unknown(String)
-
-        var errorDescription: String {
-            switch self {
-            case .unknown(let message): return message
-            }
-        }
-    }
-
     private static let baseURL = URL(string: "http://localhost:23604")!
 
     static func start(launchConfiguration: LaunchConfiguration) async throws {
