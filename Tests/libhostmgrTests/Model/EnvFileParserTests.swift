@@ -79,4 +79,8 @@ final class EnvFileParserTests: XCTestCase {
     func testThatEmojiArePreserved() throws {
         XCTAssertEqual("🛠 Build for Testing", self.envFile["STRING_WITH_EMOJI"])
     }
+
+    func testThatCommentsAreIgnored() throws {
+        XCTAssertNil(self.envFile["DO_NOT_PARSE_THIS"])
+    }
 }
