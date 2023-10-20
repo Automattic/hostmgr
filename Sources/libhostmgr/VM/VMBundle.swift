@@ -83,8 +83,6 @@ extension VMBundle: Bundle {
     public func preparedForReuse() throws -> VMBundle {
         let oldBundle = VMBundle(at: self.root)
 
-
-
         try oldBundle.getConfig()
             .settingUniqueMacAddress()
             .settingUniqueMachineIdentifier()
