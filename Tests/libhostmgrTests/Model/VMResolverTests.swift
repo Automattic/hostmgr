@@ -18,7 +18,7 @@ final class VMResolverTests: XCTestCase {
     func testThatWorkingVMIsResolvedBeforeBundleVM() throws {
         let existingFiles = MockFileManager(existingDirectories: [
             bundleVMPath,
-            workingVMPath,
+            workingVMPath
         ])
 
         XCTAssertEqual(try VMResolver.resolvePath(for: "foo", fileManager: existingFiles), workingVMPath)
@@ -27,14 +27,14 @@ final class VMResolverTests: XCTestCase {
     func testThatBundledVMIsResolvedBeforeTemplateVM() throws {
         let existingFiles = MockFileManager(existingDirectories: [
             templateVMPath,
-            bundleVMPath,
+            bundleVMPath
         ])
 
         XCTAssertEqual(try VMResolver.resolvePath(for: "foo", fileManager: existingFiles), bundleVMPath)
     }
 
     func testThatTemplateVMIsResolvedBeforeArchivedVM() throws {
-        let existingFiles = MockFileManager(existingFiles: [archivedVMPath], existingDirectories: [templateVMPath,])
+        let existingFiles = MockFileManager(existingFiles: [archivedVMPath], existingDirectories: [templateVMPath ])
 
         XCTAssertEqual(try VMResolver.resolvePath(for: "foo", fileManager: existingFiles), templateVMPath)
     }

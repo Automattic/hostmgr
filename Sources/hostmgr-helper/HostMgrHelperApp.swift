@@ -174,15 +174,23 @@ struct VMListItem: View {
 
     var body: some View {
         switch slot.status {
-            case .empty:
+        case .empty:
             EmptyVMListItem(number: number)
-            case .starting(let launchConfiguration):
-            PendingVMListItem(number: number, launchConfiguration: launchConfiguration)
-            case .running(let launchConfiguration, let ipAddress):
-            RunningVMListItem(number: number, launchConfiguration: launchConfiguration, ipAddress: ipAddress, slot: slot)
-            case .stopping:
+        case .starting(let launchConfiguration):
+            PendingVMListItem(
+                number: number,
+                launchConfiguration: launchConfiguration
+            )
+        case .running(let launchConfiguration, let ipAddress):
+            RunningVMListItem(
+                number: number,
+                launchConfiguration: launchConfiguration,
+                ipAddress: ipAddress,
+                slot: slot
+            )
+        case .stopping:
             EmptyVMListItem(number: number)
-            case .crashed(let error):
+        case .crashed(let error):
             ErrorVMListItem(number: number, error: error)
         }
     }

@@ -2,7 +2,7 @@ import Foundation
 import FlyingFox
 import OSLog
 
-public protocol HostmgrServerDelegate {
+public protocol HostmgrServerDelegate: AnyObject {
     func start(launchConfiguration: LaunchConfiguration) async throws
     func stop(handle: String) async throws
     func stopAll() async throws
@@ -65,7 +65,7 @@ public struct VMStopAllRequest: XPCRequest {
     static let path: String = "/stop-all"
 }
 
-protocol XPCResponse: Codable{}
+protocol XPCResponse: Codable {}
 extension XPCResponse {
 
     func packed() throws -> Data {

@@ -1,7 +1,7 @@
 import Foundation
 
 public struct VMUsageRecord: Sendable {
-    public let vm: String
+    public let vmName: String
     public let date: Date
 
     public func isAfter(date: Date) -> Bool {
@@ -10,7 +10,7 @@ public struct VMUsageRecord: Sendable {
 }
 
 public struct VMUsageAggregate {
-    public let vm: String
+    public let vmName: String
     public let count: Int
     public let lastUsed: Date
 
@@ -21,11 +21,11 @@ public struct VMUsageAggregate {
     public func merging(_ record: VMUsageRecord) -> VMUsageAggregate {
         let count = self.count + 1
         let date = record.isAfter(date: lastUsed) ? record.date : lastUsed
-        return VMUsageAggregate(vm: vm, count: count, lastUsed: date)
+        return VMUsageAggregate(vmName: record.vmName, count: count, lastUsed: date)
     }
 
     public static func from(record: VMUsageRecord) -> VMUsageAggregate {
-        VMUsageAggregate(vm: record.vm, count: 1, lastUsed: record.date)
+        VMUsageAggregate(vmName: record.vmName, count: 1, lastUsed: record.date)
     }
 
     public static func from(_ records: [VMUsageRecord]) -> VMUsageAggregate? {
@@ -44,21 +44,20 @@ extension [VMUsageRecord]: Sendable {
         var aggregatedRecords = [String: VMUsageAggregate]()
 
         for record in self {
-            if let existingRecord = aggregatedRecords[record.vm] {
-                aggregatedRecords[record.vm] = existingRecord.merging(record)
+            if let existingRecord = aggregatedRecords[record.vmName] {
+                aggregatedRecords[record.vmName] = existingRecord.merging(record)
             } else {
-                aggregatedRecords[record.vm] = VMUsageAggregate.from(record: record)
+                aggregatedRecords[record.vmName] = VMUsageAggregate.from(record: record)
             }
         }
 
         return aggregatedRecords.values.map { $0 }
     }
-
 }
 
 extension [VMUsageAggregate] {
     public func asTable() -> Console.Table {
-        self.map { [$0.vm, String($0.count)] }
+        self.map { [$0.vmName, String($0.count)] }
     }
 
     func unused(since: Date) -> Self {

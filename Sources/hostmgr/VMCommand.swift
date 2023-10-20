@@ -19,7 +19,7 @@ struct VMCommand: AsyncParsableCommand {
             VMPublishCommand.self,
             VMStartCommand.self,
             VMStatsCommand.self,
-            VMStopCommand.self,
+            VMStopCommand.self
         ]
     )
 }

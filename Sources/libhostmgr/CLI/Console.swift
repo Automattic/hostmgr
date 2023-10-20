@@ -203,7 +203,10 @@ extension Console {
         ProgressBar(title: string, type: type, initialProgress: .discreteProgress(totalUnitCount: 0))
     }
 
-    public static func startImageDownload(_ image: any RemoteVMImage, _ callback: ProgressUpdateCallback) async rethrows {
+    public static func startImageDownload(
+        _ image: any RemoteVMImage,
+        _ callback: ProgressUpdateCallback
+    ) async rethrows {
         let size = Format.fileBytes(image.size)
         let bar = ProgressBar(
             title: "Downloading \(image.fileName) (\(size))",

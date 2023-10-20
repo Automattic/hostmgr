@@ -7,7 +7,7 @@ struct HostmgrClient {
 
         var errorDescription: String {
             switch self {
-                case .unknown(let message): return message
+            case .unknown(let message): return message
             }
         }
     }
@@ -29,7 +29,7 @@ struct HostmgrClient {
     static func perform(request: XPCRequest) async throws {
         let request = try request.asUrlRequest(relativeTo: baseURL)
         let (data, response) = try await URLSession.shared.data(for: request)
-        let statusCode = (response as! HTTPURLResponse).statusCode
+        let statusCode = (response as? HTTPURLResponse)?.statusCode
 
         // Bail early if we don't need to handle errors
         guard statusCode != 200 else {

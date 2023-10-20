@@ -9,19 +9,19 @@ actor VMUsageTracker {
         self.usageFilePath = usageFilePath
     }
 
-    func trackUsageOf(vm: String, on date: Date = Date()) throws {
+    func trackUsageOf(vmNamed name: String, on date: Date = Date()) throws {
         try createUsageFileIfNotExists()
 
         let fileHandle = try FileHandle(forWritingTo: self.usageFilePath)
         try fileHandle.seekToEnd()
 
-        let line = vm + "\t" + self.dateFormatter.string(from: date) + "\n"
+        let line = name + "\t" + self.dateFormatter.string(from: date) + "\n"
         try fileHandle.write(contentsOf: Data(line.utf8))
 
         try fileHandle.close()
     }
 
-    func usageCountFor(vm: String, since date: Date) async throws -> Int {
+    func usageCountFor(vmNamed name: String, since date: Date) async throws -> Int {
         try createUsageFileIfNotExists()
 
         let fileHandle = try FileHandle(forReadingFrom: self.usageFilePath)
@@ -29,7 +29,7 @@ actor VMUsageTracker {
         var count = 0
 
         for try await line in fileHandle.bytes.lines {
-            guard line.hasPrefix(vm), let usageRecord = await parseLine(line: line) else {
+            guard line.hasPrefix(name), let usageRecord = await parseLine(line: line) else {
                 continue
             }
 
@@ -74,13 +74,13 @@ actor VMUsageTracker {
         let parts = line.components(separatedBy: CharacterSet(charactersIn: "\t"))
 
         guard
-            let vm = parts.first,
+            let vmName = parts.first,
             let timestamp = parts.last,
             let linestamp = self.dateFormatter.date(from: String(timestamp))
         else {
             return nil
         }
 
-        return VMUsageRecord(vm: String(vm), date: linestamp)
+        return VMUsageRecord(vmName: String(vmName), date: linestamp)
     }
 }

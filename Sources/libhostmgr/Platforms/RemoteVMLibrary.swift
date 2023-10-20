@@ -27,14 +27,14 @@ public enum RemoteVMImageSortingStrategy {
     }
 }
 
-public protocol RemoteVMLibrary<VM> {
+public protocol RemoteVMLibrary<RemoteVMType> {
 
-    associatedtype VM: RemoteVMImage
+    associatedtype RemoteVMType: RemoteVMImage
 
     func getManifest() async throws -> [String]
-    func listImages(sortedBy strategy: RemoteVMImageSortingStrategy) async throws -> [VM]
+    func listImages(sortedBy strategy: RemoteVMImageSortingStrategy) async throws -> [RemoteVMType]
     func hasImage(named: String) async throws -> Bool
-    func lookupImage(named name: String) async throws -> VM
+    func lookupImage(named name: String) async throws -> RemoteVMType
 
     @discardableResult
     func download(vmNamed: String, progressCallback: @escaping ProgressCallback) async throws -> URL
@@ -44,7 +44,7 @@ public protocol RemoteVMLibrary<VM> {
     /// This method is the preferred way to deploy a VM image
     func publish(vmNamed: String, progressCallback: @escaping ProgressCallback) async throws
 
-    func remoteImagesFrom(objects: [RemoteFile]) -> [VM]
+    func remoteImagesFrom(objects: [RemoteFile]) -> [RemoteVMType]
 }
 
 enum RemoteVMLibraryErrors: Error {
@@ -96,7 +96,7 @@ extension RemoteVMLibrary {
         return destination
     }
 
-    public func listImages(sortedBy strategy: RemoteVMImageSortingStrategy = .name) async throws -> [VM] {
+    public func listImages(sortedBy strategy: RemoteVMImageSortingStrategy = .name) async throws -> [RemoteVMType] {
         let objects = try await S3Server.vmImages.listFiles(startingWith: "images/")
         return remoteImagesFrom(objects: objects)
     }
@@ -105,7 +105,7 @@ extension RemoteVMLibrary {
         try await listImages().contains(where: { $0.name == name })
     }
 
-    public func lookupImage(named name: String) async throws -> VM {
+    public func lookupImage(named name: String) async throws -> RemoteVMType {
         guard let image = try await listImages().first(where: { $0.name == name }) else {
             throw HostmgrError.unableToFindRemoteImage(name)
         }
@@ -113,8 +113,8 @@ extension RemoteVMLibrary {
         return image
     }
 
-    public func remoteImagesFrom(objects: [RemoteFile]) -> [VM] {
-        objects.compactMap(VM.init)
+    public func remoteImagesFrom(objects: [RemoteFile]) -> [RemoteVMType] {
+        objects.compactMap(RemoteVMType.init)
     }
 
     public func publish(vmNamed name: String, progressCallback: @escaping ProgressCallback) async throws {

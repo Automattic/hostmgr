@@ -61,7 +61,10 @@ final class VMConfigFileTests: XCTestCase {
     }
 
     func testThatSettingUniqueMachineIdentifierPersistsTemplateName() throws {
-        try XCTAssertEqual(configFileSample3.templateName, configFileSample3.settingUniqueMachineIdentifier().templateName)
+        try XCTAssertEqual(
+            configFileSample3.templateName,
+            configFileSample3.settingUniqueMachineIdentifier().templateName
+        )
     }
 
     func testThatSettingTemplateNameUpdatesCorrectly() throws {
@@ -95,7 +98,7 @@ final class VMConfigFileTests: XCTestCase {
             try VMConfigFile.from(url: sampleConfig1)
         }
     }
-    
+
     /// Configuration file with `name` set, but not `vmTemplate`
     ///
     var configFileSample2: VMConfigFile {
@@ -112,7 +115,7 @@ final class VMConfigFileTests: XCTestCase {
         }
     }
 
-    func roundTrip<T>(_ object: T) throws -> T where T:Codable {
+    func roundTrip<T>(_ object: T) throws -> T where T: Codable {
         let encoded = try JSONEncoder().encode(object)
         return try JSONDecoder().decode(T.self, from: encoded)
     }

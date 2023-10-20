@@ -6,7 +6,8 @@ import Foundation
 /// could be in the `vm-images` directory if they're a template. Within the `vm-images` directory, they could
 /// be a `.vmtemplate` or `.bundle` file, depending on whether they've been converted to a template or not.
 ///
-/// This object papers over those distinctions and makes it possible to just say "get a VM called `foo`" and have it work.
+/// This object papers over those distinctions and makes it possible to just say "get a VM called `foo`" and
+/// have it work.
 struct VMResolver {
 
     enum Result {
@@ -36,7 +37,7 @@ struct VMResolver {
         named identifier: String,
         fileManager: FileManagerProto = FileManager.default
     ) throws -> any Bundle {
-        switch(try resolve(identifier, fileManager: fileManager)) {
+        switch try resolve(identifier, fileManager: fileManager) {
         case .bundle(let bundle): return bundle
         case .template(let template): return template
         }

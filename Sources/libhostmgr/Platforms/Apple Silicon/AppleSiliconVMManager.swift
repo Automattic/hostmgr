@@ -2,15 +2,15 @@ import Foundation
 import Network
 import Virtualization
 
-struct AppleSiliconVMManager: VMManager {    
-    typealias VM = AppleSiliconVMImage
+struct AppleSiliconVMManager: VMManager {
+    typealias VMType = AppleSiliconVMImage
 
     let vmUsageTracker = VMUsageTracker()
 
     func startVM(configuration: LaunchConfiguration) async throws {
         try createWorkingDirectoriesIfNeeded()
         try await ensureLocalVMExists(named: configuration.name)
-        try await vmUsageTracker.trackUsageOf(vm: configuration.name)
+        try await vmUsageTracker.trackUsageOf(vmNamed: configuration.name)
         try await HostmgrClient.start(launchConfiguration: configuration)
     }
 
@@ -52,7 +52,7 @@ struct AppleSiliconVMManager: VMManager {
         try FileManager.default.createDirectory(at: Paths.vmWorkingStorageDirectory, withIntermediateDirectories: true)
     }
 
-    func cloneVM(from source: String, to destination: String) async throws {
+    func cloneVM(source: String, destination: String) async throws {
         let bundle = try VMResolver.resolveBundle(named: source)
         _ = try bundle.createEphemeralCopy(at: Paths.toWorkingAppleSiliconVM(named: destination))
     }
@@ -66,8 +66,8 @@ struct AppleSiliconVMManager: VMManager {
         let vmBundle: VMResolver.Result = try VMResolver.resolve(name)
 
         switch vmBundle {
-            case .bundle(let bundle): return try await ipAddress(for: bundle.macAddress)
-            case .template(let template): return try await ipAddress(for: template.macAddress)
+        case .bundle(let bundle): return try await ipAddress(for: bundle.macAddress)
+        case .template(let template): return try await ipAddress(for: template.macAddress)
         }
     }
 
@@ -98,8 +98,8 @@ struct AppleSiliconVMManager: VMManager {
 
     func vmTemplateName(forVmWithName name: String) async throws -> String? {
         switch try VMResolver.resolve(name) {
-            case .bundle(let bundle): return try bundle.templateName
-            case .template(let template): return template.basename
+        case .bundle(let bundle): return try bundle.templateName
+        case .template(let template): return template.basename
         }
     }
 

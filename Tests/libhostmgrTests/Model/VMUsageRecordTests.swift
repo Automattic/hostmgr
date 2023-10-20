@@ -4,8 +4,8 @@ import XCTest
 final class VMUsageRecordTests: XCTestCase {
 
     let records = [
-        VMUsageRecord(vm: "test", date: Date(timeIntervalSince1970: 1)),
-        VMUsageRecord(vm: "test", date: Date(timeIntervalSince1970: 2)),
+        VMUsageRecord(vmName: "test", date: Date(timeIntervalSince1970: 1)),
+        VMUsageRecord(vmName: "test", date: Date(timeIntervalSince1970: 2))
     ].shuffled()
 
     func testThatMergingRecordsRetainsLatestValue() throws {

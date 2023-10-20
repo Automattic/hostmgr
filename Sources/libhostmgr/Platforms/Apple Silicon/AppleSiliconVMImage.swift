@@ -7,7 +7,7 @@ public struct AppleSiliconVMImage: LocalVMImage {
     public static let validVMExtensions = [
         ".bundle",
         ".vmtemplate",
-        ".vmtemplate.aar",
+        ".vmtemplate.aar"
     ]
 
     public init?(path: URL) {

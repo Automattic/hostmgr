@@ -41,7 +41,9 @@ extension VMConfigFile {
         )
     }
 
-    func settingUniqueMachineIdentifier(to newValue: VZMacMachineIdentifier = VZMacMachineIdentifier()) -> VMConfigFile {
+    func settingUniqueMachineIdentifier(
+        to newValue: VZMacMachineIdentifier = VZMacMachineIdentifier()
+    ) -> VMConfigFile {
         VMConfigFile(
             name: self.name,
             hardwareModel: self.hardwareModel,

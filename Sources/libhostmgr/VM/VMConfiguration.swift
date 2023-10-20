@@ -54,18 +54,18 @@ struct VMConfiguration {
     }
 
     func calculateMemorySize(
-        min _min: UInt64 = VZVirtualMachineConfiguration.minimumAllowedMemorySize,
-        max _max: UInt64 = VZVirtualMachineConfiguration.maximumAllowedMemorySize,
+        min minimum: UInt64 = VZVirtualMachineConfiguration.minimumAllowedMemorySize,
+        max maximum: UInt64 = VZVirtualMachineConfiguration.maximumAllowedMemorySize,
         hostReserved: UInt64 = Configuration.shared.hostReservedRAM,
         shared: Bool
     ) -> UInt64 {
-        let vmReservedSize = _max - hostReserved
+        let vmReservedSize = maximum - hostReserved
 
         if shared {
-            return min(max(_min, vmReservedSize.quotientAndRemainder(dividingBy: 2).quotient), _max)
+            return min(max(minimum, vmReservedSize.quotientAndRemainder(dividingBy: 2).quotient), maximum)
         }
 
-        return max(vmReservedSize, _min)
+        return max(vmReservedSize, minimum)
     }
 
     var memorySize: UInt64 {

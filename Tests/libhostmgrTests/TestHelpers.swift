@@ -53,7 +53,6 @@ func jsonForResource(named key: String) throws -> Data {
 
 class MockFileManager: FileManagerProto {
 
-
     let existingFiles: [String]
     let existingDirectories: [String]
 

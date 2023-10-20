@@ -75,11 +75,13 @@ class VirtualMachineSlot: NSObject, ObservableObject, VZVirtualMachineDelegate {
         case .starting(let launchConfiguration):
             return launchConfiguration.handle == handle
         case .running(let launchConfiguration, _):
-            Logger.helper.log("Comparing \(launchConfiguration.handle, privacy: .public) and \(handle, privacy: .public)")
+            Logger.helper.trace(
+                "Comparing \(launchConfiguration.handle, privacy: .public) and \(handle, privacy: .public)"
+            )
             return launchConfiguration.handle == handle
         case .stopping:
             return false
-        case .crashed(_):
+        case .crashed:
             return false
         }
     }
@@ -92,11 +94,11 @@ class VirtualMachineSlot: NSObject, ObservableObject, VZVirtualMachineDelegate {
     @MainActor
     var isAvailable: Bool {
         switch self.status {
-        case .empty, .crashed(_): return true
+        case .empty, .crashed: return true
         default: return false
         }
     }
-//
+
 //    /// Called when a VM is stopped gracefully
 //    func guestDidStop(_ virtualMachine: VZVirtualMachine) {
 //        Logger.helper.log("Virtual Machine Stopped")
@@ -112,7 +114,11 @@ class VirtualMachineSlot: NSObject, ObservableObject, VZVirtualMachineDelegate {
 ////        self.status = .crashed(error)
 //    }
 //
-//    func virtualMachine(_ virtualMachine: VZVirtualMachine, networkDevice: VZNetworkDevice, attachmentWasDisconnectedWithError error: Error) {
+//    func virtualMachine(
+//        _ virtualMachine: VZVirtualMachine,
+//        networkDevice: VZNetworkDevice,
+//        attachmentWasDisconnectedWithError error: Error
+//    ) {
 //        debugPrint("Network attachment was disconnected")
 //        Logger.helper.log("Network attachment was disconnected: \(error.localizedDescription)")
 //    }

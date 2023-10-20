@@ -1,12 +1,7 @@
 .DEFAULT_GOAL := lint
 
 RELEASE_VERSION = $(shell .build/release/hostmgr --version)
-
-lint:
-	docker run -it --rm -v `pwd`:`pwd` -w `pwd` ghcr.io/realm/swiftlint:0.50.0 swiftlint lint --strict
-
-lintfix:
-	docker run -it --rm -v `pwd`:`pwd` -w `pwd` ghcr.io/realm/swiftlint:0.50.0 swiftlint --autocorrect
+SWIFTLINT_VERSION = 0.53.0
 
 clean:
 	rm -rf .build
@@ -67,10 +62,10 @@ lintfix: lintfix-swift lintfix-ruby
 
 ## Swift Tooling
 lint-swift:
-	docker run -it --rm -v `pwd`:`pwd` -w `pwd` ghcr.io/realm/swiftlint:0.50.3 swiftlint lint --strict
+	docker run --platform linux/x86_64 -it --rm -v `pwd`:`pwd` -w `pwd` ghcr.io/realm/swiftlint:$(SWIFTLINT_VERSION) swiftlint lint --strict
 
 lintfix-swift:
-	docker run -it --rm -v `pwd`:`pwd` -w `pwd` ghcr.io/realm/swiftlint:0.50.3 swiftlint --autocorrect
+	docker run --platform linux/x86_64 -it --rm -v `pwd`:`pwd` -w `pwd` ghcr.io/realm/swiftlint:$(SWIFTLINT_VERSION) swiftlint --autocorrect
 
 ## Ruby Tooling
 lint-ruby:

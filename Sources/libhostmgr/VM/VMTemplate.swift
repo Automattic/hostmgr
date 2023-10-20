@@ -104,7 +104,6 @@ public struct VMTemplate: TemplateBundle {
         return try self.applyingBundleBit()
     }
 
-    
     /// Create a read-only template on disk from an existing VM bundle
     public static func creatingTemplate(fromBundle bundle: VMBundle) throws -> VMTemplate {
 

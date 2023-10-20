@@ -44,7 +44,7 @@ public struct Configuration: Codable {
     public var gitMirrorBucket = ""
     public var gitMirrorPort = Defaults.defaultGitMirrorPort
     public var gitMirrorRegion: String = "us-east-1"
-    public var gitMirrorEndpoint: S3Endpoint{
+    public var gitMirrorEndpoint: S3Endpoint {
         allowAWSAcceleratedTransfer ? S3Endpoint.accelerated : S3Endpoint.default
     }
 
@@ -119,13 +119,11 @@ public struct Configuration: Codable {
 public extension Configuration {
 
     static var shared: Configuration {
-        get {
-            do {
-                return try ConfigurationRepository.getConfiguration()
-            } catch {
-                Console.error("Unable to load configuration: \(error.localizedDescription)")
-                Foundation.exit(-1)
-            }
+        do {
+            return try ConfigurationRepository.getConfiguration()
+        } catch {
+            Console.error("Unable to load configuration: \(error.localizedDescription)")
+            Foundation.exit(-1)
         }
     }
 

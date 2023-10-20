@@ -5,7 +5,7 @@ import Network
 /// be able to do with this protocol.
 public protocol VMManager {
 
-    associatedtype VM: LocalVMImage
+    associatedtype VMType: LocalVMImage
 
     /// Start a VM
     ///
@@ -24,28 +24,31 @@ public protocol VMManager {
 
     /// Unpack a packaged VM
     ///
-    /// This method expects that the packaged VM is located in the `vm-images` directory – referencing it by name will attempt to unpack the
-    /// VM at that location. If there is no packaged VM at that location, this method will emit an error.
+    /// This method expects that the packaged VM is located in the `vm-images` directory – referencing it by name
+    /// will attempt to unpack the VM at that location. If there is no packaged VM at that location, this method will
+    /// emit an error.
     func unpackVM(name: String) async throws
 
     /// Package a VM for use on other machines
     ///
-    /// This method expects that the VM to be packaged is a template located in the `vm-images` directory – referencing it by name will attempt to pack
-    /// the VM in the directory with that name. If there is no VM at that location, an error will be emitted.
+    /// This method expects that the VM to be packaged is a template located in the `vm-images` directory –
+    /// referencing it by name will attempt to pack the VM in the directory with that name. If there is no VM at
+    /// that location, an error will be emitted.
     func packageVM(name: String) async throws
 
     /// Resets the VM working directory by deleting any VMs that might have previously existed.
     ///
-    /// This helps the node to be resilient against errors in the VM – if there's some consistent failure that prevents cleanup, we
-    /// can ensure that the disk won't fill up.
+    /// This helps the node to be resilient against errors in the VM – if there's some
+    /// consistent failure that prevents cleanup, we can ensure that the disk won't fill up.
     func resetVMWorkingDirectory() throws
 
     /// Copy a VM template to a temporary location, making the VM ready for use
     ///
     /// - Parameters:
-    ///   - from: The name of the VM template to copy. The VM template is expected to be located in the `vm-images` directory. If there is no VM at that location, an error will be emitted.
+    ///   - from: The name of the VM template to copy. The VM template is expected to be located in
+    ///   the `vm-images` directory. If there is no VM at that location, an error will be emitted.
     ///   - to: The name of the resulting VM
-    func cloneVM(from: String, to: String) async throws
+    func cloneVM(source: String, destination: String) async throws
 
     /// Wait for the VM with the given name to finish starting up
     ///
@@ -78,30 +81,25 @@ public extension VMManager {
         try lookupTempVMs().contains { $0.name == name }
     }
 
-    func lookupVMImages() throws -> [VM] {
+    func lookupVMImages() throws -> [VMType] {
         try resolveVMs(FileManager.default.children(ofDirectory: Paths.vmImageStorageDirectory))
     }
 
-    func lookupTempVMs() throws -> [VM] {
+    func lookupTempVMs() throws -> [VMType] {
         try resolveVMs(FileManager.default.children(ofDirectory: Paths.vmWorkingStorageDirectory))
     }
 
-    func lookupTempVM(name: String) throws -> VM? {
+    func lookupTempVM(name: String) throws -> VMType? {
         try lookupVMImages().first { $0.name == name }
     }
 
     func createWorkingDirectoriesIfNeeded() throws {
-        if try !FileManager.default.directoryExists(at: Paths.vmImageStorageDirectory) {
-            try FileManager.default.createDirectory(at: Paths.vmImageStorageDirectory, withIntermediateDirectories: true)
-        }
-
-        if try !FileManager.default.directoryExists(at: Paths.vmWorkingStorageDirectory) {
-            try FileManager.default.createDirectory(at: Paths.vmWorkingStorageDirectory, withIntermediateDirectories: true)
-        }
+        try FileManager.default.createDirectoryIfNotExists(at: Paths.vmImageStorageDirectory)
+        try FileManager.default.createDirectoryIfNotExists(at: Paths.vmWorkingStorageDirectory)
     }
 
-    private func resolveVMs(_ paths: [URL]) -> [VM] {
-        paths.compactMap { VM(path: $0) }
+    private func resolveVMs(_ paths: [URL]) -> [VMType] {
+        paths.compactMap { VMType(path: $0) }
     }
 }
 

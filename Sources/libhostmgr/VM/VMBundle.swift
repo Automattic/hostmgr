@@ -4,19 +4,19 @@ import Virtualization
 import TSCBasic
 
 public struct VMBundle: Sendable {
-    
+
     enum Errors: Error {
         /// We couldn't create the disk image – usually because there were no file descriptors available
         case unableToCreateDiskImage
-        
+
         /// We couldn't create the disk image – probably because there isn't enough space available on disk
         case unableToProvisionDiskSpace
-        
+
         /// We created the disk image successfully, but couldn't properly close the file descriptor.
         /// The disk image is probably fine, but you should really try creating it again.
         case unableToCloseDiskImage
     }
-    
+
     public let root: URL
 
     public init(at root: URL) {

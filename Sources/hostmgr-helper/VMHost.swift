@@ -35,7 +35,7 @@ extension VMHost: HostmgrServerDelegate {
 
         throw HostmgrError.noVMSlotsAvailable
     }
-    
+
     func stop(handle: String) async throws {
         Logger.helper.log("Received stop request for \(handle, privacy: .public)")
 
@@ -47,7 +47,7 @@ extension VMHost: HostmgrServerDelegate {
             try await secondaryVMSlot.stopVirtualMachine()
         }
     }
-    
+
     func stopAll() async throws {
         var count = 0
 

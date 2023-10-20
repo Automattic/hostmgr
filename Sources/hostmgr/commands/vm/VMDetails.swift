@@ -40,13 +40,13 @@ struct VMDetailsCommand: AsyncParsableCommand {
         let workingPath = Paths.toWorkingAppleSiliconVM(named: handle).path()
 
         switch detail {
-            case .ipAddress: print(ipAddress)
-            case .path: print(path)
-            case .workingPath: print(workingPath)
-            case .all:
-                print("Path:\t\t\(path)")
-                print("Working Path:\t\(workingPath)")
-                print("IPv4 Address:\t\(ipAddress)")
+        case .ipAddress: print(ipAddress)
+        case .path: print(path)
+        case .workingPath: print(workingPath)
+        case .all:
+            print("Path:\t\t\(path)")
+            print("Working Path:\t\(workingPath)")
+            print("IPv4 Address:\t\(ipAddress)")
         }
     }
 }
