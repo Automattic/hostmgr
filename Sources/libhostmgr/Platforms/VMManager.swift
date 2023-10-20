@@ -52,7 +52,7 @@ public protocol VMManager {
 
     /// Wait for the VM with the given name to finish starting up
     ///
-    func waitForVMStartup(name: String) async throws
+    func waitForVMStartup(name: String, timeout: Duration) async throws
 
     /// Get details about a VM
     func ipAddress(forVmWithName: String) async throws -> IPv4Address

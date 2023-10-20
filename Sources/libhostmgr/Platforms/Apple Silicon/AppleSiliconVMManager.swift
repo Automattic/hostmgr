@@ -57,9 +57,9 @@ struct AppleSiliconVMManager: VMManager {
         _ = try bundle.createEphemeralCopy(at: Paths.toWorkingAppleSiliconVM(named: destination))
     }
 
-    func waitForVMStartup(name: String) async throws {
+    func waitForVMStartup(name: String, timeout: Duration = .seconds(30)) async throws {
         let address = try await ipAddress(forVmWithName: name)
-        try await waitForSSHServer(forAddress: address)
+        try await waitForSSHServer(forAddress: address, timeout: timeout)
     }
 
     func ipAddress(forVmWithName name: String) async throws -> IPv4Address {
@@ -103,7 +103,7 @@ struct AppleSiliconVMManager: VMManager {
         }
     }
 
-    func waitForSSHServer(forAddress address: IPv4Address, timeout: TimeInterval = 30) async throws {
+    func waitForSSHServer(forAddress address: IPv4Address, timeout: Duration) async throws {
         let connection = NWConnection(to: .hostPort(host: .ipv4(address), port: 22), using: .tcp)
 
         return try await withCheckedThrowingContinuation { continuation in
@@ -120,7 +120,7 @@ struct AppleSiliconVMManager: VMManager {
                 }
             }
 
-            DispatchQueue.global().asyncAfter(deadline: .now() + timeout) {
+            DispatchQueue.global().asyncAfter(deadline: .now() + TimeInterval(timeout.components.seconds)) {
                 connection.cancel()
             }
 
