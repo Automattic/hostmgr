@@ -1,6 +1,7 @@
 import Foundation
 import XCTest
 @testable import libhostmgr
+import DotEnv
 
 class BuildkiteScriptBuilderTests: XCTestCase {
 
@@ -35,8 +36,8 @@ class BuildkiteScriptBuilderTests: XCTestCase {
 
     // MARK: - Environment Variable Tests
     func testThatOrganizationSlugEnvironmentVariableIsImported() throws {
-        let envFile = try EnvFile.from(codeQuoteEnvironmentPath)
-        scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_", from: envFile.configuration)
+        let variables = try getEnvironmentVariables(from: codeQuoteEnvironmentPath)
+        scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_", from: variables)
         XCTAssertEqual(
             BuildkiteScriptBuilder.Value(wrapping: "automattic"),
             scriptBuilder.environmentVariables["BUILDKITE_ORGANIZATION_SLUG"]
@@ -48,8 +49,8 @@ class BuildkiteScriptBuilderTests: XCTestCase {
     }
 
     func testThatCommitMessageEnvironmentVariableIsImported() throws {
-        let envFile = try EnvFile.from(codeQuoteEnvironmentPath)
-        scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_", from: envFile.configuration)
+        let variables = try getEnvironmentVariables(from: codeQuoteEnvironmentPath)
+        scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_", from: variables)
         XCTAssertEqual(
             BuildkiteScriptBuilder.Value(wrapping: "A simple message with `code quotes`"),
             scriptBuilder.environmentVariables["BUILDKITE_MESSAGE"]
@@ -61,8 +62,8 @@ class BuildkiteScriptBuilderTests: XCTestCase {
     }
 
     func testThatPullRequestEnvironmentVariableIsImported() throws {
-        let envFile = try EnvFile.from(codeQuoteEnvironmentPath)
-        scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_", from: envFile.configuration)
+        let variables = try getEnvironmentVariables(from: codeQuoteEnvironmentPath)
+        scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_", from: variables)
         XCTAssertEqual(
             BuildkiteScriptBuilder.Value(wrapping: "19136"),
             scriptBuilder.environmentVariables["BUILDKITE_PULL_REQUEST"]
@@ -121,10 +122,10 @@ class BuildkiteScriptBuilderTests: XCTestCase {
 
     // A test to ensure that output is the same as the previous version
     func testThatBasicCommandOutputMatchesExpectations() throws {
-        let envFile = try EnvFile.from(basicEnvironmentPath)
+        let variables = try getEnvironmentVariables(from: basicEnvironmentPath)
         scriptBuilder.addDependency(atPath: "~/.circ")
         scriptBuilder.addEnvironmentVariable(named: "BUILDKITE", value: "true")
-        scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_", from: envFile.configuration)
+        scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_", from: variables)
         scriptBuilder.addCommand("buildkite-agent", "bootstrap")
         scriptBuilder.addEnvironmentVariable(named: "BUILDKITE_AGENT_NAME", value: "builder")
         scriptBuilder.addEnvironmentVariable(
@@ -151,5 +152,11 @@ class BuildkiteScriptBuilderTests: XCTestCase {
     private func getContentsOfResource(named key: String, withExtension extension: String) throws -> String {
         let path = try XCTUnwrap(Bundle.module.path(forResource: key, ofType: `extension`))
         return try XCTUnwrap(String(contentsOfFile: path)).trimmingWhitespace
+    }
+
+    private func getEnvironmentVariables(from path: URL) throws -> [String: String] {
+        try DotEnv.read(path: path.path())
+            .lines
+            .reduce(into: [String: String]()) { $0[$1.key] = $1.value }
     }
 }
