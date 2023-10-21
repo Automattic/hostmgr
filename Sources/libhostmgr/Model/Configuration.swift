@@ -57,7 +57,6 @@ public struct Configuration: Codable {
         case authorizedKeysSyncInterval
         case authorizedKeysBucket
 
-
         case allowAWSAcceleratedTransfer
         case awsConfigurationMethod
     }
