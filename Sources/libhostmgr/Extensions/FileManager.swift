@@ -1,4 +1,5 @@
 import Foundation
+import System
 
 protocol FileManagerProto {
     // swiftlint:disable identifier_name
@@ -117,6 +118,12 @@ extension FileManager {
         }
 
         try self.removeItem(at: url)
+    }
+
+    public func set(filePermissions: FilePermissions, forItemAt path: URL) throws {
+        try setAttributes([
+            .posixPermissions: filePermissions.rawValue
+        ], ofItemAt: path)
     }
 
     public func setAttributes(_ attributes: [FileAttributeKey: Any], ofItemAt path: URL) throws {
