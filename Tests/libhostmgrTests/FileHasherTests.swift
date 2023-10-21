@@ -5,7 +5,7 @@ final class FileHasherTests: XCTestCase {
 
     func testThatHasherProducesValidOutput() throws {
         XCTAssertEqual(
-            "dad747aa4ba29546e6063f5c9fe6733594535db57f8f4450d27c06636e16beab",
+            "ec0c6ed506b8eb9d84921aa757dc162ca7b318a3cc2dc93df7d5ad8339edf1e1",
             try FileHasher.stringRepresentationForHash(ofFileAt: pathForResource(named: "file-hasher-test-1"))
         )
     }
