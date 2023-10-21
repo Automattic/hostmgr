@@ -3,63 +3,41 @@ import Network
 import Virtualization
 
 public struct VMBundle: Sendable {
-
-    enum Errors: Error {
-        /// We couldn't create the disk image – usually because there were no file descriptors available
-        case unableToCreateDiskImage
-
-        /// We couldn't create the disk image – probably because there isn't enough space available on disk
-        case unableToProvisionDiskSpace
-
-        /// We created the disk image successfully, but couldn't properly close the file descriptor.
-        /// The disk image is probably fine, but you should really try creating it again.
-        case unableToCloseDiskImage
-    }
-
     public let root: URL
 
-    public init(at root: URL) {
+    private let config: VMConfigFile
+
+    public init(at root: URL) throws {
         self.root = root
+        self.config = try VMConfigFile.from(url: Self.configurationFilePath(for: self.root))
     }
 }
 
 extension VMBundle: Bundle {
 
     var hardwareModel: VZMacHardwareModel {
-        get throws {
-            try getConfig().hardwareModel
-        }
+        config.hardwareModel
     }
 
     var machineIdentifier: VZMacMachineIdentifier {
-        get throws {
-            try getConfig().machineIdentifier
-        }
+        config.machineIdentifier
     }
 
     var macAddress: VZMACAddress {
-        get throws {
-            try getConfig().macAddress
-        }
+        config.macAddress
     }
 
     /// The name of the template that this bundle was created from
     ///
     /// If this bundle wasn't created from a template, this field is `nil`
     var templateName: String? {
-        get throws {
-            try getConfig().templateName
-        }
+        config.templateName
     }
 
     /// The path to this bundle if it were converted into a template
     ///
     var derivedTemplatePath: URL {
         root.deletingPathExtension().appendingPathExtension("vmtemplate")
-    }
-
-    func getConfig() throws -> VMConfigFile {
-        try VMConfigFile.from(url: Self.configurationFilePath(for: self.root))
     }
 
     func set(config: VMConfigFile) throws {
@@ -80,15 +58,15 @@ extension VMBundle: Bundle {
     ///
     @discardableResult
     public func preparedForReuse() throws -> VMBundle {
-        let oldBundle = VMBundle(at: self.root)
+        let newBundle = try VMBundle(at: self.root)
 
-        try oldBundle.getConfig()
+        try newBundle.config
             .settingUniqueMacAddress()
             .settingUniqueMachineIdentifier()
-            .settingTemplateName(to: oldBundle.getConfig().name)
-            .write(to: oldBundle.configurationFilePath)
+            .settingTemplateName(to: self.config.name)
+            .write(to: newBundle.configurationFilePath)
 
-        return oldBundle
+        return newBundle
     }
 
     /// Create a new VMBundle based on a restore image
@@ -111,7 +89,7 @@ extension VMBundle: Bundle {
         try FileManager.default.createDirectory(at: bundleRoot, withIntermediateDirectories: true)
         Console.success("Created bundle at \(bundleRoot.path)")
 
-        let bundle = VMBundle(at: bundleRoot)
+        let bundle = try VMBundle(at: bundleRoot)
 
         let configFile = VMConfigFile(
             name: name,
@@ -133,27 +111,7 @@ extension VMBundle: Bundle {
             return
         }
 
-        let diskFd = open(self.diskImageFilePath.path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)
-
-        guard diskFd != -1 else {
-            throw Errors.unableToCreateDiskImage
-        }
-
-        guard ftruncate(diskFd, off_t(size.converted(to: .bytes).value)) == 0 else {
-            throw Errors.unableToProvisionDiskSpace
-        }
-
-        guard close(diskFd) == 0 else {
-            throw Errors.unableToCloseDiskImage
-        }
-    }
-
-    private func macPlatformConfiguration() throws -> VZMacPlatformConfiguration {
-        let platform = VZMacPlatformConfiguration()
-        platform.hardwareModel = try self.hardwareModel
-        platform.machineIdentifier = try self.machineIdentifier
-        platform.auxiliaryStorage = try auxilaryStorage(for: self.hardwareModel)
-        return platform
+        try FileManager.default.createEmptyFile(at: self.diskImageFilePath, size: size)
     }
 
     public func virtualMachineConfiguration() throws -> VZVirtualMachineConfiguration {
@@ -165,13 +123,17 @@ extension VMBundle: Bundle {
         return configuration
     }
 
+    private func macPlatformConfiguration() throws -> VZMacPlatformConfiguration {
+        let platform = VZMacPlatformConfiguration()
+        platform.hardwareModel = self.hardwareModel
+        platform.machineIdentifier = self.machineIdentifier
+        platform.auxiliaryStorage = try auxilaryStorage(for: self.hardwareModel)
+        return platform
+    }
+
     private func auxilaryStorage(for model: VZMacHardwareModel) throws -> VZMacAuxiliaryStorage {
         guard !FileManager.default.fileExists(at: self.auxImageFilePath) else {
-            if #available(macOS 13.0, *) {
-                return VZMacAuxiliaryStorage(url: self.auxImageFilePath)
-            } else {
-                return VZMacAuxiliaryStorage(contentsOf: self.auxImageFilePath)
-            }
+            return VZMacAuxiliaryStorage(url: self.auxImageFilePath)
         }
 
         return try VZMacAuxiliaryStorage(

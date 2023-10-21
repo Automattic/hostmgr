@@ -104,7 +104,7 @@ extension FileManager {
         }
 
         guard ftruncate(diskFd, off_t(size.converted(to: .bytes).value)) == 0 else {
-            throw CocoaError(.fileReadUnknown)
+            throw CocoaError(.fileWriteUnknown)
         }
 
         guard close(diskFd) == 0 else {

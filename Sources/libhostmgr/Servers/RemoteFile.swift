@@ -4,15 +4,11 @@ public struct RemoteFile: Equatable {
     let size: Int
     let path: String
     let lastModifiedAt: Date
-}
 
-extension RemoteFile {
     public var name: String {
         URL(fileURLWithPath: path).lastPathComponent
     }
-}
 
-extension RemoteFile {
     public var basename: String {
         URL(fileURLWithPath: path).deletingPathExtension().lastPathComponent
     }

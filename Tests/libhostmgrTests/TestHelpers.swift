@@ -79,3 +79,7 @@ extension S3Object {
         RemoteFile(size: size, path: key, lastModifiedAt: lastModifiedAt)
     }
 }
+
+extension Date {
+    static let testDefault = Date(timeIntervalSinceReferenceDate: 0)
+}

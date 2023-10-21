@@ -27,7 +27,7 @@ struct VMResolver {
         }
 
         if path.pathExtension == "bundle" {
-            return .bundle(VMBundle(at: path))
+            return try .bundle(VMBundle(at: path))
         }
 
         throw HostmgrError.invalidVMStatus(path)

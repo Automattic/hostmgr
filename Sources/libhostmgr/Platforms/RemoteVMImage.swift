@@ -2,7 +2,8 @@ import Foundation
 import tinys3
 
 public struct RemoteVMImage: Equatable {
-    let imageFile: RemoteFile
+
+    private let imageFile: RemoteFile
 
     init?(imageFile: RemoteFile) {
         guard imageFile.path.hasSuffix("vmtemplate.aar") else {
@@ -20,29 +21,8 @@ public struct RemoteVMImage: Equatable {
         URL(fileURLWithPath: imageFile.path).lastPathComponent
     }
 
-    public var basename: String {
-        if architecture == .arm64 {
-            return URL(fileURLWithPath: imageFile.path)
-                .deletingPathExtension()
-                .deletingPathExtension()
-                .lastPathComponent
-        } else {
-            return URL(fileURLWithPath: imageFile.path)
-                .deletingPathExtension()
-                .lastPathComponent
-        }
-    }
-
-    public var fileExtension: String {
-        URL(fileURLWithPath: imageFile.path).pathExtension
-    }
-
     public var lastModifiedAt: Date {
         imageFile.lastModifiedAt
-    }
-
-    public var checksumKey: String {
-        basename + ".sha256.txt"
     }
 
     public var path: String {
@@ -51,14 +31,6 @@ public struct RemoteVMImage: Equatable {
 
     public var size: Int {
         imageFile.size
-    }
-
-    public var architecture: ProcessorArchitecture? {
-        switch fileExtension {
-        case "aar": return .arm64
-        case "pvmp": return .x64
-        default: return nil
-        }
     }
 }
 

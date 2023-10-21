@@ -107,7 +107,7 @@ public struct VMManager {
     /// Find the template for a given VM name
     public func vmTemplateName(forVmWithName name: String) async throws -> String? {
         switch try VMResolver.resolve(name) {
-        case .bundle(let bundle): return try bundle.templateName
+        case .bundle(let bundle): return bundle.templateName
         case .template(let template): return template.basename
         }
     }

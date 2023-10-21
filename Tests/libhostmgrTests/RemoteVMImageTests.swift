@@ -4,10 +4,7 @@ import XCTest
 
 final class RemoteVMImageTests: XCTestCase {
     private let testSubject = RemoteVMImage(
-        imageFile: S3Object.with(
-            key: "/foo/bar.vmtemplate.aar",
-            size: 4096
-        ).asFile
+        imageFile: RemoteFile(size: 4096, path: "/foo/bar.vmtemplate.aar", lastModifiedAt: .testDefault)
     )!
 
     func testThatInvalidKeyEmitsNilObject() throws {
@@ -28,5 +25,9 @@ final class RemoteVMImageTests: XCTestCase {
 
     func testThatSizeIsCorrect() throws {
         XCTAssertEqual(4096, testSubject.size)
+    }
+
+    func testThatDateIsCorrect() throws {
+        XCTAssertEqual(.testDefault, testSubject.lastModifiedAt)
     }
 }
