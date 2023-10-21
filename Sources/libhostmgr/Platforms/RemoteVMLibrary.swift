@@ -31,7 +31,7 @@ public struct RemoteVMLibrary {
 
     public init() {}
 
-    let servers: [ReadOnlyRemoteFileProvider] = [
+    let servers: [ReadableRemoteFileProvider] = [
         CacheServer.vmImages,
         S3Server.vmImages
     ]
@@ -43,7 +43,7 @@ public struct RemoteVMLibrary {
 
     public func listImages(sortedBy strategy: RemoteVMImageSortingStrategy = .name) async throws -> [RemoteVMImage] {
         let objects = try await S3Server.vmImages.listFiles(startingWith: "images/")
-        return remoteImagesFrom(objects: objects)
+        return remoteImagesFrom(objects: objects).sorted(by: strategy.sortMethod)
     }
 
     public func hasImage(named name: String) async throws -> Bool {
@@ -74,7 +74,7 @@ public struct RemoteVMLibrary {
         }
 
         guard let server = try await servers.first(havingFileAtPath: image.path) else {
-            throw RemoteVMLibraryErrors.vmNotFound
+            throw HostmgrError.unableToFindRemoteImage(name)
         }
 
         let destination = Paths.vmImageStorageDirectory.appendingPathComponent(image.fileName)
@@ -102,10 +102,4 @@ public struct RemoteVMLibrary {
     func remoteImagesFrom(objects: [RemoteFile]) -> [RemoteVMImage] {
         objects.compactMap(RemoteVMImage.init)
     }
-}
-
-enum RemoteVMLibraryErrors: Error {
-    case vmNotFound
-    case manifestNotFound
-    case invalidManifest
 }

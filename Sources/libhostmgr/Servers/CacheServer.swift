@@ -33,10 +33,7 @@ public struct CacheServerFile: Codable {
     }
 }
 
-public struct CacheServer: ReadOnlyRemoteFileProvider {
-    enum Errors: Error {
-        case invalidPath
-    }
+public struct CacheServer: ReadableRemoteFileProvider {
 
     public static let cache = CacheServer(baseURL: URL(string: "http://localhost/cache")!)
     public static let gitMirrors = CacheServer(baseURL: URL(string: "http://localhost/git-mirrors")!)

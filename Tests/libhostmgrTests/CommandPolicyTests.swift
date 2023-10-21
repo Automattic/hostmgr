@@ -1,19 +1,9 @@
 import XCTest
 @testable import libhostmgr
 
-struct TestCommand: FollowsCommandPolicies {
-    var commandIdentifier = "TestCommandIdentifier"
-    var commandPolicies: [CommandPolicy] = []
-}
-
 class CommandPolicyTests: XCTestCase {
 
     private let stateRepository = InMemoryStateRepository()
-    private let testKey = "foo"
-
-    override func setUpWithError() throws {
-
-    }
 
     override func tearDownWithError() throws {
         try stateRepository.deleteAll()
@@ -101,5 +91,30 @@ class CommandPolicyTests: XCTestCase {
 
     private func setLastHeartbeat(to date: Date, forKey key: String) throws {
         try stateRepository.write(CommandPolicy.SerialExecutionState(heartbeat: date), toKey: key)
+    }
+}
+
+class InMemoryStateRepository: StateRepository {
+    private var internalStorage = [String: Data]()
+
+    func read<T>(fromKey key: String) throws -> T? where T: Decodable, T: Encodable {
+        guard let data = internalStorage[key] else {
+            return nil
+        }
+
+        return try JSONDecoder().decode(T.self, from: data)
+    }
+
+    func write<T>(_ object: T, toKey key: String) throws where T: Decodable, T: Encodable {
+        let data = try JSONEncoder().encode(object)
+        internalStorage[key] = data
+    }
+
+    func delete(key: String) throws {
+        internalStorage[key] = nil
+    }
+
+    func deleteAll() throws {
+        internalStorage = [String: Data]()
     }
 }

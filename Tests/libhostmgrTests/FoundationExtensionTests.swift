@@ -29,14 +29,6 @@ final class FoundationExtensionTests: XCTestCase {
     }
 
     // MARK: ProcessInfo Extensions
-    func testThatProcessorArchitectureIsValid() throws {
-        let process = Process(args: "/usr/bin/uname", "-m")
-        try process.launch()
-        let arch = try process.waitUntilExit().utf8Output().trimmingWhitespace
-
-        XCTAssertEqual(ProcessorArchitecture(rawValue: arch), ProcessInfo.processInfo.processorArchitecture)
-    }
-
     func testThatPhysicalProcessorCountIsValid() throws {
         let process = Process(args: "/usr/sbin/sysctl", "-n", "hw.physicalcpu")
         try process.launch()

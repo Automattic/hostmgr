@@ -8,27 +8,18 @@ public enum ProcessorArchitecture: String {
 }
 
 extension ProcessInfo {
-    var processorArchitecture: ProcessorArchitecture {
-        var sysinfo = utsname()
-        uname(&sysinfo)
-        let data = Data(bytes: &sysinfo.machine, count: Int(_SYS_NAMELEN))
-        let identifier = String(bytes: data, encoding: .ascii)!.trimmingCharacters(in: .controlCharacters)
-        return ProcessorArchitecture(rawValue: identifier)!
-    }
 
+    /// How many cores are in this machine?
+    ///
+    /// On Apple Silicon, this returns the number of Performance Cores + Efficiency Cores
+    ///
+    /// On Intel, this returns the number of "real" cores (excluding hyperthreading "cores")
+    ///
     public var physicalProcessorCount: Int {
         var size: size_t = MemoryLayout<Int>.size
         var coresCount: Int = 0
         sysctlbyname("hw.physicalcpu", &coresCount, &size, nil, 0)
         return coresCount
-    }
-}
-
-extension Data {
-    var sha256: Data {
-        var hasher = SHA256()
-        hasher.update(data: self)
-        return Data(hasher.finalize())
     }
 }
 

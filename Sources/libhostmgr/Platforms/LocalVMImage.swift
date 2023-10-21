@@ -1,6 +1,6 @@
 import Foundation
 
-public struct LocalVMImage: Equatable, FilterableByName {
+public struct LocalVMImage: Equatable {
     public let path: URL
 
     public static let validVMExtensions = [
@@ -43,10 +43,6 @@ public struct LocalVMImage: Equatable, FilterableByName {
         }
 
         return path.deletingPathExtension().lastPathComponent
-    }
-
-    var fileName: String {
-        path.lastPathComponent
     }
 
     public var fileSize: Int {

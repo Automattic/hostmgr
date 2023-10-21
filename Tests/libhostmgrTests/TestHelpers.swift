@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 import Virtualization
 import XCTest
 
@@ -19,13 +20,9 @@ extension S3Object {
 
 extension XCTest {
     func XCTAssert(_ data: Data, hasHash hash: String, file: StaticString = #file, line: UInt = #line) {
-        XCTAssertEqual(data.sha256.base64EncodedString(), hash, file: file, line: line)
-    }
-}
-
-extension VZMacHardwareModel {
-    static func createTestFixture() throws -> VZMacHardwareModel {
-        try VZMacHardwareModel(dataRepresentation: dataForResource(named: "mac-hardware-model-data"))!
+        var hasher = SHA256()
+        hasher.update(data: data)
+        XCTAssertEqual(Data(hasher.finalize()).base64EncodedString(), hash, file: file, line: line)
     }
 }
 
@@ -35,15 +32,6 @@ func getPathForEnvFile(named key: String) -> URL {
 
 func pathForResource(named key: String, extension: String? = nil) -> URL {
     Bundle.module.url(forResource: key, withExtension: `extension`)!
-}
-
-func dataForResource(named key: String) throws -> Data {
-    let url = Bundle.module.url(forResource: key, withExtension: "dat")!
-    return try Data(contentsOf: url)
-}
-
-func stringForResource(named key: String) throws -> String {
-    return try String(contentsOf: pathForResource(named: key))
 }
 
 func jsonForResource(named key: String) throws -> Data {
@@ -73,5 +61,21 @@ class MockFileManager: FileManagerProto {
 extension FileHasher {
     static func stringRepresentationForHash(ofFileAt url: URL) throws -> String {
         try hash(fileAt: url).compactMap { String(format: "%02x", $0) }.joined()
+    }
+}
+
+extension ProcessInfo {
+    var processorArchitecture: ProcessorArchitecture {
+        var sysinfo = utsname()
+        uname(&sysinfo)
+        let data = Data(bytes: &sysinfo.machine, count: Int(_SYS_NAMELEN))
+        let identifier = String(bytes: data, encoding: .ascii)!.trimmingCharacters(in: .controlCharacters)
+        return ProcessorArchitecture(rawValue: identifier)!
+    }
+}
+
+extension S3Object {
+    var asFile: RemoteFile {
+        RemoteFile(size: size, path: key, lastModifiedAt: lastModifiedAt)
     }
 }

@@ -15,7 +15,7 @@ struct GitMirrorFetchCommand: AsyncParsableCommand {
     )
     var gitMirror: GitMirror?
 
-    let servers: [ReadOnlyRemoteFileProvider] = [
+    let servers: [ReadableRemoteFileProvider] = [
 //        CacheServer.gitMirrors,
         S3Server.gitMirrors
     ]

@@ -6,7 +6,6 @@ class BundleTests: XCTestCase {
 
     struct BundleObject: libhostmgr.Bundle {
         var root: URL { URL(fileURLWithPath: "/tmp") }
-        var macAddress: VZMACAddress = .randomLocallyAdministered()
     }
 
     func testThatRootIsStoredCorrectly() throws {
@@ -36,7 +35,6 @@ class BundleTests: XCTestCase {
 class TemplateTests: BundleTests {
     struct BundleObject: TemplateBundle {
         var root: URL { URL(fileURLWithPath: "/tmp") }
-        var macAddress: VZMACAddress = .randomLocallyAdministered()
     }
 
     func testThatManifestFileIsAlwaysNamedCorrectly() throws {

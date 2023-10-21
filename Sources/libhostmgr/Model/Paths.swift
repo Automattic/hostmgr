@@ -55,12 +55,6 @@ public struct Paths {
         storageRoot.appendingPathComponent("hostmgr.json")
     }
 
-    static var applicationCacheDirectory: URL {
-        FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
-            .first!
-            .appendingPathComponent(storageDirectoryIdentifier)
-    }
-
     public static var userLaunchAgentsDirectory: URL {
         FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)
             .first!

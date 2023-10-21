@@ -77,10 +77,6 @@ extension XPCResponse {
     }
 }
 
-public struct XPCError {
-    let message: String
-}
-
 public struct InvalidRequestResponse: XPCResponse {
     let error: HostmgrError
 }

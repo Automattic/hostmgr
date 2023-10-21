@@ -1,14 +1,9 @@
 import Foundation
 import tinys3
 
-public struct S3Server: ReadWriteRemoteFileProvider, BytewiseRemoteFileProvider {
+public struct S3Server: RemoteFileProvider {
     private let bucketName: String
     private let endpoint: S3Endpoint
-
-    enum Errors: Error {
-        case fileNotFound
-        case unableToReadFile
-    }
 
     public static let gitMirrors: S3Server = S3Server(
         bucketName: Configuration.shared.gitMirrorBucket,
@@ -30,51 +25,49 @@ public struct S3Server: ReadWriteRemoteFileProvider, BytewiseRemoteFileProvider 
         self.endpoint = endpoint
     }
 
-    public func uploadFile(at source: URL, to destination: String, progress: @escaping ProgressCallback) async throws {
-        try await s3Client.upload(fileAt: source, toKey: destination, progress: progress)
-    }
-
-    public func downloadFile(at path: String, to destination: URL, progress: @escaping ProgressCallback) async throws {
-        try await s3Client.download(key: path, to: destination, progressCallback: progress)
-    }
-
-    func fetchFileBytes(forFileAt path: String) async throws -> Data {
-        guard let object = try await s3Client.lookupObject(atPath: path) else {
-            throw Errors.fileNotFound
-        }
-
-        guard let bytes = try await s3Client.download(object: object) else {
-            throw Errors.unableToReadFile
-        }
-
-        return bytes
-    }
-
     public func listFiles(startingWith prefix: String) async throws -> [RemoteFile] {
-        try await s3Client.listObjects(startingWith: prefix).map { $0.asFile }
+        try await s3Client.list(bucket: bucketName, prefix: prefix).objects.map(self.convert)
     }
 
     public func hasFile(at path: String) async throws -> Bool {
-        try await !s3Client.listObjects(startingWith: path).isEmpty
+        try await listFiles(startingWith: path).isEmpty
     }
 
-    public func fileDetails(forPath path: String) async throws -> RemoteFile? {
-        try await s3Client.lookupObject(atPath: path)?.asFile
-    }
-
-    var s3Client: S3Manager {
+    var s3Client: S3Client {
         get throws {
-            try S3Manager(
-                bucket: self.bucketName,
-                credentials: .fromUserConfiguration(),
-                endpoint: self.endpoint
-            )
+            S3Client(credentials: try .fromUserConfiguration(), endpoint: self.endpoint)
         }
+    }
+
+    func convert(_ s3Object: S3Object) -> RemoteFile {
+        RemoteFile(size: s3Object.size, path: s3Object.key, lastModifiedAt: s3Object.lastModifiedAt)
     }
 }
 
-extension S3Object {
-    var asFile: RemoteFile {
-        RemoteFile(size: size, path: key, lastModifiedAt: lastModifiedAt)
+extension S3Server: ReadableRemoteFileProvider {
+    public func downloadFile(at path: String, to destination: URL, progress: @escaping ProgressCallback) async throws {
+        let tempUrl = try await s3Client.download(
+            objectWithKey: path,
+            inBucket: self.bucketName,
+            progressCallback: progress
+        )
+
+        if FileManager.default.fileExists(at: destination) {
+            try FileManager.default.removeItem(at: destination)
+        }
+
+        try FileManager.default.moveItem(at: tempUrl, to: destination)
+    }
+}
+
+extension S3Server: WritableRemoteFileProvider {
+
+    public func uploadFile(at source: URL, to destination: String, progress: @escaping ProgressCallback) async throws {
+        try await s3Client.upload(
+            objectAtPath: source,
+            toBucket: self.bucketName,
+            key: destination,
+            progressCallback: progress
+        )
     }
 }

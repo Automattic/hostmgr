@@ -1,7 +1,7 @@
 import Foundation
 import tinys3
 
-public struct RemoteVMImage: FilterableByName, Equatable {
+public struct RemoteVMImage: Equatable {
     let imageFile: RemoteFile
 
     init?(imageFile: RemoteFile) {

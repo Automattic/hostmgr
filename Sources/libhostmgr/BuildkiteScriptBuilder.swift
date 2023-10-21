@@ -136,10 +136,6 @@ public struct BuildkiteScriptBuilder {
             self.arguments = arguments
         }
 
-        init(_ command: String, _ arguments: String...) {
-            self.init(command: command, arguments: arguments)
-        }
-
         /// The escaped command text, sutible for placement in a shell script
         var escapedText: String {
             "\(command) \(escapedArguments.joined(separator: " "))".trimmingWhitespace

@@ -160,3 +160,9 @@ class BuildkiteScriptBuilderTests: XCTestCase {
             .reduce(into: [String: String]()) { $0[$1.key] = $1.value }
     }
 }
+
+extension BuildkiteScriptBuilder.Command {
+    init(_ command: String, _ arguments: String...) {
+        self.init(command: command, arguments: arguments)
+    }
+}

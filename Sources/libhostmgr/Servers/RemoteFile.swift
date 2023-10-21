@@ -6,13 +6,13 @@ public struct RemoteFile: Equatable {
     let lastModifiedAt: Date
 }
 
-extension RemoteFile: FilterableByName {
+extension RemoteFile {
     public var name: String {
         URL(fileURLWithPath: path).lastPathComponent
     }
 }
 
-extension RemoteFile: FilterableByBasename {
+extension RemoteFile {
     public var basename: String {
         URL(fileURLWithPath: path).deletingPathExtension().lastPathComponent
     }

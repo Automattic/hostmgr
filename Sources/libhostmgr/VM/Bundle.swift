@@ -10,8 +10,6 @@ protocol Bundle {
     var auxImageFilePath: URL { get }
 
     var diskImageFilePath: URL { get }
-
-    var macAddress: VZMACAddress { get throws }
 }
 
 extension Bundle {
