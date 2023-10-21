@@ -30,12 +30,6 @@ extension Date {
     }
 }
 
-extension String {
-    public var trimmingWhitespace: String {
-        trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-}
-
 extension Sequence {
     func sorted<T: Comparable>(by keyPath: KeyPath<Element, T>) -> [Element] {
         return sorted { lhs, rhs in

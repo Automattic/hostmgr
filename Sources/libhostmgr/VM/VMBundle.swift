@@ -1,7 +1,6 @@
 import Foundation
 import Network
 import Virtualization
-import TSCBasic
 
 public struct VMBundle: Sendable {
 

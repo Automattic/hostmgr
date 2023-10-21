@@ -23,7 +23,6 @@ let package = Package(
         .package(url: "https://github.com/jkmassel/tinys3.git", branch: "main"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
         .package(url: "https://github.com/jkmassel/kcpassword-swift.git", from: "1.0.0"),
-        .package(url: "https://github.com/apple/swift-tools-support-core", from: "0.2.5"),
         .package(url: "https://github.com/vapor/console-kit.git", .upToNextMajor(from: "4.9.0")),
         .package(url: "https://github.com/swhitty/FlyingFox.git", .upToNextMajor(from: "0.12.2")),
         .package(url: "https://github.com/getsentry/sentry-cocoa.git", .upToNextMajor(from: "8.13.1")),
@@ -59,7 +58,6 @@ let package = Package(
             name: "libhostmgr",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "TSCBasic", package: "swift-tools-support-core"),
                 .product(name: "tinys3", package: "tinys3"),
                 .product(name: "ConsoleKit", package: "console-kit"),
                 .product(name: "FlyingFox", package: "FlyingFox")
