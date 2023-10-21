@@ -25,8 +25,7 @@ struct VMDetailsCommand: AsyncParsableCommand {
     @Flag(exclusivity: .exclusive)
     var detail: Detail = .all
 
-    @DIInjected
-    var vmManager: any VMManager
+    let vmManager = VMManager()
 
     enum CodingKeys: CodingKey {
         case handle

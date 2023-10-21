@@ -23,8 +23,4 @@ public struct FileHasher {
 
         return Data(hasher.finalize())
     }
-
-    static func stringRepresentationForHash(ofFileAt url: URL) throws -> String {
-        try hash(fileAt: url).compactMap { String(format: "%02x", $0) }.joined()
-    }
 }

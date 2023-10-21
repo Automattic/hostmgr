@@ -9,13 +9,10 @@ public struct S3Manager {
     }
 
     private let bucket: String
-    private let region: String
-
     private let s3Client: tinys3.S3Client
 
-    public init(bucket: String, region: String, credentials: tinys3.AWSCredentials, endpoint: S3Endpoint) throws {
+    public init(bucket: String, credentials: tinys3.AWSCredentials, endpoint: S3Endpoint) throws {
         self.bucket = bucket
-        self.region = region
         self.s3Client = S3Client(credentials: credentials, endpoint: endpoint)
     }
 

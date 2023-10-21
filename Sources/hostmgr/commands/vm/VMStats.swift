@@ -9,8 +9,7 @@ struct VMStatsCommand: AsyncParsableCommand {
         abstract: "Show VM usage stats"
     )
 
-    @DIInjected
-    var vmManager: any VMManager
+    let vmManager = VMManager()
 
     enum CodingKeys: CodingKey {}
 

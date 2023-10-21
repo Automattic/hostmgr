@@ -204,7 +204,7 @@ extension Console {
     }
 
     public static func startImageDownload(
-        _ image: any RemoteVMImage,
+        _ image: RemoteVMImage,
         _ callback: ProgressUpdateCallback
     ) async rethrows {
         let size = Format.fileBytes(image.size)

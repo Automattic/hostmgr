@@ -67,20 +67,6 @@ public struct CacheServer: ReadOnlyRemoteFileProvider {
         return try decoder.decode([CacheServerFile].self, from: data).map { $0.asRemoteFile }
     }
 
-    func findParentDirectory(forKey key: String) -> String {
-        if key == "/" {
-            return key
-        }
-
-        let newKey = key.split(separator: "/").dropLast().joined(separator: "/")
-
-        if newKey.isEmpty {
-            return "/"
-        }
-
-        return newKey
-    }
-
     public func downloadFile(
         at path: String,
         to destination: URL,

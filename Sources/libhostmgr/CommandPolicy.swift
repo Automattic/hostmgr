@@ -71,11 +71,11 @@ public enum CommandPolicy: Equatable, Codable {
     }
 }
 
-internal enum CommandPolicyViolation: Error {
+internal enum CommandPolicyViolation: Error, CustomStringConvertible {
     case alreadyRunning
     case notTimeYet(Date)
 
-    var errorMessage: String {
+    var description: String {
         switch self {
         case .alreadyRunning:
             return "Another instance of this process is already running"

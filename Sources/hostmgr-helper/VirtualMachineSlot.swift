@@ -16,8 +16,7 @@ class VirtualMachineSlot: NSObject, ObservableObject, VZVirtualMachineDelegate {
         case crashed(Error)
     }
 
-    @DIInjected
-    private var vmManager: any VMManager
+    private let vmManager = VMManager()
 
     private var virtualMachine: VZVirtualMachine?
 

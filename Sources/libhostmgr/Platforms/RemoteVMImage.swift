@@ -1,22 +1,19 @@
 import Foundation
 import tinys3
 
-public protocol RemoteVMImage: FilterableByName, Equatable {
-    var imageFile: RemoteFile { get }
+public struct RemoteVMImage: FilterableByName, Equatable {
+    let imageFile: RemoteFile
 
-    var name: String { get }
-    var fileName: String { get }
-    var path: String { get }
-    var lastModifiedAt: Date { get }
+    init?(imageFile: RemoteFile) {
+        guard imageFile.path.hasSuffix("vmtemplate.aar") else {
+            return nil
+        }
 
-    var size: Int { get }
+        self.imageFile = imageFile
+    }
 
-    init?(imageFile: RemoteFile)
-}
-
-extension RemoteVMImage {
     public var name: String {
-        URL(fileURLWithPath: imageFile.path).deletingPathExtension().lastPathComponent
+        URL(fileURLWithPath: imageFile.path).deletingPathExtension().deletingPathExtension().lastPathComponent
     }
 
     public var fileName: String {
@@ -66,7 +63,7 @@ extension RemoteVMImage {
 }
 
 extension RemoteVMImage {
-    public static func == (lhs: any RemoteVMImage, rhs: any RemoteVMImage) -> Bool {
+    public static func == (lhs: RemoteVMImage, rhs: RemoteVMImage) -> Bool {
         lhs.imageFile == rhs.imageFile
     }
 }

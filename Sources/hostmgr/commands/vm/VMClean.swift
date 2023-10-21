@@ -9,8 +9,7 @@ struct VMCleanCommand: AsyncParsableCommand {
         abstract: "Remove VMs that haven't been used recently"
     )
 
-    @DIInjected
-    var vmManager: any VMManager
+    let vmManager = VMManager()
 
     enum CodingKeys: CodingKey {}
 

@@ -34,8 +34,7 @@ struct VMStartCommand: AsyncParsableCommand {
         case persistent
     }
 
-    @DIInjected
-    var vmManager: any VMManager
+    let vmManager = VMManager()
 
     func run() async throws {
         do {

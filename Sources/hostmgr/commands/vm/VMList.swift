@@ -25,11 +25,9 @@ struct VMListCommand: AsyncParsableCommand {
     @Option(help: "Filter VMs by location – can be 'remote', 'local', or 'all'.")
     var location: Location = Location.all
 
-    @DIInjected
-    var vmManager: any VMManager
+    let vmManager = VMManager()
 
-    @DIInjected
-    var vmRemote: any RemoteVMLibrary
+    let vmRemote = RemoteVMLibrary()
 
     enum CodingKeys: CodingKey {
         case location
@@ -52,7 +50,7 @@ struct VMListCommand: AsyncParsableCommand {
         )
     }
 
-    private func format(localVM: any LocalVMImage) throws -> Console.TableRow {
+    private func format(localVM: LocalVMImage) throws -> Console.TableRow {
         return [
             "Local",
 //            localVM.basename,
@@ -63,7 +61,7 @@ struct VMListCommand: AsyncParsableCommand {
         ]
     }
 
-    private func format(remoteVM: any RemoteVMImage) throws -> Console.TableRow {
+    private func format(remoteVM: RemoteVMImage) throws -> Console.TableRow {
         return [
             "Remote",
             remoteVM.name,

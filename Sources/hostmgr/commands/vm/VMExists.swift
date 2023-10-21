@@ -11,8 +11,7 @@ struct VMExistsCommand: AsyncParsableCommand {
     @Argument(help: "The exact name of the VM")
     var name: String
 
-    @DIInjected
-    var vmManager: any VMManager
+    let vmManager = VMManager()
 
     enum CodingKeys: CodingKey {
         case name

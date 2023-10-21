@@ -27,7 +27,6 @@ public struct Configuration: Codable {
 
     /// VM Remote Image Settings
     public var vmImagesBucket: String = ""
-    public var vmImagesRegion: String = "us-east-1"
     public var vmImagesEndpoint: S3Endpoint {
         allowAWSAcceleratedTransfer ? S3Endpoint.accelerated : S3Endpoint.default
     }
@@ -38,12 +37,10 @@ public struct Configuration: Codable {
     /// authorized_keys file sync
     public var authorizedKeysSyncInterval = Defaults.defaultAuthorizedKeysRefreshInterval
     public var authorizedKeysBucket = ""
-    public var authorizedKeysRegion: String = "us-east-1"
 
     /// git repo mirroring
     public var gitMirrorBucket = ""
     public var gitMirrorPort = Defaults.defaultGitMirrorPort
-    public var gitMirrorRegion: String = "us-east-1"
     public var gitMirrorEndpoint: S3Endpoint {
         allowAWSAcceleratedTransfer ? S3Endpoint.accelerated : S3Endpoint.default
     }
@@ -64,17 +61,13 @@ public struct Configuration: Codable {
         case version
 
         case vmImagesBucket
-        case vmImagesRegion
-
         case protectedImages
 
         case authorizedKeysSyncInterval
         case authorizedKeysBucket
-        case authorizedKeysRegion
 
         case gitMirrorBucket
         case gitMirrorPort
-        case gitMirrorRegion
 
         case allowAWSAcceleratedTransfer
         case awsConfigurationMethod
@@ -87,7 +80,6 @@ public struct Configuration: Codable {
         version = 1
 
         vmImagesBucket = try values.decode(String.self, forKey: .vmImagesBucket)
-        vmImagesRegion = try values.decode(String.self, forKey: .vmImagesRegion)
 
         protectedImages = values.decode(
             forKey: .protectedImages,
@@ -95,14 +87,12 @@ public struct Configuration: Codable {
 
         authorizedKeysSyncInterval = values.decode(forKey: .authorizedKeysSyncInterval, defaultingTo: 3600)
         authorizedKeysBucket = try values.decode(String.self, forKey: .authorizedKeysBucket)
-        authorizedKeysRegion = try values.decode(String.self, forKey: .authorizedKeysRegion)
 
         gitMirrorBucket = try values.decode(String.self, forKey: .gitMirrorBucket)
         gitMirrorPort = values.decode(
             forKey: .gitMirrorPort,
             defaultingTo: Defaults.defaultGitMirrorPort
         )
-        gitMirrorRegion = try values.decode(String.self, forKey: .gitMirrorRegion)
 
         allowAWSAcceleratedTransfer = values.decode(
             forKey: .allowAWSAcceleratedTransfer,

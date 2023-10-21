@@ -3,7 +3,6 @@ import tinys3
 
 public struct S3Server: ReadWriteRemoteFileProvider, BytewiseRemoteFileProvider {
     private let bucketName: String
-    private let region: String
     private let endpoint: S3Endpoint
 
     enum Errors: Error {
@@ -13,25 +12,21 @@ public struct S3Server: ReadWriteRemoteFileProvider, BytewiseRemoteFileProvider 
 
     public static let gitMirrors: S3Server = S3Server(
         bucketName: Configuration.shared.gitMirrorBucket,
-        region: Configuration.shared.gitMirrorRegion,
         endpoint: Configuration.shared.gitMirrorEndpoint
     )
 
     public static let secrets: S3Server = S3Server(
         bucketName: Configuration.shared.authorizedKeysBucket,
-        region: Configuration.shared.authorizedKeysRegion,
         endpoint: .default
     )
 
     public static let vmImages: S3Server = S3Server(
         bucketName: Configuration.shared.vmImagesBucket,
-        region: Configuration.shared.vmImagesRegion,
         endpoint: .accelerated
     )
 
-    public init(bucketName: String, region: String, endpoint: S3Endpoint) {
+    public init(bucketName: String, endpoint: S3Endpoint) {
         self.bucketName = bucketName
-        self.region = region
         self.endpoint = endpoint
     }
 
@@ -71,7 +66,6 @@ public struct S3Server: ReadWriteRemoteFileProvider, BytewiseRemoteFileProvider 
         get throws {
             try S3Manager(
                 bucket: self.bucketName,
-                region: self.region,
                 credentials: .fromUserConfiguration(),
                 endpoint: self.endpoint
             )

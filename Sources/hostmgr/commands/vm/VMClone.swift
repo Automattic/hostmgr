@@ -15,8 +15,7 @@ struct VMCloneCommand: AsyncParsableCommand {
     @Argument
     var destination: String
 
-    @DIInjected
-    var vmManager: any VMManager
+    let vmManager = VMManager()
 
     enum CodingKeys: CodingKey {
         case source

@@ -69,3 +69,9 @@ class MockFileManager: FileManagerProto {
         existingDirectories.firstIndex(of: url.path()) != nil
     }
 }
+
+extension FileHasher {
+    static func stringRepresentationForHash(ofFileAt url: URL) throws -> String {
+        try hash(fileAt: url).compactMap { String(format: "%02x", $0) }.joined()
+    }
+}

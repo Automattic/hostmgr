@@ -6,7 +6,7 @@ public enum RemoteVMImageSortingStrategy {
     case size
     case newest
 
-    var sortMethod: (any RemoteVMImage, any RemoteVMImage) -> Bool {
+    var sortMethod: (RemoteVMImage, RemoteVMImage) -> Bool {
         switch self {
         case .name: return sortByName
         case .size: return sortBySize
@@ -14,59 +14,51 @@ public enum RemoteVMImageSortingStrategy {
         }
     }
 
-    func sortByName(_ lhs: any RemoteVMImage, _ rhs: any RemoteVMImage) -> Bool {
+    func sortByName(_ lhs: RemoteVMImage, _ rhs: RemoteVMImage) -> Bool {
         lhs.fileName.compare(rhs.fileName, options: [.diacriticInsensitive, .caseInsensitive]) == .orderedAscending
     }
 
-    func sortBySize(_ lhs: any RemoteVMImage, _ rhs: any RemoteVMImage) -> Bool {
+    func sortBySize(_ lhs: RemoteVMImage, _ rhs: RemoteVMImage) -> Bool {
         lhs.size < rhs.size
     }
 
-    func sortByDateDescending(_ lhs: any RemoteVMImage, _ rhs: any RemoteVMImage) -> Bool {
+    func sortByDateDescending(_ lhs: RemoteVMImage, _ rhs: RemoteVMImage) -> Bool {
         lhs.lastModifiedAt > rhs.lastModifiedAt
     }
 }
 
-public protocol RemoteVMLibrary<RemoteVMType> {
+public struct RemoteVMLibrary {
 
-    associatedtype RemoteVMType: RemoteVMImage
+    public init() {}
 
-    func getManifest() async throws -> [String]
-    func listImages(sortedBy strategy: RemoteVMImageSortingStrategy) async throws -> [RemoteVMType]
-    func hasImage(named: String) async throws -> Bool
-    func lookupImage(named name: String) async throws -> RemoteVMType
-
-    @discardableResult
-    func download(vmNamed: String, progressCallback: @escaping ProgressCallback) async throws -> URL
-
-    /// Make a local image available for others to use (by publishing it to S3)
-    ///
-    /// This method is the preferred way to deploy a VM image
-    func publish(vmNamed: String, progressCallback: @escaping ProgressCallback) async throws
-
-    func remoteImagesFrom(objects: [RemoteFile]) -> [RemoteVMType]
-}
-
-enum RemoteVMLibraryErrors: Error {
-    case vmNotFound
-    case manifestNotFound
-    case invalidManifest
-}
-
-extension RemoteVMLibrary {
-
-    var servers: [ReadOnlyRemoteFileProvider] {
-        [
-            CacheServer.vmImages,
-            S3Server.vmImages
-        ]
-    }
+    let servers: [ReadOnlyRemoteFileProvider] = [
+        CacheServer.vmImages,
+        S3Server.vmImages
+    ]
 
     public func getManifest() async throws -> [String] {
         let objects = try await S3Server.vmImages.listFiles(startingWith: "/images/")
         return remoteImagesFrom(objects: objects).map { $0.name }
     }
 
+    public func listImages(sortedBy strategy: RemoteVMImageSortingStrategy = .name) async throws -> [RemoteVMImage] {
+        let objects = try await S3Server.vmImages.listFiles(startingWith: "images/")
+        return remoteImagesFrom(objects: objects)
+    }
+
+    public func hasImage(named name: String) async throws -> Bool {
+        try await listImages(sortedBy: .name).contains(where: { $0.name == name })
+    }
+
+    public func lookupImage(named name: String) async throws -> RemoteVMImage {
+        guard let image = try await listImages(sortedBy: .name).first(where: { $0.name == name }) else {
+            throw HostmgrError.unableToFindRemoteImage(name)
+        }
+
+        return image
+    }
+
+    @discardableResult
     public func download(vmNamed name: String, progressCallback: @escaping ProgressCallback) async throws -> URL {
         let image = try await lookupImage(named: name)
 
@@ -96,27 +88,9 @@ extension RemoteVMLibrary {
         return destination
     }
 
-    public func listImages(sortedBy strategy: RemoteVMImageSortingStrategy = .name) async throws -> [RemoteVMType] {
-        let objects = try await S3Server.vmImages.listFiles(startingWith: "images/")
-        return remoteImagesFrom(objects: objects)
-    }
-
-    public func hasImage(named name: String) async throws -> Bool {
-        try await listImages().contains(where: { $0.name == name })
-    }
-
-    public func lookupImage(named name: String) async throws -> RemoteVMType {
-        guard let image = try await listImages().first(where: { $0.name == name }) else {
-            throw HostmgrError.unableToFindRemoteImage(name)
-        }
-
-        return image
-    }
-
-    public func remoteImagesFrom(objects: [RemoteFile]) -> [RemoteVMType] {
-        objects.compactMap(RemoteVMType.init)
-    }
-
+    /// Make a local image available for others to use (by publishing it to S3)
+    ///
+    /// This method is the preferred way to deploy a VM image
     public func publish(vmNamed name: String, progressCallback: @escaping ProgressCallback) async throws {
         try await S3Server.vmImages.uploadFile(
             at: Paths.toArchivedVM(named: name),
@@ -124,4 +98,14 @@ extension RemoteVMLibrary {
             progress: progressCallback
         )
     }
+
+    func remoteImagesFrom(objects: [RemoteFile]) -> [RemoteVMImage] {
+        objects.compactMap(RemoteVMImage.init)
+    }
+}
+
+enum RemoteVMLibraryErrors: Error {
+    case vmNotFound
+    case manifestNotFound
+    case invalidManifest
 }

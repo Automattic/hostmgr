@@ -3,75 +3,30 @@ import XCTest
 @testable import tinys3
 
 final class RemoteVMImageTests: XCTestCase {
+    private let testSubject = RemoteVMImage(
+        imageFile: S3Object.with(
+            key: "/foo/bar.vmtemplate.aar",
+            size: 4096
+        ).asFile
+    )!
 
-    //    private let testSubject = ParallelsVMImage(
-    //        imageObject: S3Object(
-    //            key: "foo/bar.txt",
-    //            size: 1234,
-    //            eTag: "",
-    //            lastModifiedAt: Date.distantPast,
-    //            storageClass: ""
-    //        ),
-    //        checksumObject: S3Object(
-    //            key: "foo/bar.sha1.txt",
-    //            size: 64,
-    //            eTag: "",
-    //            lastModifiedAt: Date.distantPast,
-    //            storageClass: ""
-    //        )
-    //    )
+    func testThatInvalidKeyEmitsNilObject() throws {
+        XCTAssertNil(RemoteVMImage(imageFile: S3Object.with(key: "/bar/baz", size: 0).asFile))
+    }
 
-    //    func testThatImagePathIsValid() throws {
-    //        XCTAssertEqual("foo/bar.txt", testSubject.imageObject.key)
-    //    }
-    //
-    //    func testThatFileNameIsValid() throws {
-    //        XCTAssertEqual("bar.txt", testSubject.fileName)
-    //    }
-    //
-    //    func testThatBaseNameIsValid() throws {
-    //        XCTAssertEqual("bar", testSubject.basename)
-    //    }
-    //
-    //    func testThatSizeCanBeRetrieved() throws {
-    //        XCTAssertEqual(1234, testSubject.imageObject.size)
-    //    }
+    func testThatNameIsCorrect() throws {
+        XCTAssertEqual("bar", testSubject.name)
+    }
 
-//
-//    func testThatFileNameIsValid() throws {
-//        XCTAssertEqual("bar.txt", testSubject.fileName)
-//    }
-//
-//    func testThatBaseNameIsValid() throws {
-//        XCTAssertEqual("bar", testSubject.basename)
-//    }
-//
-//    func testThatSizeCanBeRetrieved() throws {
-//        XCTAssertEqual(1234, testSubject.imageObject.size)
-//    }
-//
-//    func testThatChecksumCanBeRetrieved() throws {
-//        XCTAssertEqual("foo/bar.sha1.txt", testSubject.checksumObject.key)
-//    }
-//
-//    func testThatChecksumCanBeDirectlyRetrieved() throws {
-//        XCTAssertEqual("foo/bar.sha1.txt", testSubject.checksumKey)
-//    }
-//
-//    func testThatChecksumFilenameCanBeInferred() throws {
-//        XCTAssertEqual("bar.sha256.txt", testSubject.checksumFileName)
-//    }
-//
-//    func testThatRemoteArm64PackagedImageFileNameIsCorrect() throws {
-//        XCTAssertEqual(RemoteVMImage.with(key: "xcode-12.5.1.vmtemplate.aar").basename, "xcode-12.5.1")
-//    }
-//
-//    func testThatRemoteX64PackagedImageFileNameIsCorrect() throws {
-//        XCTAssertEqual(RemoteVMImage.with(key: "xcode-12.5.1.pvmp").basename, "xcode-12.5.1")
-//    }
+    func testThatfileNameIsCorrect() throws {
+        XCTAssertEqual("bar.vmtemplate.aar", testSubject.fileName)
+    }
 
-    //    func testThatChecksumCanBeRetrieved() throws {
-    //        XCTAssertEqual("foo/bar.sha1.txt", testSubject.checksumObject.key)
-    //    }
+    func testThatPathIsCorrect() throws {
+        XCTAssertEqual("/foo/bar.vmtemplate.aar", testSubject.path)
+    }
 
+    func testThatSizeIsCorrect() throws {
+        XCTAssertEqual(4096, testSubject.size)
+    }
 }

@@ -15,8 +15,7 @@ struct VMConnectCommand: AsyncParsableCommand {
     )
     var handle: String
 
-    @DIInjected
-    var vmManager: any VMManager
+    let vmManager = VMManager()
 
     enum CodingKeys: CodingKey {
         case handle

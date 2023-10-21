@@ -13,11 +13,9 @@ struct VMFetchCommand: AsyncParsableCommand {
     )
     var name: String
 
-    @DIInjected
-    var vmLibrary: any RemoteVMLibrary
+    var vmLibrary = RemoteVMLibrary()
 
-    @DIInjected
-    var vmManager: any VMManager
+    let vmManager = VMManager()
 
     enum CodingKeys: CodingKey {
         case name

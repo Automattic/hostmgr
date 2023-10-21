@@ -15,8 +15,7 @@ struct VMStopCommand: AsyncParsableCommand {
     @Flag(help: "Shutdown all VMs")
     var all: Bool = false
 
-    @DIInjected
-    var vmManager: any VMManager
+    let vmManager = VMManager()
 
     enum CodingKeys: CodingKey {
         case identifier

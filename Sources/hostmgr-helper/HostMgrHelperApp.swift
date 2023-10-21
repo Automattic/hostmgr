@@ -13,8 +13,7 @@ struct HostMgrHelperApp: App {
     @ObservedObject
     private var vmHost = VMHost.shared
 
-    @DIInjected
-    private var vmManager: any VMManager
+    private let vmManager = VMManager()
 
     private var serverTask: Task<Void, Error>!
 
