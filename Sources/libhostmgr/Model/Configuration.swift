@@ -4,22 +4,14 @@ import tinys3
 
 public struct Configuration: Codable {
 
-    public enum SchedulableSyncCommand: String, Codable, CaseIterable, ExpressibleByArgument {
-        case authorizedKeys = "authorized_keys"
-        case vmImages = "vm_images"
-    }
-
     public enum AWSConfigurationType: String, Codable {
         case configurationFile
         case ec2Environment
     }
 
     struct Defaults {
-        static let defaultGitMirrorPort: UInt = 41362
-
         static let defaultAWSAcceleratedTransferAllowed = true
         static let defaultAWSConfigurationMethod: AWSConfigurationType = .configurationFile
-
         static let defaultAuthorizedKeysRefreshInterval: UInt = 3600
     }
 
@@ -40,7 +32,6 @@ public struct Configuration: Codable {
 
     /// git repo mirroring
     public var gitMirrorBucket = ""
-    public var gitMirrorPort = Defaults.defaultGitMirrorPort
     public var gitMirrorEndpoint: S3Endpoint {
         allowAWSAcceleratedTransfer ? S3Endpoint.accelerated : S3Endpoint.default
     }
@@ -61,13 +52,11 @@ public struct Configuration: Codable {
         case version
 
         case vmImagesBucket
-        case protectedImages
+        case gitMirrorBucket
 
         case authorizedKeysSyncInterval
         case authorizedKeysBucket
 
-        case gitMirrorBucket
-        case gitMirrorPort
 
         case allowAWSAcceleratedTransfer
         case awsConfigurationMethod
@@ -81,23 +70,16 @@ public struct Configuration: Codable {
 
         vmImagesBucket = try values.decode(String.self, forKey: .vmImagesBucket)
 
-        protectedImages = values.decode(
-            forKey: .protectedImages,
-            defaultingTo: [])
-
         authorizedKeysSyncInterval = values.decode(forKey: .authorizedKeysSyncInterval, defaultingTo: 3600)
         authorizedKeysBucket = try values.decode(String.self, forKey: .authorizedKeysBucket)
 
         gitMirrorBucket = try values.decode(String.self, forKey: .gitMirrorBucket)
-        gitMirrorPort = values.decode(
-            forKey: .gitMirrorPort,
-            defaultingTo: Defaults.defaultGitMirrorPort
-        )
 
         allowAWSAcceleratedTransfer = values.decode(
             forKey: .allowAWSAcceleratedTransfer,
             defaultingTo: Defaults.defaultAWSAcceleratedTransferAllowed
         )
+
         awsConfigurationMethod = values.decode(
             forKey: .awsConfigurationMethod,
             defaultingTo: Defaults.defaultAWSConfigurationMethod
@@ -139,24 +121,5 @@ private extension KeyedDecodingContainer {
         } catch {
             return defaultValue
         }
-    }
-}
-
-extension S3Endpoint: Encodable {
-    enum Errors: Error {
-        case invalidEndpoint
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        if self == .accelerated {
-            try container.encode("accelerated")
-        }
-
-        if self == .default {
-            try container.encode("default")
-        }
-
-        throw Errors.invalidEndpoint
     }
 }

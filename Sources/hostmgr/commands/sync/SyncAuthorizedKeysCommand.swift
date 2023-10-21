@@ -10,7 +10,7 @@ struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
     }
 
     static let configuration = CommandConfiguration(
-        commandName: Configuration.SchedulableSyncCommand.authorizedKeys.rawValue,
+        commandName: "authorized_keys",
         abstract: "Set this machine's authorized_keys file"
     )
 
@@ -47,9 +47,7 @@ struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
 
         // Fix the permissions on the file, if needed
         Console.info("Setting file permissions on \(destination)")
-        try FileManager.default.setAttributes([
-            .posixPermissions: 0o600
-        ], ofItemAt: destination)
+        try FileManager.default.set(filePermissions: .ownerReadWrite, forItemAt: destination)
         Console.success("Authorized Key Sync Complete")
 
         try recordLastRun()

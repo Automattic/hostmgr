@@ -71,8 +71,6 @@ let package = Package(
                 .product(name: "DotEnv", package: "DotEnv"),
             ],
             resources: [
-                .copy("resources/configurations/0.6.0.json"),
-                .copy("resources/configurations/defaults.json"),
                 .copy("resources/server-responses/caddy-file-list.json"),
                 .copy("resources/buildkite-environment-variables-basic-expected-output.txt"),
                 .copy("resources/buildkite-environment-variables-basic.env"),
