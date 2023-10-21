@@ -11,14 +11,8 @@ actor VMUsageTracker {
 
     func trackUsageOf(vmNamed name: String, on date: Date = Date()) throws {
         try createUsageFileIfNotExists()
-
-        let fileHandle = try FileHandle(forWritingTo: self.usageFilePath)
-        try fileHandle.seekToEnd()
-
         let line = name + "\t" + self.dateFormatter.string(from: date) + "\n"
-        try fileHandle.write(contentsOf: Data(line.utf8))
-
-        try fileHandle.close()
+        try FileManager.default.append(line, toFile: usageFilePath)
     }
 
     func usageStats() async throws -> [VMUsageRecord] {

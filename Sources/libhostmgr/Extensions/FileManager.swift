@@ -144,4 +144,10 @@ extension FileManager {
             .map { URL(fileURLWithPath: $0, relativeTo: directory) }
     }
 
+    public func append(_ string: String, toFile url: URL) throws {
+        let fileHandle = try FileHandle(forWritingTo: url)
+        try fileHandle.seekToEnd()
+        try fileHandle.write(contentsOf: Data(string.utf8))
+        try fileHandle.close()
+    }
 }

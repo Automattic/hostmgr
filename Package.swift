@@ -82,6 +82,7 @@ let package = Package(
                 .copy("resources/dotenv-fixtures.env"),
                 .copy("resources/file-hasher-test-1"),
                 .copy("resources/mac-hardware-model-data.dat"),
+                .copy("resources/usage-file-sample"),
                 .copy("resources/vm-config-file-sample-1.json"),
                 .copy("resources/vm-config-file-sample-2.json"),
                 .copy("resources/vm-config-file-sample-3.json")
