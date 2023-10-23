@@ -22,6 +22,8 @@ public struct S3Manager: S3ManagerProtocol {
 
     enum Errors: Error {
         case fileExistsAtDestination
+        /// AWS S3 API error
+        case apiError(data: Data, response: HTTPURLResponse)
     }
 
     private let bucket: String
@@ -68,6 +70,10 @@ public struct S3Manager: S3ManagerProtocol {
 
     public func download(object: S3Object) async throws -> Data? {
         let downloadUrl = s3Client.signedDownloadUrl(forKey: object.key, in: self.bucket, validFor: 60)
-        return try await URLSession.shared.data(from: downloadUrl).0
+        let (data, response) = try await URLSession.shared.data(from: downloadUrl)
+        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+            throw S3Manager.Errors.apiError(data: data, response: httpResponse)
+        }
+        return data
     }
 }
