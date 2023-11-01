@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 /// Resolves local virtual machines by name or handle
 ///
@@ -16,18 +17,27 @@ struct VMResolver {
     }
 
     static func resolve(_ identifier: String, fileManager: FileManagerProto = FileManager.default) throws -> Result {
+        Logger.helper.debug("Resolving VM: \(identifier, privacy: .public)")
+
         let path = try resolvePath(for: identifier, fileManager: fileManager)
 
         if path.path().hasSuffix(".vmtemplate.aar") {
-            return .template(VMTemplate(at: path))
+            let template = VMTemplate(at: path)
+            Logger.helper.debug("Resolved template at: \(template.root, privacy: .public)")
+            return .template(template)
         }
 
         if path.path().hasSuffix(".vmtemplate") {
-            return .template(VMTemplate(at: path))
+            let template = VMTemplate(at: path)
+            Logger.helper.debug("Resolved template at: \(template.root, privacy: .public)")
+
+            return .template(template)
         }
 
         if path.pathExtension == "bundle" {
-            return try .bundle(VMBundle(at: path))
+            let bundle = try VMBundle(at: path)
+            Logger.helper.debug("Resolved bundle at: \(bundle.root, privacy: .public)")
+            return .bundle(bundle)
         }
 
         throw HostmgrError.invalidVMStatus(path)

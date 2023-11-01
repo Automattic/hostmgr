@@ -14,7 +14,7 @@ public struct VMManager {
     ///
     public func startVM(configuration: LaunchConfiguration) async throws {
         try createWorkingDirectoriesIfNeeded()
-        try await ensureLocalVMExists(named: configuration.name)
+        try ensureLocalVMTemplateExists(named: configuration.name)
         try await vmUsageTracker.trackUsageOf(vmNamed: configuration.name)
         try await HostmgrClient.start(launchConfiguration: configuration)
     }
@@ -82,9 +82,9 @@ public struct VMManager {
     ///   - from: The name of the VM template to copy. The VM template is expected to be located in
     ///   the `vm-images` directory. If there is no VM at that location, an error will be emitted.
     ///   - to: The name of the resulting VM
-    public func cloneVM(source: String, destination: String) async throws {
+    public func cloneVMTemplate(source: String, destination: String) async throws {
         let bundle = try VMResolver.resolveBundle(named: source)
-        _ = try bundle.createEphemeralCopy(at: Paths.toWorkingAppleSiliconVM(named: destination))
+        _ = try bundle.createEphemeralCopy(at: Paths.toVMTemplate(named: destination))
     }
 
     /// Wait for the VM with the given name to finish starting up
@@ -128,18 +128,22 @@ public struct VMManager {
 public extension VMManager {
 
     func list(sortedBy strategy: LocalVMImageSortingStrategy = .name) async throws -> [LocalVMImage] {
-        try (lookupVMImages() + lookupTempVMs()).sorted(by: strategy.sortMethod)
+        try (lookupVMTemplates() + lookupTempVMs()).sorted(by: strategy.sortMethod)
     }
 
-    func hasLocalVM(name: String, state: VMImageState) async throws -> Bool {
-        try lookupVMImages().contains { $0.name == name && $0.state == state }
+    func hasLocalVMTemplate(named name: String) throws -> Bool {
+        try lookupVMTemplates().contains { $0.name == name }
     }
 
-    func hasTempVM(named name: String) async throws -> Bool {
+    func hasLocalVMTemplate(named name: String, state: VMImageState) throws -> Bool {
+        try lookupVMTemplates().contains { $0.name == name && $0.state == state }
+    }
+
+    func hasTempVM(named name: String) throws -> Bool {
         try lookupTempVMs().contains { $0.name == name }
     }
 
-    func lookupVMImages() throws -> [LocalVMImage] {
+    func lookupVMTemplates() throws -> [LocalVMImage] {
         try resolveVMs(FileManager.default.children(ofDirectory: Paths.vmImageStorageDirectory))
     }
 
@@ -148,7 +152,7 @@ public extension VMManager {
     }
 
     func lookupTempVM(name: String) throws -> LocalVMImage? {
-        try lookupVMImages().first { $0.name == name }
+        try lookupTempVMs().first { $0.name == name }
     }
 
     func createWorkingDirectoriesIfNeeded() throws {
@@ -162,8 +166,8 @@ public extension VMManager {
 }
 
 extension VMManager {
-    func ensureLocalVMExists(named name: String) async throws {
-        guard try await hasLocalVM(name: name, state: .ready) else {
+    func ensureLocalVMTemplateExists(named name: String) throws {
+        guard try hasLocalVMTemplate(named: name, state: .ready) else {
             throw HostmgrError.localVMNotFound(name)
         }
     }

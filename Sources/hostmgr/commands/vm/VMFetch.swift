@@ -23,12 +23,12 @@ struct VMFetchCommand: AsyncParsableCommand {
 
     func run() async throws {
         // If we already have the VM ready to go, don't re-download it
-        if try await vmManager.hasLocalVM(name: name, state: .ready) {
+        if try vmManager.hasLocalVMTemplate(named: name, state: .ready) {
             Console.exit("VM is present locally", style: .success)
         }
 
         // If it just needs to be unpacked, try that
-        if try await vmManager.hasLocalVM(name: name, state: .packaged) {
+        if try vmManager.hasLocalVMTemplate(named: name, state: .packaged) {
             Console.info("Existing package found – extracting")
             try await vmManager.unpackVM(name: name)
             Console.exit("VM is present locally", style: .success)

@@ -18,7 +18,7 @@ struct VMExistsCommand: AsyncParsableCommand {
     }
 
     func run() async throws {
-        guard try await vmManager.hasLocalVM(name: name, state: .ready) else {
+        guard try vmManager.hasLocalVMTemplate(named: name) || vmManager.hasTempVM(named: name) else {
             Console.crash(.localVMNotFound(name))
         }
 

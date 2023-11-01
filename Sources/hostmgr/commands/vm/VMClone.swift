@@ -23,6 +23,6 @@ struct VMCloneCommand: AsyncParsableCommand {
     }
 
     func run() async throws {
-        try await vmManager.cloneVM(source: self.source, destination: self.destination)
+        try await vmManager.cloneVMTemplate(source: self.source, destination: self.destination)
     }
 }
