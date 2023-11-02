@@ -89,8 +89,11 @@ public struct VMManager {
 
     /// Wait for the VM with the given name to finish starting up
     ///
-    public func waitForVMStartup(name: String, timeout: Duration = .seconds(30)) async throws {
-        let address = try await ipAddress(forVmWithName: name)
+    public func waitForVMStartup(
+        for launchConfiguration: LaunchConfiguration,
+        timeout: Duration = .seconds(30)
+    ) async throws {
+        let address = try await ipAddress(forVmWithName: launchConfiguration.handle)
         try await waitForSSHServer(forAddress: address, timeout: timeout)
     }
 

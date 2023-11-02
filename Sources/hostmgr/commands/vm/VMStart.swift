@@ -38,17 +38,19 @@ struct VMStartCommand: AsyncParsableCommand {
 
     func run() async throws {
         do {
-            try await vmManager.startVM(configuration: LaunchConfiguration(
+            let configuration = LaunchConfiguration(
                 name: self.name,
                 handle: self.handle,
                 persistent: self.persistent,
-                sharedPaths: self.sharedPaths
-            ))
+                sharedPaths: try self.sharedPaths
+            )
+
+            try await vmManager.startVM(configuration: configuration)
 
             if waitForever {
-                try await vmManager.waitForVMStartup(name: self.handle, timeout: .seconds(.greatestFiniteMagnitude))
+                try await vmManager.waitForVMStartup(for: configuration, timeout: .seconds(.greatestFiniteMagnitude))
             } else {
-                try await vmManager.waitForVMStartup(name: self.handle, timeout: .seconds(30))
+                try await vmManager.waitForVMStartup(for: configuration, timeout: .seconds(30))
             }
 
             Console.success("Booted \(name) in \(Format.elapsedTime(between: startTime, and: .now))")
