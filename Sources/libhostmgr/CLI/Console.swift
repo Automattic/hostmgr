@@ -3,7 +3,26 @@ import ConsoleKit
 import tinys3
 import OSLog
 
-public struct Console {
+public protocol Consolable {
+    @discardableResult
+    func success(_ message: String) -> Self
+
+    @discardableResult
+    func error(_ message: String) -> Self
+
+    @discardableResult
+    func warn(_ message: String) -> Self
+
+    @discardableResult
+    func info(_ message: String) -> Self
+
+    @discardableResult
+    func log(_ message: String) -> Self
+}
+
+public struct Console: Consolable {
+
+    static let shared = Console()
 
     let terminal = Terminal()
 

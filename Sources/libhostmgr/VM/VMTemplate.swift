@@ -53,6 +53,24 @@ public struct VMTemplate: TemplateBundle {
         try FileHasher.hash(fileAt: self.auxImageFilePath)
     }
 
+    /// Seals this VM template against future modification by:
+    ///
+    ///  - Calculating and recording a disk image hash
+    ///  - Calculating and recording an auxilary data hash
+    ///
+    ///  This method also re-applies the `bundle` bit on template's source directory if it's missing – the bundle
+    ///  isn't valid without it, but we can fix it transparently
+    ///
+    @discardableResult
+    public func seal() throws -> Self {
+        try ManifestFile(
+            imageHash: try self.hashDiskImage(),
+            auxilaryDataHash: try self.hashAuxData()
+        ).write(to: self.manifestFilePath)
+
+        return try self.applyingBundleBit()
+    }
+
     /// Validate this VM template by:
     ///
     ///  - Ensuring that the manifest is present and can be parsed
@@ -104,12 +122,7 @@ public struct VMTemplate: TemplateBundle {
         try FileManager.default.copyItem(at: bundle.auxImageFilePath, to: template.auxImageFilePath)
         try FileManager.default.copyItem(at: bundle.diskImageFilePath, to: template.diskImageFilePath)
 
-        try ManifestFile(
-            imageHash: try template.hashDiskImage(),
-            auxilaryDataHash: try template.hashAuxData()
-        ).write(to: template.manifestFilePath)
-
-        return try template.applyingBundleBit()
+        return try template.seal()
     }
 
     func applyingBundleBit() throws -> Self {

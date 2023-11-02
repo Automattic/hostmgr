@@ -7,8 +7,11 @@ import Virtualization
 public struct VMManager {
 
     let vmUsageTracker = VMUsageTracker()
+    let console: Consolable
 
-    public init() {}
+    public init(console: Consolable? = nil) {
+        self.console = console ?? Console()
+    }
 
     /// Start a VM
     ///
@@ -61,10 +64,22 @@ public struct VMManager {
     /// referencing it by name will attempt to pack the VM in the directory with that name. If there is no VM at
     /// that location, an error will be emitted.
     public func packageVM(name: String) async throws {
-        try Compressor.compress(
-            directory: Paths.toVMTemplate(named: name),
-            to: Paths.toArchivedVM(named: name)
-        )
+        var template: VMTemplate
+
+        switch try VMResolver.resolve(name) {
+        case .bundle(let bundle):
+            console.info("Creating Template from bundle")
+            template = try VMTemplate.creatingTemplate(fromBundle: bundle)
+            console.success("Template Created")
+        case .template(let _template):
+            console.info("Validating Template")
+            template = try _template.seal().validate()
+            console.success("Validation Complete")
+        }
+
+        console.info("Compressing Template")
+        try template.compress()
+        console.success("Compression Complete")
     }
 
     /// Resets the VM working directory by deleting any VMs that might have previously existed.
