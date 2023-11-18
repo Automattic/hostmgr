@@ -46,21 +46,31 @@ struct RunningVMListItem: View {
             VMListItemDataItem(key: "IP Address", value: ipAddress.debugDescription)
 
             HStack(alignment: .top) {
-                Button(action: self.openVNCSession, label: {
+                Button(action: self.openVNCSession) {
+                    Spacer()
                     Label("VNC", systemImage: "play.display")
-                })
+                    Spacer()
+                }
 
-                Button(action: self.openVMWindow, label: {
+                Button(action: self.openVMWindow) {
+                    Spacer()
                     Label("View", systemImage: "display")
-                })
+                    Spacer()
+                }
+            }.frame(maxWidth: .infinity)
 
-                Button(action: self.openSSHSession, label: {
+            HStack(alignment: .top) {
+                Button(action: self.openSSHSession) {
+                    Spacer()
                     Label("SSH", systemImage: "terminal").foregroundStyle(.white)
-                })
+                    Spacer()
+                }
 
-                Button(action: self.shutdown, label: {
+                Button(action: self.shutdown) {
+                    Spacer()
                     Label("Stop", systemImage: "stop.circle").foregroundStyle(.white)
-                })
+                    Spacer()
+                }
             }.frame(maxWidth: .infinity)
         }
 
