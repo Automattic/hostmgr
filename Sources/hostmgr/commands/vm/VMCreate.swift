@@ -29,11 +29,11 @@ struct VMCreateCommand: AsyncParsableCommand {
     mutating func run() async throws {
         let restoreImage = try await VZMacOSRestoreImage.latestSupported
 
-        if VMDownloader.needsToDownload(restoreImage: restoreImage) {
+        if RestoreImageLibrary.needsToDownload(restoreImage: restoreImage) {
             try await download(restoreImage: restoreImage, withProgress: !quiet)
         }
 
-        let localImage = try await VMDownloader.localCopy(of: restoreImage)
+        let localImage = try await RestoreImageLibrary.localCopy(of: restoreImage)
 
         let bundle = try VMBundle.createBundle(
             named: self.name,
@@ -49,13 +49,13 @@ struct VMCreateCommand: AsyncParsableCommand {
     private func download(restoreImage: VZMacOSRestoreImage, withProgress: Bool) async throws {
         if withProgress {
             let downloadProgressBar = Console.startFileDownload(restoreImage.url)
-            try await VMDownloader.download(restoreImage: restoreImage, progress: {
+            try await RestoreImageLibrary.download(restoreImage: restoreImage, progress: {
                 downloadProgressBar.update($0)
             })
             downloadProgressBar.succeed()
         } else {
             Console.info("Downloading \(restoreImage.url) – this may take a while")
-            try await VMDownloader.download(restoreImage: restoreImage) { _ in }
+            try await RestoreImageLibrary.download(restoreImage: restoreImage) { _ in }
         }
     }
 

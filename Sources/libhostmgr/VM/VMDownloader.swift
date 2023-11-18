@@ -1,7 +1,7 @@
 import Foundation
 import Virtualization
 
-public struct VMDownloader {
+public struct RestoreImageLibrary {
 
     public static func fetchLatestRestoreImage() async throws -> VZMacOSRestoreImage {
         Console.info("Fetching latest restore image")
