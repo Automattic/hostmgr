@@ -45,13 +45,13 @@ struct VMConfiguration {
     }
 
     var cpuCount: Int {
-        calculateCPUCount(shared: Configuration.shared.isSharedNode)
+        calculateCPUCount(shared: Configuration.shared.allowsMultipleVMs)
     }
 
     func calculateMemorySize(
         min minimum: UInt64 = VZVirtualMachineConfiguration.minimumAllowedMemorySize,
         max maximum: UInt64 = VZVirtualMachineConfiguration.maximumAllowedMemorySize,
-        hostReserved: UInt64 = Configuration.shared.hostReservedRAM,
+        hostReserved: UInt64 = Configuration.shared.hostReservedRAMBytes,
         shared: Bool
     ) -> UInt64 {
         let vmReservedSize = maximum - hostReserved
@@ -64,7 +64,7 @@ struct VMConfiguration {
     }
 
     var memorySize: UInt64 {
-        calculateMemorySize(shared: Configuration.shared.isSharedNode)
+        calculateMemorySize(shared: Configuration.shared.allowsMultipleVMs)
     }
 
     var graphicsConfiguration: [VZMacGraphicsDeviceConfiguration] {

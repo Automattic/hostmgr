@@ -1,88 +1,59 @@
 import Foundation
 import ArgumentParser
 import tinys3
+import Network
 
 public struct Configuration: Codable {
 
-    public enum AWSConfigurationType: String, Codable {
-        case configurationFile
-        case ec2Environment
-    }
-
-    struct Defaults {
-        static let defaultAWSAcceleratedTransferAllowed = true
-        static let defaultAWSConfigurationMethod: AWSConfigurationType = .configurationFile
-        static let defaultAuthorizedKeysRefreshInterval: UInt = 3600
-    }
-
     public var version = 1
 
-    /// VM Remote Image Settings
-    public var vmImagesBucket: String = ""
-    public var vmImagesEndpoint: S3Endpoint {
-        allowAWSAcceleratedTransfer ? S3Endpoint.accelerated : S3Endpoint.default
-    }
+    // MARK: authorized_keys sync
+    public var authorizedKeysBucket: String
 
-    /// Images that are protected from deletion (useful for local work, or for a fallback image)
-    public var protectedImages: [String] = []
-
-    /// authorized_keys file sync
-    public var authorizedKeysSyncInterval = Defaults.defaultAuthorizedKeysRefreshInterval
-    public var authorizedKeysBucket = ""
-
-    /// git repo mirroring
-    public var gitMirrorBucket = ""
+    // MARK: git repo mirroring
+    public var gitMirrorBucket: String
     public var gitMirrorEndpoint: S3Endpoint {
-        allowAWSAcceleratedTransfer ? S3Endpoint.accelerated : S3Endpoint.default
+        guard let allowAWSAcceleratedTransfer else {
+            return .default
+        }
+
+        return allowAWSAcceleratedTransfer ? S3Endpoint.accelerated : S3Endpoint.default
     }
 
-    /// settings for running in AWS
-    public var allowAWSAcceleratedTransfer: Bool! = Defaults.defaultAWSAcceleratedTransferAllowed
-    public var awsConfigurationMethod: AWSConfigurationType! = Defaults.defaultAWSConfigurationMethod
+    // MARK: VM Remote Image Settings
+    public var vmImagesBucket: String
+    public var vmImagesEndpoint: S3Endpoint {
+        guard let allowAWSAcceleratedTransfer else {
+            return .default
+        }
+
+        return allowAWSAcceleratedTransfer ? S3Endpoint.accelerated : S3Endpoint.default
+    }
+
+    // MARK: AWS Settings
+    public var allowAWSAcceleratedTransfer: Bool?
+
+
+
 
     // MARK: VM Resource Settings
 
     /// Should this node run more than one concurrent VM?
-    public let isSharedNode: Bool = false
+    private var isSharedNode: Bool?
 
     /// How much RAM should be reserved for the host (and not allocated to VMs)
-    public let hostReservedRAM: UInt64 = 1024 * 1024 * 2048 // Leave 2GB for the VM host
+    private var hostReservedRAM: UInt64?
 
-    enum CodingKeys: String, CodingKey {
-        case version
-
-        case vmImagesBucket
-        case gitMirrorBucket
-
-        case authorizedKeysSyncInterval
-        case authorizedKeysBucket
-
-        case allowAWSAcceleratedTransfer
-        case awsConfigurationMethod
+    /// Alias of the `isSharedNode` configuration item – allows not specifying it in the config
+    ///
+    public var allowsMultipleVMs: Bool {
+        isSharedNode ?? false
     }
 
-    public init() {}
-
-    public init(from decoder: Decoder) throws {
-        let values = try decoder.container(keyedBy: CodingKeys.self)
-        version = 1
-
-        vmImagesBucket = try values.decode(String.self, forKey: .vmImagesBucket)
-
-        authorizedKeysSyncInterval = values.decode(forKey: .authorizedKeysSyncInterval, defaultingTo: 3600)
-        authorizedKeysBucket = try values.decode(String.self, forKey: .authorizedKeysBucket)
-
-        gitMirrorBucket = try values.decode(String.self, forKey: .gitMirrorBucket)
-
-        allowAWSAcceleratedTransfer = values.decode(
-            forKey: .allowAWSAcceleratedTransfer,
-            defaultingTo: Defaults.defaultAWSAcceleratedTransferAllowed
-        )
-
-        awsConfigurationMethod = values.decode(
-            forKey: .awsConfigurationMethod,
-            defaultingTo: Defaults.defaultAWSConfigurationMethod
-        )
+    /// Alias of the `hostReservedRAM` configuration key – allows not specifying it in the config
+    ///
+    public var hostReservedRAMBytes: UInt64 {
+        hostReservedRAM ?? 1024 * 1024 * 2048 // Leave 2GB for the VM host
     }
 }
 
@@ -109,16 +80,5 @@ public extension Configuration {
 
     static func from(data: Data) throws -> Self {
         try JSONDecoder().decode(Configuration.self, from: data)
-    }
-}
-
-private extension KeyedDecodingContainer {
-
-    func decode<T: Decodable>(forKey key: KeyedDecodingContainer<K>.Key, defaultingTo defaultValue: T) -> T {
-        do {
-            return try self.decode(T.self, forKey: key)
-        } catch {
-            return defaultValue
-        }
     }
 }
