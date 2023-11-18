@@ -1,6 +1,7 @@
 import Foundation
 import Network
 import Virtualization
+import OSLog
 
 /// A protocol implementing a control layer for Virtual Machines – anything that you could do from a GUI, you should
 /// be able to do with this protocol.
@@ -115,6 +116,9 @@ public struct VMManager {
     /// Get details about a VM
     public func ipAddress(forVmWithName name: String) async throws -> IPv4Address {
         let vmBundle: VMResolver.Result = try VMResolver.resolve(name)
+
+        Logger.lib.debug("Resolving IP Address for VM named \(name)")
+        Logger.lib.debug("Found \(vmBundle)")
 
         switch vmBundle {
         case .bundle(let bundle): return try await ipAddress(for: bundle.macAddress)

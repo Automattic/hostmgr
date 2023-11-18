@@ -36,7 +36,7 @@ extension Bundle {
     /// - A unique MAC address
     ///
     public func createEphemeralCopy(at destination: URL) throws -> VMBundle {
-        Logger.helper.log("Creating ephemeral copy of \(root, privacy: .public) at \(destination, privacy: .public)")
+        Logger.helper.log("Creating ephemeral copy of \(root) at \(destination)")
         try FileManager.default.createParentDirectoryIfNotExists(for: destination)
         try FileManager.default.copyItem(at: self.root, to: destination)
 

@@ -17,26 +17,25 @@ struct VMResolver {
     }
 
     static func resolve(_ identifier: String, fileManager: FileManagerProto = FileManager.default) throws -> Result {
-        Logger.helper.debug("Resolving VM: \(identifier, privacy: .public)")
+        Logger.helper.debug("Resolving VM: \(identifier)")
 
         let path = try resolvePath(for: identifier, fileManager: fileManager)
 
         if path.path().hasSuffix(".vmtemplate.aar") {
             let template = VMTemplate(at: path)
-            Logger.helper.debug("Resolved template at: \(template.root, privacy: .public)")
+            Logger.helper.debug("Resolved template at: \(template.root)")
             return .template(template)
         }
 
         if path.path().hasSuffix(".vmtemplate") {
             let template = VMTemplate(at: path)
-            Logger.helper.debug("Resolved template at: \(template.root, privacy: .public)")
-
+            Logger.helper.debug("Resolved template at: \(template.root)")
             return .template(template)
         }
 
         if path.pathExtension == "bundle" {
             let bundle = try VMBundle(at: path)
-            Logger.helper.debug("Resolved bundle at: \(bundle.root, privacy: .public)")
+            Logger.helper.debug("Resolved bundle at: \(bundle.root)")
             return .bundle(bundle)
         }
 

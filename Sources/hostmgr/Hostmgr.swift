@@ -1,11 +1,10 @@
 import Foundation
 import ArgumentParser
-import Logging
 import libhostmgr
+import OSLog
 
 @main
 struct Hostmgr: AsyncParsableCommand {
-
     private static let appVersion = libhostmgr.hostmgrVersion
 
     static var configuration = CommandConfiguration(
@@ -25,7 +24,7 @@ struct Hostmgr: AsyncParsableCommand {
     )
 
     mutating func run() async throws {
-        logger.trace("Starting Up")
+        Logger.cli.debug("Starting up")
 
         try Configuration.validate()
 

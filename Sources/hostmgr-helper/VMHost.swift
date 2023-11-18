@@ -19,7 +19,7 @@ class VMHost: NSObject, ObservableObject {
 
 extension VMHost: HostmgrServerDelegate {
     func start(launchConfiguration: libhostmgr.LaunchConfiguration) async throws {
-        Logger.helper.log("Launching VM: \(launchConfiguration.name, privacy: .public)")
+        Logger.helper.log("Launching VM: \(launchConfiguration.name)")
 
         if self.primaryVMSlot.isAvailable {
             Logger.helper.log("Using Primary Slot")
@@ -37,7 +37,7 @@ extension VMHost: HostmgrServerDelegate {
     }
 
     func stop(handle: String) async throws {
-        Logger.helper.log("Received stop request for \(handle, privacy: .public)")
+        Logger.helper.log("Received stop request for \(handle)")
 
         if self.primaryVMSlot.isRunningVM(withHandle: handle) {
             try await primaryVMSlot.stopVirtualMachine()

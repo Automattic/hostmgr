@@ -2,6 +2,7 @@ import SwiftUI
 import Virtualization
 import Network
 import libhostmgr
+import OSLog
 
 import Sentry
 

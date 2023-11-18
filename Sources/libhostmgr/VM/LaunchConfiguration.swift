@@ -56,6 +56,14 @@ public struct LaunchConfiguration: Sendable, Codable {
         self.sharedPaths = sharedPaths
         self.waitForNetworking = waitForNetworking
 
+        Logger.lib.debug(
+"""
+== Initialized launch Configuration ==
+Name:        \(name)
+Handle:      \(handle)
+Persistence: \(persistent)
+"""
+        )
     }
 
     public var sharedDirectoryConfiguration: VZDirectorySharingDeviceConfiguration {
@@ -83,24 +91,35 @@ public struct LaunchConfiguration: Sendable, Codable {
         if self.persistent {
             return Paths.toAppleSiliconVM(named: self.handle)
         } else {
-            return Paths.toWorkingAppleSiliconVM(named: self.handle)
+            let path = Paths.toWorkingAppleSiliconVM(named: self.handle)
+            Logger.lib.debug("Destination to non-persitent VM is: \(path)")
+            return path
         }
-    }
-
-    public func createBundle() throws -> VMBundle {
-        if self.persistent {
-            return try VMBundle(at: vmSourcePath)
-        }
-
-        return try VMResolver.resolveBundle(named: name)
-            .createEphemeralCopy(at: destinationPath)
     }
 
     public func setupVirtualMachine() async throws -> VZVirtualMachine {
-        let configuration = try createBundle().virtualMachineConfiguration()
-        configuration.directorySharingDevices = [self.sharedDirectoryConfiguration]
+        let sourceBundle = try VMBundle(at: vmSourcePath)
+        let bundle = self.persistent
+            ? sourceBundle
+            : try VMResolver.resolveBundle(named: name).createEphemeralCopy(at: destinationPath)
 
+        Logger.helper.debug("""
+==Resolved VM Bundle as VM Configuration Source==
+Persistent Launch Requested:    \(self.persistent)
+Source Path:                    \(bundle.root)
+Source MAC Address:             \(sourceBundle.macAddress)
+Destination MAC Adddress:       \(bundle.macAddress)
+""")
+
+        let configuration = try bundle.virtualMachineConfiguration()
+        configuration.directorySharingDevices = [self.sharedDirectoryConfiguration]
         try configuration.validate()
+
+        Logger.helper.debug("""
+==VM Configuration Prepared==
+CPU Count:      \(configuration.cpuCount)
+MAC Address:    \(String(describing: configuration.networkDevices.first?.macAddress))
+""")
 
         return VZVirtualMachine(configuration: configuration)
     }

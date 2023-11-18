@@ -277,27 +277,27 @@ extension Console {
     }
 
     @discardableResult public static func success(_ message: String) -> Self {
-        Logger(OSLog.default).info("\(message)")
+        Logger.lib.info(message)
         return Console().success(message)
     }
 
     @discardableResult public static func error(_ message: String) -> Self {
-        Logger(OSLog.default).error("\(message)")
+        Logger.lib.error("\(message)")
         return Console().error(message)
     }
 
     @discardableResult public static func warn(_ message: String) -> Self {
-        Logger(OSLog.default).warning("\(message)")
+        Logger.lib.warning("\(message)")
         return Console().warn(message)
     }
 
     @discardableResult public static func info(_ message: String) -> Self {
-        Logger(OSLog.default).info("\(message)")
+        Logger.lib.info("\(message)")
         return Console().info(message)
     }
 
     @discardableResult public static func log(_ message: String) -> Self {
-        Logger(OSLog.default).info("\(message)")
+        Logger.lib.info("\(message)")
         return Console().log(message)
     }
 

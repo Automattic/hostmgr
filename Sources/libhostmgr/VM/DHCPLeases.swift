@@ -20,7 +20,7 @@ public struct DHCPLease {
     }
 
     public static func mostRecentLease(forMACaddress address: VZMACAddress) throws -> DHCPLease {
-        Logger.helper.debug("Fetching lease for \(address.string, privacy: .public)")
+        Logger.helper.debug("Fetching lease for \(address.string)")
         let leases = try leases(for: address)
 
         guard !leases.isEmpty else {
@@ -36,10 +36,10 @@ public struct DHCPLease {
 
     static func leases(for address: VZMACAddress) throws -> [DHCPLease] {
         let allLeases = try leasesFrom(file: URL(fileURLWithPath: "/private/var/db/dhcpd_leases"))
-        Logger.helper.debug("\(allLeases.count, privacy: .public) found")
+        Logger.helper.debug("\(allLeases.count) found")
 
         let filteredLeases = allLeases.filter { $0.hwAddress == address }
-        Logger.helper.debug("\(filteredLeases.count, privacy: .public) for \(address, privacy: .public)")
+        Logger.helper.debug("\(filteredLeases.count) for \(address)")
 
         return filteredLeases
     }

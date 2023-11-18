@@ -21,7 +21,6 @@ let package = Package(
         // Dependencies declare other packages that this package depends on.
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.1.4"),
         .package(url: "https://github.com/jkmassel/tinys3.git", branch: "main"),
-        .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
         .package(url: "https://github.com/jkmassel/kcpassword-swift.git", from: "1.0.0"),
         .package(url: "https://github.com/vapor/console-kit.git", .upToNextMajor(from: "4.9.0")),
         .package(url: "https://github.com/swhitty/FlyingFox.git", .upToNextMajor(from: "0.12.2")),
@@ -35,7 +34,6 @@ let package = Package(
             name: "hostmgr",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "Logging", package: "swift-log"),
                 .product(name: "kcpassword", package: "kcpassword-swift"),
                 .target(name: "libhostmgr")
             ],
@@ -48,7 +46,6 @@ let package = Package(
             name: "hostmgr-helper",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "Logging", package: "swift-log"),
                 .product(name: "Sentry", package: "sentry-cocoa"),
                 .target(name: "libhostmgr")
             ],

@@ -37,12 +37,15 @@ class VirtualMachineSlot: NSObject, ObservableObject, VZVirtualMachineDelegate {
 
             if launchConfiguration.waitForNetworking {
                 let ipAddress = try await vmManager.ipAddress(forVmWithName: launchConfiguration.handle)
+                Logger.helper.log("Startup complete – IP Address: \(ipAddress.debugDescription)")
                 self.status = .running(launchConfiguration, ipAddress)
+            } else {
+                Logger.helper.log("Startup in progress – skipped waiting for IP address per launch configuration")
                 self.status = .running(launchConfiguration, .any)
             }
         } catch {
-            Logger.helper.error("Error launching VM: \(error.localizedDescription, privacy: .public)")
-            Logger.helper.error("Attempting Cleanup of \(launchConfiguration.handle, privacy: .public)")
+            Logger.helper.error("Error launching VM: \(error.localizedDescription)")
+            Logger.helper.error("Attempting Cleanup of \(launchConfiguration.handle)")
             try await vmManager.removeVM(name: launchConfiguration.handle)
 
             self.status = .crashed(error)
@@ -75,8 +78,8 @@ class VirtualMachineSlot: NSObject, ObservableObject, VZVirtualMachineDelegate {
         case .starting(let launchConfiguration):
             return launchConfiguration.handle == handle
         case .running(let launchConfiguration, _):
-            Logger.helper.trace(
-                "Comparing \(launchConfiguration.handle, privacy: .public) and \(handle, privacy: .public)"
+            Logger.helper.debug(
+                "Comparing \(launchConfiguration.handle) and \(handle)"
             )
             return launchConfiguration.handle == handle
         case .stopping:
