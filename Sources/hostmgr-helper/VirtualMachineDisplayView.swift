@@ -1,7 +1,7 @@
 import SwiftUI
 import Virtualization
 
-struct VMView: NSViewRepresentable {
+struct VirtualMachineDisplayView: NSViewRepresentable {
     typealias NSViewType = VZVirtualMachineView
 
     let virtualMachine: VZVirtualMachine

@@ -13,7 +13,7 @@ struct VMWindowContent: View {
         switch vmSlot.status {
         case .empty:  Text("VM not running")
         case .starting: ProgressView()
-        case .running: VMView(virtualMachine: vmSlot.virtualMachine!)
+        case .running: VirtualMachineDisplayView(virtualMachine: vmSlot.virtualMachine!)
         case .stopping: ProgressView()
         case .crashed(let err): Text("VM Error: \(err.localizedDescription)")
         }
