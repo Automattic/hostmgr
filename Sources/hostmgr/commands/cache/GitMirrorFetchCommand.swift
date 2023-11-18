@@ -31,13 +31,13 @@ struct GitMirrorFetchCommand: AsyncParsableCommand {
         if try !gitMirror.archiveExistsLocally {
             Console.info("Fetching the Git Mirror for \(gitMirror.url)")
 
-            guard let server = try await servers.first(havingFileAtPath: gitMirror.remoteFilename) else {
+            guard let server = try await servers.first(havingFileNamed: gitMirror.remoteFilename) else {
                 Console.exit("No Git Mirror found for \(gitMirror.slug)", style: .error)
             }
 
             let progress = Console.startProgress("Downloading Git Mirror", type: .download)
             try await server.downloadFile(
-                at: gitMirror.remoteFilename,
+                named: gitMirror.remoteFilename,
                 to: gitMirror.archivePath,
                 progress: progress.update
             )

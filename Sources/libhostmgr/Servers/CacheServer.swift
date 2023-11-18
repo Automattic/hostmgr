@@ -70,8 +70,8 @@ public struct CacheServer: ReadableRemoteFileProvider {
         self.basePath = path
     }
 
-    public func hasFile(at path: String) async throws -> Bool {
-        guard let url = baseURL?.appendingPathComponent(path) else {
+    public func hasFile(named name: String) async throws -> Bool {
+        guard let url = baseURL?.appendingPathComponent(name) else {
             return false
         }
 
@@ -85,11 +85,11 @@ public struct CacheServer: ReadableRemoteFileProvider {
     }
 
     public func downloadFile(
-        at path: String,
+        named name: String,
         to destination: URL,
         progress: @escaping ProgressCallback)
     async throws {
-        guard let url = baseURL?.appendingPathComponent(path) else {
+        guard let url = baseURL?.appendingPathComponent(name) else {
             preconditionFailure("Don't try to download a file without checking if it exists first")
         }
 

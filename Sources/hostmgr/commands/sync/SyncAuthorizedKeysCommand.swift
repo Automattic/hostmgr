@@ -37,13 +37,13 @@ struct SyncAuthorizedKeysCommand: AsyncParsableCommand, FollowsCommandPolicies {
 
         Console.heading("Syncing Authorized Keys")
 
-        guard try await server.hasFile(at: Constants.s3Key) else {
+        guard try await server.hasFile(named: Constants.s3Key) else {
             Console.error("Unable to locate authorized_keys file – exiting")
             throw ExitCode(rawValue: 1)
         }
 
         let progressBar = Console.startProgress("Downloading `authorized_keys`", type: .download)
-        try await server.downloadFile(at: Constants.s3Key, to: destination, progress: progressBar.update)
+        try await server.downloadFile(named: Constants.s3Key, to: destination, progress: progressBar.update)
 
         // Fix the permissions on the file, if needed
         Console.info("Setting file permissions on \(destination)")

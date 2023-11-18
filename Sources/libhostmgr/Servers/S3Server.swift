@@ -18,7 +18,7 @@ public struct S3Server: RemoteFileProvider {
 
     public static let vmImages: S3Server = S3Server(
         bucketName: Configuration.shared.vmImagesBucket,
-        prefix: "images",
+        prefix: "images/",
         endpoint: .accelerated
     )
 
@@ -32,8 +32,14 @@ public struct S3Server: RemoteFileProvider {
         try await s3Client.list(bucket: bucketName, prefix: prefix ?? "/").objects.map(self.convert)
     }
 
-    public func hasFile(at path: String) async throws -> Bool {
-        try await listFiles().contains { $0.path.hasPrefix(path) }
+    public func hasFile(named name: String) async throws -> Bool {
+        do {
+            let object = try await s3Client.head(bucket: bucketName, key: key(fromName: name))
+            return object != nil
+        } catch let err {
+            debugPrint(err.localizedDescription)
+            return false
+        }
     }
 
     var s3Client: S3Client {
@@ -45,12 +51,16 @@ public struct S3Server: RemoteFileProvider {
     func convert(_ s3Object: S3Object) -> RemoteFile {
         RemoteFile(size: s3Object.size, path: s3Object.key, lastModifiedAt: s3Object.lastModifiedAt)
     }
+
+    func key(fromName name: String) -> String {
+        "\(self.prefix ?? "/")\(name)"
+    }
 }
 
 extension S3Server: ReadableRemoteFileProvider {
-    public func downloadFile(at path: String, to destination: URL, progress: @escaping ProgressCallback) async throws {
+    public func downloadFile(named name: String, to destination: URL, progress: @escaping ProgressCallback) async throws {
         let tempUrl = try await s3Client.download(
-            objectWithKey: path,
+            objectWithKey: key(fromName: name),
             inBucket: self.bucketName,
             progressCallback: progress
         )

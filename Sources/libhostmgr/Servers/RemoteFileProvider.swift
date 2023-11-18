@@ -1,11 +1,11 @@
 import Foundation
 
 public protocol RemoteFileProvider {
-    func hasFile(at path: String) async throws -> Bool
+    func hasFile(named name: String) async throws -> Bool
 }
 
 public protocol ReadableRemoteFileProvider: RemoteFileProvider {
-    func downloadFile(at path: String, to destination: URL, progress: @escaping ProgressCallback) async throws
+    func downloadFile(named name: String, to destination: URL, progress: @escaping ProgressCallback) async throws
 }
 
 protocol WritableRemoteFileProvider: RemoteFileProvider {
@@ -13,10 +13,10 @@ protocol WritableRemoteFileProvider: RemoteFileProvider {
 }
 
 public extension [ReadableRemoteFileProvider] {
-    func first(havingFileAtPath path: String) async throws -> ReadableRemoteFileProvider? {
+    func first(havingFileNamed name: String) async throws -> ReadableRemoteFileProvider? {
         for server in self {
             do {
-                if try await server.hasFile(at: path) {
+                if try await server.hasFile(named: name) {
                     return server
                 }
             } catch {

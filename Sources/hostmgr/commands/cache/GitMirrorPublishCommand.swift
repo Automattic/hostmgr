@@ -10,7 +10,7 @@ struct GitMirrorPublishCommand: AsyncParsableCommand {
     )
 
     @Option(
-        help: "The URL to the Git repository that will be fetched"
+        help: "The URL to the Git repository that will be cached"
     )
     var gitMirror: GitMirror?
 
@@ -30,7 +30,7 @@ struct GitMirrorPublishCommand: AsyncParsableCommand {
             Console.exit("There is no local Git Mirror at \(gitMirror.localPath)", style: .error)
         }
 
-        guard try await !server.hasFile(at: gitMirror.remoteFilename) else {
+        guard try await !server.hasFile(named: gitMirror.remoteFilename) else {
             Console.exit("Remote mirror already exists – exiting", style: .error)
         }
 
