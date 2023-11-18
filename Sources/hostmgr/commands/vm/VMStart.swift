@@ -24,6 +24,8 @@ struct VMStartCommand: AsyncParsableCommand {
     @Flag(help: "Start the original VM instead of an ephemeral copy. Useful for creating VM templates")
     var persistent: Bool = false
 
+    @Flag(help: "Skip waiting for the network – useful for debugging")
+    var skipNetworkChecks: Bool = false
     private let startTime = Date()
 
     enum CodingKeys: CodingKey {
@@ -32,6 +34,7 @@ struct VMStartCommand: AsyncParsableCommand {
         case withGitMirrors
         case waitForever
         case persistent
+        case skipNetworkChecks
     }
 
     let vmManager = VMManager()
@@ -42,10 +45,16 @@ struct VMStartCommand: AsyncParsableCommand {
                 name: self.name,
                 handle: self.handle,
                 persistent: self.persistent,
-                sharedPaths: try self.sharedPaths
+                sharedPaths: try self.sharedPaths,
+                waitForNetworking: !skipNetworkChecks
             )
 
             try await vmManager.startVM(configuration: configuration)
+
+            if skipNetworkChecks {
+                Console.success("Booting \(name) in progress")
+                return
+            }
 
             if waitForever {
                 try await vmManager.waitForVMStartup(for: configuration, timeout: .seconds(.greatestFiniteMagnitude))

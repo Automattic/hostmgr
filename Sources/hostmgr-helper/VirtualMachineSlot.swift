@@ -35,10 +35,11 @@ class VirtualMachineSlot: NSObject, ObservableObject, VZVirtualMachineDelegate {
             self.virtualMachine = virtualMachine
             try await virtualMachine.start()
 
-            let ipAddress = try await vmManager.ipAddress(forVmWithName: launchConfiguration.handle)
-            Logger.helper.log("Startup complete – IP Address: \(ipAddress.debugDescription, privacy: .public)")
-
-            self.status = .running(launchConfiguration, ipAddress)
+            if launchConfiguration.waitForNetworking {
+                let ipAddress = try await vmManager.ipAddress(forVmWithName: launchConfiguration.handle)
+                self.status = .running(launchConfiguration, ipAddress)
+                self.status = .running(launchConfiguration, .any)
+            }
         } catch {
             Logger.helper.error("Error launching VM: \(error.localizedDescription, privacy: .public)")
             Logger.helper.error("Attempting Cleanup of \(launchConfiguration.handle, privacy: .public)")

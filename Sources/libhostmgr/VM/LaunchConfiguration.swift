@@ -37,13 +37,25 @@ public struct LaunchConfiguration: Sendable, Codable {
     /// Paths that should be mounted into the VM
     ///
     /// Uses appropriate folder-sharing mechanisms to mirror host directories into the VM on launch. Useful for caches.
-    let sharedPaths: [SharedPath]
+    public let sharedPaths: [SharedPath]
 
-    public init(name: String, handle: String, persistent: Bool = false, sharedPaths: [SharedPath] = []) {
+    /// Don't wait for networking – this is particularly useful for debugging issues with DHCPd and NAT networking
+    ///
+    public let waitForNetworking: Bool
+
+    public init(
+        name: String,
+        handle: String,
+        persistent: Bool = false,
+        sharedPaths: [SharedPath] = [],
+        waitForNetworking: Bool = true
+    ) {
         self.name = name
         self.handle = persistent ? name : handle
         self.persistent = persistent
         self.sharedPaths = sharedPaths
+        self.waitForNetworking = waitForNetworking
+
     }
 
     public var sharedDirectoryConfiguration: VZDirectorySharingDeviceConfiguration {
