@@ -23,8 +23,8 @@ public struct LaunchConfiguration: Sendable, Codable {
     /// The VM handle – the cloned VM will use this handle, allowing multiple VMs with the same name
     /// to be launched and individually terminated as needed
     ///
-    /// If the `LaunchConfiguration` is set to "persistent", the handle will always be the same as the `name` (thus, it's
-    /// impossible to launch two persistent VMs with the same name).
+    /// If the `LaunchConfiguration` is set to "persistent", the handle will always be the same as the `name` (thus,
+    /// it's impossible to launch two persistent VMs with the same name).
     public let handle: String
 
     /// Launch the VM persistently

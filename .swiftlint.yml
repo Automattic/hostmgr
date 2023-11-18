@@ -2,3 +2,7 @@ swiftlint_version: 0.53.0
 included:
   - Sources
   - Tests
+
+identifier_name:
+  allowed_symbols: "_"
+  min_length: 2

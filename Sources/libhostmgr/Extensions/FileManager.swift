@@ -2,10 +2,8 @@ import Foundation
 import System
 
 protocol FileManagerProto {
-    // swiftlint:disable identifier_name
     func fileExists(at: URL) -> Bool
     func directoryExists(at: URL) throws -> Bool
-    // swiftlint:enable identifier_name
 }
 
 extension FileManager: FileManagerProto {

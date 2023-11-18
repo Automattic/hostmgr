@@ -55,7 +55,7 @@ public struct CacheServer: ReadableRemoteFileProvider {
             return URL(string: "http://\(ipAddress.debugDescription)")?.appendingPathComponent(basePath)
         }
 
-        guard let hostname else{
+        guard let hostname else {
             return nil
         }
 
