@@ -130,6 +130,8 @@ public class ProgressBar {
         self.title = title
         self.type = type
 
+        terminal.info(title)
+
         self.update(initialProgress)
     }
 
@@ -159,10 +161,9 @@ public class ProgressBar {
 
         // Erase the old progress line and overwrite it
         if lastUpdateAt != 0 {
-            terminal.clear(lines: 2)
+            terminal.clear(lines: 1)
         }
 
-        terminal.info(title)
         terminal.print("\(percentage) [\(rate)/s, \((remaining))]")
 
         // Make sure we don't update again this second
@@ -202,7 +203,7 @@ public class ProgressBar {
             terminal.clear(lines: 1)
             terminal.success("Finished in \(elapsedTime)")
         case .download, .upload:
-            terminal.clear(lines: 2)
+            terminal.clear(lines: 1)
 
             if let rate = self.currentRate {
                 terminal.success("Finished in \(elapsedTime) (\(rate)/s)")
