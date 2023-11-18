@@ -111,7 +111,15 @@ extension VMConfigFile: Codable {
     }
 
     func write(to url: URL) throws {
-        try JSONEncoder().encode(self).write(to: url, options: .atomic)
+        let data = try JSONEncoder().encode(self)
+
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+
+        if FileManager.default.fileExists(at: url) {
+            try data.write(to: url, options: .atomic)
+        } else {
+            try FileManager.default.createFile(at: url, contents: data)
+        }
     }
 
     struct Parse {

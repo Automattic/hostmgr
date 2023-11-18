@@ -66,7 +66,8 @@ extension VMBundle: Bundle {
             .settingTemplateName(to: self.config.name)
             .write(to: newBundle.configurationFilePath)
 
-        return newBundle
+        // Reload from disk to ensure we're the right config data
+        return try VMBundle(at: self.root)
     }
 
     /// Create a new VMBundle based on a restore image

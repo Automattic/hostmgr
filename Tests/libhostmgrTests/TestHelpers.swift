@@ -39,6 +39,11 @@ func jsonForResource(named key: String) throws -> Data {
     return try Data(contentsOf: url).dropLast()
 }
 
+func dataForResource(named key: String) throws -> Data {
+    let url = Bundle.module.url(forResource: key, withExtension: "dat")!
+    return try Data(contentsOf: url)
+}
+
 class MockFileManager: FileManagerProto {
 
     let existingFiles: [String]
@@ -82,4 +87,13 @@ extension S3Object {
 
 extension Date {
     static let testDefault = Date(timeIntervalSinceReferenceDate: 0)
+}
+
+extension VZMacHardwareModel {
+    static var testDefault: VZMacHardwareModel {
+        get throws {
+            let data = try dataForResource(named: "mac-hardware-model-data")
+            return VZMacHardwareModel(dataRepresentation: data)!
+        }
+    }
 }
