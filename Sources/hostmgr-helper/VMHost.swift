@@ -8,13 +8,18 @@ import Network
 class VMHost: NSObject, ObservableObject {
     static let shared = VMHost()
 
-    private override init() {}
+    @Published
+    var primaryVMSlot = VirtualMachineSlot(role: .primary)
 
     @Published
-    var primaryVMSlot = VirtualMachineSlot()
+    var secondaryVMSlot = VirtualMachineSlot(role: .secondary)
 
-    @Published
-    var secondaryVMSlot = VirtualMachineSlot()
+    func vmSlot(for role: VirtualMachineSlot.Role) -> VirtualMachineSlot {
+        switch role {
+        case .primary: return primaryVMSlot
+        case .secondary: return secondaryVMSlot
+        }
+    }
 }
 
 extension VMHost: HostmgrServerDelegate {

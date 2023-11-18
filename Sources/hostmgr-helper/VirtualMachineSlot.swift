@@ -8,6 +8,15 @@ import libhostmgr
 @MainActor
 class VirtualMachineSlot: NSObject, ObservableObject, VZVirtualMachineDelegate {
 
+    enum Role: String, Codable {
+        case primary
+        case secondary
+
+        var displayName: String {
+            self.rawValue.localizedCapitalized
+        }
+    }
+
     enum Status: Sendable {
         case empty
         case starting(LaunchConfiguration)
@@ -18,10 +27,18 @@ class VirtualMachineSlot: NSObject, ObservableObject, VZVirtualMachineDelegate {
 
     private let vmManager = VMManager()
 
-    private var virtualMachine: VZVirtualMachine?
+    @Published
+    var virtualMachine: VZVirtualMachine?
 
     @Published @MainActor
     var status: Status = .empty
+
+    @Published @MainActor
+    var role: Role
+
+    init(role: Role) {
+        self.role = role
+    }
 
     @MainActor
     func start(launchConfiguration: LaunchConfiguration) async throws {

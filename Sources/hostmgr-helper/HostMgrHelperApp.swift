@@ -36,11 +36,19 @@ struct HostMgrHelperApp: App {
     var body: some Scene {
         MenuBarExtra("Hostmgr Helper", systemImage: "play.desktopcomputer", isInserted: $showMenuBarExtra) {
             VStack(alignment: .leading) {
-                VMListItem(slot: vmHost.primaryVMSlot, number: 1)
+                VMListItem(slot: vmHost.primaryVMSlot)
                 Divider().padding()
-                VMListItem(slot: vmHost.secondaryVMSlot, number: 2)
+                VMListItem(slot: vmHost.secondaryVMSlot)
             }.padding()
         }.menuBarExtraStyle(.window)
+
+        WindowGroup("VM View", id: "vm-view", for: VirtualMachineSlot.Role.self) { role in
+            if let role = role.wrappedValue {
+                VMWindowContent(role: role)
+            } else {
+                Text("Unable to define role")
+            }
+        }.defaultSize(width: 800, height: 600)
     }
 
     let sentryOptions: Sentry.Options = {
@@ -54,11 +62,12 @@ struct HostMgrHelperApp: App {
 }
 
 struct EmptyVMListItem: View {
-    let number: Int
+
+    let slot: VirtualMachineSlot
 
     var body: some View {
         VStack(alignment: .leading) {
-            Text("Slot \(number)").font(.footnote)
+            Text(slot.role.displayName).font(.footnote)
 
             Spacer()
             HStack {
@@ -72,13 +81,13 @@ struct EmptyVMListItem: View {
 }
 
 struct ErrorVMListItem: View {
-    let number: Int
 
+    let slot: VirtualMachineSlot
     let error: Error
 
     var body: some View {
         VStack(alignment: .leading) {
-            Text("Slot \(number)").font(.footnote)
+            Text(slot.role.displayName).font(.footnote)
 
             Spacer()
             HStack {
@@ -88,18 +97,17 @@ struct ErrorVMListItem: View {
                 Spacer()
             }
             Spacer()
-
         }
     }
 }
 
 struct PendingVMListItem: View {
-    let number: Int
     let launchConfiguration: LaunchConfiguration
+    let slot: VirtualMachineSlot
 
     var body: some View {
         VStack(alignment: .leading) {
-            Text("Slot \(number)")
+            Text(slot.role.displayName)
                 .font(.footnote)
 
             Text(launchConfiguration.name)
@@ -112,9 +120,11 @@ struct PendingVMListItem: View {
 }
 
 struct RunningVMListItem: View {
-    let number: Int
     let launchConfiguration: LaunchConfiguration
     let ipAddress: IPv4Address
+
+    @Environment(\.openWindow)
+    var openWindow: OpenWindowAction
 
     @ObservedObject
     var slot: VirtualMachineSlot
@@ -129,6 +139,10 @@ struct RunningVMListItem: View {
         NSWorkspace.shared.open(sshURL)
     }
 
+    func openVMWindow() {
+        self.openWindow(id: "vm-view", value: slot.role)
+    }
+
     func shutdown() {
         Task {
             try await slot.stopVirtualMachine()
@@ -137,7 +151,7 @@ struct RunningVMListItem: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-            Text("Slot \(number)")
+            Text(slot.role.displayName)
                 .font(.footnote)
 
             Text(launchConfiguration.name)
@@ -150,6 +164,10 @@ struct RunningVMListItem: View {
             HStack(alignment: .top) {
                 Button(action: self.openVNCSession, label: {
                     Label("VNC", systemImage: "play.display")
+                })
+
+                Button(action: self.openVMWindow, label: {
+                    Label("View", systemImage: "display")
                 })
 
                 Button(action: self.openSSHSession, label: {
@@ -170,28 +188,24 @@ struct VMListItem: View {
     @ObservedObject
     var slot: VirtualMachineSlot
 
-    let number: Int
-
     var body: some View {
         switch slot.status {
-        case .empty:
-            EmptyVMListItem(number: number)
+        case .empty: EmptyVMListItem(slot: slot)
         case .starting(let launchConfiguration):
             PendingVMListItem(
-                number: number,
-                launchConfiguration: launchConfiguration
+                launchConfiguration: launchConfiguration,
+                slot: slot
             )
         case .running(let launchConfiguration, let ipAddress):
             RunningVMListItem(
-                number: number,
                 launchConfiguration: launchConfiguration,
                 ipAddress: ipAddress,
                 slot: slot
             )
         case .stopping:
-            EmptyVMListItem(number: number)
+            EmptyVMListItem(slot: slot)
         case .crashed(let error):
-            ErrorVMListItem(number: number, error: error)
+            ErrorVMListItem(slot: slot, error: error)
         }
     }
 }
