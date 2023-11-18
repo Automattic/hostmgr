@@ -58,7 +58,11 @@ public struct S3Server: RemoteFileProvider {
 }
 
 extension S3Server: ReadableRemoteFileProvider {
-    public func downloadFile(named name: String, to destination: URL, progress: @escaping ProgressCallback) async throws {
+    public func downloadFile(
+        named name: String,
+        to destination: URL,
+        progress: @escaping ProgressCallback
+    ) async throws {
         let tempUrl = try await s3Client.download(
             objectWithKey: key(fromName: name),
             inBucket: self.bucketName,
