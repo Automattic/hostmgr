@@ -1,7 +1,6 @@
 import Foundation
 
 public protocol RemoteFileProvider {
-    func listFiles(startingWith prefix: String) async throws -> [RemoteFile]
     func hasFile(at path: String) async throws -> Bool
 }
 

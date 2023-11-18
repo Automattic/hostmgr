@@ -33,8 +33,15 @@ public struct Configuration: Codable {
     // MARK: AWS Settings
     public var allowAWSAcceleratedTransfer: Bool?
 
+    // MARK: Cache Server Settings
 
+    /// Where we should try to fetch cache items from
+    ///
+    public var cacheServerHostname: String?
 
+    /// We might not have a DNS-routable address to the cache server, so allow specifying an IP address too
+    ///
+    public var cacheServerAddress: IPv4Address?
 
     // MARK: VM Resource Settings
 

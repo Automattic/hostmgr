@@ -1,6 +1,7 @@
 import Foundation
 import CryptoKit
 import Virtualization
+import Network
 
 public enum ProcessorArchitecture: String {
     case arm64
@@ -107,5 +108,23 @@ extension Task where Failure == Error {
             try Task<Never, Never>.checkCancellation()
             return try await operation()
         }
+    }
+}
+
+extension IPv4Address: Codable {
+    public init(from decoder: Decoder) throws {
+        let addressString = try decoder.singleValueContainer().decode(String.self)
+        guard let address = IPv4Address(addressString) else {
+            let errorMessage = "Invalid IP Address: \(addressString)"
+            let context = DecodingError.Context(codingPath: decoder.codingPath, debugDescription: errorMessage)
+            throw DecodingError.typeMismatch(String.self, context)
+        }
+
+        self.init(address.rawValue, nil)!
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(self.debugDescription)
     }
 }

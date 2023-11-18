@@ -37,12 +37,12 @@ public struct RemoteVMLibrary {
     ]
 
     public func getManifest() async throws -> [String] {
-        let objects = try await S3Server.vmImages.listFiles(startingWith: "/images/")
+        let objects = try await S3Server.vmImages.listFiles()
         return remoteImagesFrom(objects: objects).map { $0.name }
     }
 
     public func listImages(sortedBy strategy: RemoteVMImageSortingStrategy = .name) async throws -> [RemoteVMImage] {
-        let objects = try await S3Server.vmImages.listFiles(startingWith: "images/")
+        let objects = try await S3Server.vmImages.listFiles()
         return remoteImagesFrom(objects: objects).sorted(by: strategy.sortMethod)
     }
 
@@ -73,14 +73,14 @@ public struct RemoteVMLibrary {
             throw HostmgrError.notEnoughLocalDiskSpaceToDownloadFile(image.fileName, image.size, availableStorageSpace)
         }
 
-        guard let server = try await servers.first(havingFileAtPath: image.path) else {
+        guard let server = try await servers.first(havingFileAtPath: image.fileName) else {
             throw HostmgrError.unableToFindRemoteImage(name)
         }
 
         let destination = Paths.vmImageStorageDirectory.appendingPathComponent(image.fileName)
 
         try await server.downloadFile(
-            at: image.path,
+            at: image.fileName,
             to: destination,
             progress: progressCallback
         )

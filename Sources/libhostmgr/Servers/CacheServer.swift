@@ -35,27 +35,47 @@ public struct CacheServerFile: Codable {
 
 public struct CacheServer: ReadableRemoteFileProvider {
 
-    public static let cache = CacheServer(baseURL: URL(string: "http://localhost/cache")!)
-    public static let gitMirrors = CacheServer(baseURL: URL(string: "http://localhost/git-mirrors")!)
-    public static let vmImages = CacheServer(baseURL: URL(string: "http://localhost/vm-images")!)
-
-    let baseURL: URL
+    public static let cache = CacheServer(path: "/cache")
+    public static let gitMirrors = CacheServer(path: "/git-mirrors")
+    public static let vmImages = CacheServer(path: "/vm-images")
 
     let session = URLSession(configuration: .default)
 
-    public init(baseURL: URL) {
-        self.baseURL = baseURL
+    let basePath: String
+
+    var baseURL: URL? {
+        let hostname = Configuration.shared.cacheServerHostname
+        let ipAddress = Configuration.shared.cacheServerAddress
+
+        guard hostname != nil && ipAddress != nil else {
+            return nil
+        }
+
+        if needsHostHeader, let ipAddress {
+            return URL(string: "http://\(ipAddress.debugDescription)")?.appendingPathComponent(basePath)
+        }
+
+        guard let hostname else{
+            return nil
+        }
+
+        return URL(string: "http://\(hostname)")?.appendingPathComponent(basePath)
+    }
+
+    var needsHostHeader: Bool {
+        return Configuration.shared.cacheServerAddress != nil
+    }
+
+    public init(path: String) {
+        self.basePath = path
     }
 
     public func hasFile(at path: String) async throws -> Bool {
-        let url = baseURL.appendingPathComponent(path)
-        return try await HEAD(url: url).statusCode == 200
-    }
+        guard let url = baseURL?.appendingPathComponent(path) else {
+            return false
+        }
 
-    public func listFiles(startingWith prefix: String) async throws -> [RemoteFile] {
-        let url = baseURL.appendingPathComponent(prefix)
-        let (data, _) = try await LIST(url: url)
-        return try parseFileData(data).filter { $0.path.hasPrefix("./" + prefix) }
+        return try await HEAD(url: url).statusCode == 200
     }
 
     func parseFileData(_ data: Data) throws -> [RemoteFile] {
@@ -69,9 +89,17 @@ public struct CacheServer: ReadableRemoteFileProvider {
         to destination: URL,
         progress: @escaping ProgressCallback)
     async throws {
-        let url = baseURL.appendingPathComponent(path)
+        guard let url = baseURL?.appendingPathComponent(path) else {
+            preconditionFailure("Don't try to download a file without checking if it exists first")
+        }
 
-        let downloadPath = try await DownloadOperation(url: url).start(progressCallback: progress)
+        var request = URLRequest(url: url)
+
+        if needsHostHeader, let hostname = Configuration.shared.cacheServerHostname {
+            request.addValue(hostname, forHTTPHeaderField: "Host")
+        }
+
+        let downloadPath = try await DownloadOperation(request: request).start(progressCallback: progress)
 
         try FileManager.default.createDirectory(
             at: destination.deletingLastPathComponent(),
@@ -85,6 +113,10 @@ public struct CacheServer: ReadableRemoteFileProvider {
         var request = URLRequest(url: url)
         request.httpMethod = "HEAD"
 
+        if needsHostHeader, let hostname = Configuration.shared.cacheServerHostname {
+            request.addValue(hostname, forHTTPHeaderField: "Host")
+        }
+
         let (_, response) = try await session.data(for: request)
 
         // swiftlint:disable force_cast
@@ -96,6 +128,10 @@ public struct CacheServer: ReadableRemoteFileProvider {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Accept")
+
+        if needsHostHeader, let hostname = Configuration.shared.cacheServerHostname {
+            request.addValue(hostname, forHTTPHeaderField: "Host")
+        }
 
         let (data, response) = try await session.data(for: request)
 
@@ -123,6 +159,11 @@ class DownloadOperation: NSObject {
     init(url: URL, urlSessionConfiguration: URLSessionConfiguration = .default) {
         self.urlSessionConfiguration = urlSessionConfiguration
         self.request = URLRequest(url: url)
+    }
+
+    init(request: URLRequest, urlSessionConfiguration: URLSessionConfiguration = .default) {
+        self.urlSessionConfiguration = urlSessionConfiguration
+        self.request = request
     }
 
     func start(progressCallback: ProgressCallback? = nil) async throws -> URL {

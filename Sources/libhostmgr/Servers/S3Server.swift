@@ -3,6 +3,7 @@ import tinys3
 
 public struct S3Server: RemoteFileProvider {
     private let bucketName: String
+    private let prefix: String?
     private let endpoint: S3Endpoint
 
     public static let gitMirrors: S3Server = S3Server(
@@ -17,20 +18,22 @@ public struct S3Server: RemoteFileProvider {
 
     public static let vmImages: S3Server = S3Server(
         bucketName: Configuration.shared.vmImagesBucket,
+        prefix: "images",
         endpoint: .accelerated
     )
 
-    public init(bucketName: String, endpoint: S3Endpoint) {
+    public init(bucketName: String, prefix: String? = nil, endpoint: S3Endpoint) {
         self.bucketName = bucketName
+        self.prefix = prefix
         self.endpoint = endpoint
     }
 
-    public func listFiles(startingWith prefix: String) async throws -> [RemoteFile] {
-        try await s3Client.list(bucket: bucketName, prefix: prefix).objects.map(self.convert)
+    public func listFiles() async throws -> [RemoteFile] {
+        try await s3Client.list(bucket: bucketName, prefix: prefix ?? "/").objects.map(self.convert)
     }
 
     public func hasFile(at path: String) async throws -> Bool {
-        try await listFiles(startingWith: path).isEmpty
+        try await listFiles().contains { $0.path.hasPrefix(path) }
     }
 
     var s3Client: S3Client {
