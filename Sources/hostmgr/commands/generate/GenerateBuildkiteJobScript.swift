@@ -17,7 +17,8 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
             "BUILDKITE_BUILD_PATH": Paths.buildkiteBuildDirectory.path,
             "BUILDKITE_HOOKS_PATH": Paths.buildkiteHooksDirectory.path,
             "BUILDKITE_PLUGINS_PATH": Paths.buildkitePluginsDirectory.path,
-            "BUILDKITE_GIT_MIRRORS_PATH": "/Volumes/My Shared Files/git-mirrors"
+            "BUILDKITE_GIT_MIRRORS_PATH": "/Volumes/My Shared Files/git-mirrors",
+            "BUILDKITE_GIT_MIRRORS_SKIP_UPDATE": "true"   // The agent can't write to the Git Mirror, so don't try
         ]
     }
 
