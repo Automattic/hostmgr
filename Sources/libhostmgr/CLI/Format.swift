@@ -22,6 +22,10 @@ public struct Format {
         return formatter.string(fromByteCount: count)
     }
 
+    public static func memoryBytes(_ count: Int) -> String {
+        memoryBytes(Int64(count))
+    }
+
     public static func memoryBytes(_ count: UInt64) -> String {
         memoryBytes(Int64(count))
     }
@@ -33,14 +37,55 @@ public struct Format {
         return formatter.string(fromByteCount: count)
     }
 
-    public static func time(_ interval: TimeInterval) -> String {
+    public static func elapsedTime(
+        between start: Date,
+        and end: Date,
+        context: Formatter.Context = .standalone
+    ) -> String {
+        let formatter = DateComponentsFormatter()
+        formatter.formattingContext = context
+        formatter.includesApproximationPhrase = false
+        formatter.unitsStyle = .full
+        formatter.allowedUnits = [.second, .minute, .hour]
+        return formatter.string(from: start, to: end)!
+    }
+
+    public static func remainingTime(until date: Date, context: Formatter.Context = .standalone) -> String {
         let formatter = RelativeDateTimeFormatter()
-        formatter.formattingContext = .standalone
-        return formatter.localizedString(fromTimeInterval: interval)
+        formatter.formattingContext = context
+        return formatter.localizedString(for: date, relativeTo: .now)
+    }
+
+    public static func timeRemaining(_ interval: TimeInterval) -> String {
+        let formatter = DateComponentsFormatter()
+        formatter.includesApproximationPhrase = true
+        formatter.includesTimeRemainingPhrase = true
+        formatter.unitsStyle = .abbreviated
+        formatter.maximumUnitCount = 2
+        formatter.allowedUnits = [.second, .minute, .hour, .day, .month, .year]
+        return formatter.string(from: Date(), to: Date() + interval) ?? "Calculating time remaining"
+    }
+
+    public static func timeInterval(_ interval: TimeInterval) -> String {
+        let formatter = DateComponentsFormatter()
+        formatter.includesApproximationPhrase = false
+        formatter.includesTimeRemainingPhrase = false
+        formatter.unitsStyle = .abbreviated
+        formatter.maximumUnitCount = 2
+        formatter.allowedUnits = [.second, .minute, .hour, .day, .month, .year]
+        return formatter.string(from: Date(), to: Date() + interval) ?? "a while"
+    }
+
+    public static func date(_ date: Date, style: DateFormatter.Style) -> String {
+        DateFormatter.localizedString(from: date, dateStyle: style, timeStyle: .none)
     }
 
     public static func percentage(_ number: Decimal) -> String {
         return percentage(NSDecimalNumber(decimal: number))
+    }
+
+    public static func percentage(_ number: Double) -> String {
+        return percentage(NSNumber(value: number))
     }
 
     public static func percentage(_ number: NSNumber) -> String {
@@ -51,5 +96,9 @@ public struct Format {
         formatter.maximumFractionDigits = 2
 
         return formatter.string(for: number)!
+    }
+
+    public static func path(_ url: URL) -> String {
+        url.path
     }
 }

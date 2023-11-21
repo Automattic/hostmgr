@@ -5,11 +5,13 @@ import DotEnv
 
 class BuildkiteScriptBuilderTests: XCTestCase {
 
-    private var codeQuoteEnvironmentPath: String {
+    private var codeQuoteEnvironmentPath: URL {
         getPathForEnvFile(named: "buildkite-environment-variables-with-code-quotes")
     }
 
-    private var basicEnvironmentPath: String { getPathForEnvFile(named: "buildkite-environment-variables-basic") }
+    private var basicEnvironmentPath: URL {
+        getPathForEnvFile(named: "buildkite-environment-variables-basic")
+    }
 
     private var scriptBuilder: BuildkiteScriptBuilder!
 
@@ -34,8 +36,8 @@ class BuildkiteScriptBuilderTests: XCTestCase {
 
     // MARK: - Environment Variable Tests
     func testThatOrganizationSlugEnvironmentVariableIsImported() throws {
-        let env = try DotEnv.read(path: codeQuoteEnvironmentPath)
-        scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_", from: readLines(from: env))
+        let variables = try getEnvironmentVariables(from: codeQuoteEnvironmentPath)
+        scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_", from: variables)
         XCTAssertEqual(
             BuildkiteScriptBuilder.Value(wrapping: "automattic"),
             scriptBuilder.environmentVariables["BUILDKITE_ORGANIZATION_SLUG"]
@@ -47,8 +49,8 @@ class BuildkiteScriptBuilderTests: XCTestCase {
     }
 
     func testThatCommitMessageEnvironmentVariableIsImported() throws {
-        let env = try DotEnv.read(path: codeQuoteEnvironmentPath)
-        scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_", from: readLines(from: env))
+        let variables = try getEnvironmentVariables(from: codeQuoteEnvironmentPath)
+        scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_", from: variables)
         XCTAssertEqual(
             BuildkiteScriptBuilder.Value(wrapping: "A simple message with `code quotes`"),
             scriptBuilder.environmentVariables["BUILDKITE_MESSAGE"]
@@ -60,8 +62,8 @@ class BuildkiteScriptBuilderTests: XCTestCase {
     }
 
     func testThatPullRequestEnvironmentVariableIsImported() throws {
-        let env = try DotEnv.read(path: codeQuoteEnvironmentPath)
-        scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_", from: readLines(from: env))
+        let variables = try getEnvironmentVariables(from: codeQuoteEnvironmentPath)
+        scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_", from: variables)
         XCTAssertEqual(
             BuildkiteScriptBuilder.Value(wrapping: "19136"),
             scriptBuilder.environmentVariables["BUILDKITE_PULL_REQUEST"]
@@ -120,10 +122,10 @@ class BuildkiteScriptBuilderTests: XCTestCase {
 
     // A test to ensure that output is the same as the previous version
     func testThatBasicCommandOutputMatchesExpectations() throws {
-        let env = try DotEnv.read(path: basicEnvironmentPath)
+        let variables = try getEnvironmentVariables(from: basicEnvironmentPath)
         scriptBuilder.addDependency(atPath: "~/.circ")
         scriptBuilder.addEnvironmentVariable(named: "BUILDKITE", value: "true")
-        scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_", from: readLines(from: env))
+        scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_", from: variables)
         scriptBuilder.addCommand("buildkite-agent", "bootstrap")
         scriptBuilder.addEnvironmentVariable(named: "BUILDKITE_AGENT_NAME", value: "builder")
         scriptBuilder.addEnvironmentVariable(
@@ -140,12 +142,6 @@ class BuildkiteScriptBuilderTests: XCTestCase {
     }
 
     // MARK: - Test Helpers
-    private func readLines(from env: DotEnv) -> [String: String] {
-        env.lines.reduce(into: [:]) { partialResult, line in
-            partialResult[line.key] = line.value
-        }
-    }
-
     private func getContentsOfResourceAsValue(
         named key: String,
         withExtension extension: String
@@ -158,7 +154,15 @@ class BuildkiteScriptBuilderTests: XCTestCase {
         return try XCTUnwrap(String(contentsOfFile: path)).trimmingWhitespace
     }
 
-    private func getPathForEnvFile(named key: String) -> String {
-        Bundle.module.path(forResource: key, ofType: "env")!
+    private func getEnvironmentVariables(from path: URL) throws -> [String: String] {
+        try DotEnv.read(path: path.path())
+            .lines
+            .reduce(into: [String: String]()) { $0[$1.key] = $1.value }
+    }
+}
+
+extension BuildkiteScriptBuilder.Command {
+    init(_ command: String, _ arguments: String...) {
+        self.init(command: command, arguments: arguments)
     }
 }

@@ -1,0 +1,77 @@
+{
+    name=builderlMachine
+    ip_address=192.168.64.12
+    hw_address=1,1e:1b:a6:ca:93:51
+    identifier=1,1e:1b:a6:ca:93:51
+    lease=0x65289442
+}
+{
+    name=builderlMachine
+    ip_address=192.168.64.11
+    hw_address=1,b2:9d:b6:cb:dc:9e
+    identifier=1,b2:9d:b6:cb:dc:9e
+    lease=0x6527f7e8
+}
+{
+    name=builderlMachine
+    ip_address=192.168.64.10
+    hw_address=1,22:e6:b9:8:5c:fd
+    identifier=1,22:e6:b9:8:5c:fd
+    lease=0x65276d44
+}
+{
+    name=builderlMachine
+    ip_address=192.168.64.9
+    hw_address=1,36:f6:59:c7:f7:ac
+    identifier=1,36:f6:59:c7:f7:ac
+    lease=0x65276c02
+}
+{
+    name=builderlMachine
+    ip_address=192.168.64.8
+    hw_address=1,3a:26:21:76:2c:be
+    identifier=1,3a:26:21:76:2c:be
+    lease=0x65276bbb
+}
+{
+    name=builderlMachine
+    ip_address=192.168.64.7
+    hw_address=1,d2:34:2b:65:ac:ab
+    identifier=1,d2:34:2b:65:ac:ab
+    lease=0x65276ab3
+}
+{
+    name=builderlMachine
+    ip_address=192.168.64.6
+    hw_address=1,2a:31:dd:2e:74:f0
+    identifier=1,2a:31:dd:2e:74:f0
+    lease=0x65276987
+}
+{
+    name=builderlMachine
+    ip_address=192.168.64.5
+    hw_address=1,e:df:d3:29:92:e4
+    identifier=1,e:df:d3:29:92:e4
+    lease=0x6527694a
+}
+{
+    name=builderlMachine
+    ip_address=192.168.64.4
+    hw_address=1,6e:49:a9:4b:3a:99
+    identifier=1,6e:49:a9:4b:3a:99
+    lease=0x65276934
+}
+{
+    name=builderlMachine
+    ip_address=192.168.64.3
+    hw_address=1,66:e7:a7:36:2e:49
+    identifier=1,66:e7:a7:36:2e:49
+    lease=0x652768b7
+}
+{
+    name=builderlMachine
+    ip_address=192.168.64.2
+    hw_address=1,a2:25:f4:5c:9c:9f
+    identifier=1,a2:25:f4:5c:9c:9f
+    lease=0x652767ff
+}

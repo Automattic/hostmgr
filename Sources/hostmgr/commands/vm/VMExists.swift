@@ -2,7 +2,7 @@ import Foundation
 import ArgumentParser
 import libhostmgr
 
-struct VMExistsCommand: ParsableCommand {
+struct VMExistsCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "exists",
         abstract: "Exits with code 0 if the named VM exists. Otherwise exits with code 1"
@@ -11,11 +11,17 @@ struct VMExistsCommand: ParsableCommand {
     @Argument(help: "The exact name of the VM")
     var name: String
 
-    func run() throws {
-        guard let localVM = try LocalVMRepository().lookupVM(withName: self.name) else {
-            Console.crash(message: "There is no local VM named \(self.name)", reason: .fileNotFound)
+    let vmManager = VMManager()
+
+    enum CodingKeys: CodingKey {
+        case name
+    }
+
+    func run() async throws {
+        guard try vmManager.hasLocalVMTemplate(named: name) || vmManager.hasTempVM(named: name) else {
+            Console.crash(.localVMNotFound(name))
         }
 
-        Console.success("VM \(localVM.basename) exists")
+        Console.success("VM \(name) exists")
     }
 }

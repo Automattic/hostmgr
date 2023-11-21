@@ -1,123 +1,83 @@
 import Foundation
 import ArgumentParser
+import tinys3
+import Network
 
 public struct Configuration: Codable {
 
-    public enum SchedulableSyncCommand: String, Codable, CaseIterable, ExpressibleByArgument {
-        case authorizedKeys = "authorized_keys"
-        case vmImages = "vm_images"
-    }
-
-    public enum AWSConfigurationType: String, Codable {
-        case configurationFile
-        case ec2Environment
-    }
-
-    struct Defaults {
-
-        static let defaultSyncTasks: [SchedulableSyncCommand] = [
-            .authorizedKeys,
-            .vmImages
-        ]
-
-        static let defaultGitMirrorPort: UInt = 41362
-
-        static let defaultAWSAcceleratedTransferAllowed = true
-        static let defaultAWSConfigurationMethod: AWSConfigurationType = .configurationFile
-
-        static let defaultAuthorizedKeysRefreshInterval: UInt = 3600
-    }
-
     public var version = 1
 
-    public var syncTasks = Defaults.defaultSyncTasks
+    // MARK: authorized_keys sync
+    public var authorizedKeysBucket: String
 
-    /// VM Remote Image Settings
-    public var vmImagesBucket: String = ""
-    public var vmImagesRegion: String = "us-east-1"
+    // MARK: git repo mirroring
+    public var gitMirrorBucket: String
+    public var gitMirrorEndpoint: S3Endpoint {
+        guard let allowAWSAcceleratedTransfer else {
+            return .default
+        }
 
-    /// Images that are protected from deletion (useful for local work, or for a fallback image)
-    public var protectedImages: [String] = []
-
-    /// authorized_keys file sync
-    public var authorizedKeysSyncInterval = Defaults.defaultAuthorizedKeysRefreshInterval
-    public var authorizedKeysBucket = ""
-    public var authorizedKeysRegion: String = "us-east-1"
-
-    /// git repo mirroring
-    public var gitMirrorBucket = ""
-    public var gitMirrorPort = Defaults.defaultGitMirrorPort
-
-    /// settings for running in AWS
-    public var allowAWSAcceleratedTransfer: Bool! = Defaults.defaultAWSAcceleratedTransferAllowed
-    public var awsConfigurationMethod: AWSConfigurationType! = Defaults.defaultAWSConfigurationMethod
-
-    enum CodingKeys: String, CodingKey {
-        case version
-        case syncTasks
-
-        case vmImagesBucket
-        case vmImagesRegion
-
-        case protectedImages
-
-        case authorizedKeysSyncInterval
-        case authorizedKeysBucket
-        case authorizedKeysRegion
-
-        case gitMirrorBucket
-        case gitMirrorPort
-
-        case allowAWSAcceleratedTransfer
-        case awsConfigurationMethod
+        return allowAWSAcceleratedTransfer ? S3Endpoint.accelerated : S3Endpoint.default
     }
 
-    public init() {}
+    // MARK: VM Remote Image Settings
+    public var vmImagesBucket: String
+    public var vmImagesEndpoint: S3Endpoint {
+        guard let allowAWSAcceleratedTransfer else {
+            return .default
+        }
 
-    public init(from decoder: Decoder) throws {
-        let values = try decoder.container(keyedBy: CodingKeys.self)
-        version = 1
-        syncTasks = values.decode(
-            forKey: .syncTasks,
-            defaultingTo: Defaults.defaultSyncTasks
-        )
+        return allowAWSAcceleratedTransfer ? S3Endpoint.accelerated : S3Endpoint.default
+    }
 
-        vmImagesBucket = try values.decode(String.self, forKey: .vmImagesBucket)
-        vmImagesRegion = try values.decode(String.self, forKey: .vmImagesRegion)
+    // MARK: AWS Settings
+    public var allowAWSAcceleratedTransfer: Bool?
 
-        protectedImages = values.decode(
-            forKey: .protectedImages,
-            defaultingTo: [])
+    // MARK: Cache Server Settings
 
-        authorizedKeysSyncInterval = values.decode(forKey: .authorizedKeysSyncInterval, defaultingTo: 3600)
-        authorizedKeysBucket = try values.decode(String.self, forKey: .authorizedKeysBucket)
-        authorizedKeysRegion = try values.decode(String.self, forKey: .authorizedKeysRegion)
+    /// Where we should try to fetch cache items from
+    ///
+    public var cacheServerHostname: String?
 
-        gitMirrorBucket = try values.decode(String.self, forKey: .gitMirrorBucket)
-        gitMirrorPort = values.decode(
-            forKey: .gitMirrorPort,
-            defaultingTo: Defaults.defaultGitMirrorPort
-        )
+    /// We might not have a DNS-routable address to the cache server, so allow specifying an IP address too
+    ///
+    public var cacheServerAddress: IPv4Address?
 
-        allowAWSAcceleratedTransfer = values.decode(
-            forKey: .allowAWSAcceleratedTransfer,
-            defaultingTo: Defaults.defaultAWSAcceleratedTransferAllowed
-        )
-        awsConfigurationMethod = values.decode(
-            forKey: .awsConfigurationMethod,
-            defaultingTo: Defaults.defaultAWSConfigurationMethod
-        )
+    // MARK: VM Resource Settings
+
+    /// Should this node run more than one concurrent VM?
+    private var isSharedNode: Bool?
+
+    /// How much RAM should be reserved for the host (and not allocated to VMs)
+    private var hostReservedRAM: UInt64?
+
+    /// Alias of the `isSharedNode` configuration item – allows not specifying it in the config
+    ///
+    public var allowsMultipleVMs: Bool {
+        isSharedNode ?? false
+    }
+
+    /// Alias of the `hostReservedRAM` configuration key – allows not specifying it in the config
+    ///
+    public var hostReservedRAMBytes: UInt64 {
+        hostReservedRAM ?? 1024 * 1024 * 2048 // Leave 2GB for the VM host
     }
 }
 
 /// Accessor Helpers
 public extension Configuration {
 
-    static var shared: Configuration = (try? ConfigurationRepository.getConfiguration()) ?? Configuration()
+    static var shared: Configuration {
+        do {
+            return try ConfigurationRepository.getConfiguration()
+        } catch {
+            Console.error("Unable to load configuration: \(error.localizedDescription)")
+            Foundation.exit(-1)
+        }
+    }
 
-    static var isValid: Bool {
-        let configuration = try? ConfigurationRepository.getConfiguration()
-        return configuration != nil
+    static func validate() throws {
+        _ = try ConfigurationRepository.getConfiguration()
     }
 
     @discardableResult
@@ -127,16 +87,5 @@ public extension Configuration {
 
     static func from(data: Data) throws -> Self {
         try JSONDecoder().decode(Configuration.self, from: data)
-    }
-}
-
-private extension KeyedDecodingContainer {
-
-    func decode<T: Decodable>(forKey key: KeyedDecodingContainer<K>.Key, defaultingTo defaultValue: T) -> T {
-        do {
-            return try self.decode(T.self, forKey: key)
-        } catch {
-            return defaultValue
-        }
     }
 }

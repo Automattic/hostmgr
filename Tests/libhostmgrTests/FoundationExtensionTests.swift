@@ -1,5 +1,4 @@
 import XCTest
-import TSCBasic
 
 @testable import libhostmgr
 
@@ -28,20 +27,15 @@ final class FoundationExtensionTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(at: URL(fileURLWithPath: UUID().uuidString)))
     }
 
-    // MARK: ProcessInfo Extensions
-    func testThatProcessorArchitectureIsValid() throws {
-        let process = Process(args: "/usr/bin/uname", "-m")
-        try process.launch()
-        let arch = try process.waitUntilExit().utf8Output().trimmingWhitespace
-
-        XCTAssertEqual(ProcessorArchitecture(rawValue: arch), ProcessInfo.processInfo.processorArchitecture)
-    }
-
-    func testThatPhysicalProcessorCountIsValid() throws {
-        let process = Process(args: "/usr/sbin/sysctl", "-n", "hw.physicalcpu")
-        try process.launch()
-        let count = try process.waitUntilExit().utf8Output().trimmingWhitespace
-
-        XCTAssertEqual(Int(count), ProcessInfo.processInfo.physicalProcessorCount)
+    // MARK: String Extensions
+    func testThatSlugifyProperlyTransformsURLs() throws {
+        XCTAssertEqual(
+            "https---github-com-kelseyhightower-nocode-git",
+            "https://github.com/kelseyhightower/nocode.git".slugify()
+        )
+        XCTAssertEqual(
+            "git-github-com-wordpress-mobile-WordPress-iOS-git",
+            "git@github.com:wordpress-mobile/WordPress-iOS.git".slugify()
+        )
     }
 }

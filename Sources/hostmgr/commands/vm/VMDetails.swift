@@ -1,30 +1,51 @@
 import Foundation
 import ArgumentParser
 import libhostmgr
+import Network
 
-struct VMDetailsCommand: ParsableCommand {
+struct VMDetailsCommand: AsyncParsableCommand {
+
+    enum Detail: EnumerableFlag {
+        case ipAddress
+        case path
+        case workingPath
+        case all
+    }
 
     static let configuration = CommandConfiguration(
         commandName: "details",
         abstract: "Shows information about a given VM"
     )
 
-    @Argument(help: "The VM to fetch details for")
-    var virtualMachine: String
+    @Argument(
+        help: "The VM to fetch details for"
+    )
+    var handle: String
 
-    func run() throws {
-        guard let virtualMachine = try ParallelsVMRepository().lookupVM(byIdentifier: self.virtualMachine) else {
-            Console.crash(message: "There is no local VM named \(self.virtualMachine)", reason: .fileNotFound)
+    @Flag(exclusivity: .exclusive)
+    var detail: Detail = .all
+
+    let vmManager = VMManager()
+
+    enum CodingKeys: CodingKey {
+        case handle
+        case detail
+    }
+
+    func run() async throws {
+        let ipAddress = try await vmManager.ipAddress(forVmWithName: handle)
+        let templateName = try await vmManager.vmTemplateName(forVmWithName: handle) ?? handle
+        let path = Paths.toVMTemplate(named: templateName).path()
+        let workingPath = Paths.toWorkingAppleSiliconVM(named: handle).path()
+
+        switch detail {
+        case .ipAddress: print(ipAddress)
+        case .path: print(path)
+        case .workingPath: print(workingPath)
+        case .all:
+            print("Path:\t\t\(path)")
+            print("Working Path:\t\(workingPath)")
+            print("IPv4 Address:\t\(ipAddress)")
         }
-
-        guard let runningVM = virtualMachine.asRunningVM() else {
-            Console.crash(message: "There is no running VM named \(self.virtualMachine)", reason: .invalidVMStatus)
-        }
-
-        guard runningVM.hasIpV4Address else {
-            Console.crash(message: "The VM \(runningVM) does not have an IP address", reason: .invalidVMStatus)
-        }
-
-        print("IPv4 Address:\t\(runningVM.ipAddress)")
     }
 }

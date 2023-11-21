@@ -1,0 +1,78 @@
+# frozen_string_literal: true
+
+fastlane_require 'digest'
+fastlane_require 'zip'
+
+UI.user_error!('Please run fastlane via `bundle exec`') unless FastlaneCore::Helper.bundler?
+
+########################################################################
+# Constants and Environment Variables
+########################################################################
+PROJECT_ROOT_FOLDER = File.dirname(File.expand_path(__dir__))
+SECRETS_FOLDER = File.join(PROJECT_ROOT_FOLDER, '.secrets')
+
+ARTIFACTS_ROOT = File.join(PROJECT_ROOT_FOLDER, '.build', 'artifacts', 'release')
+ARTIFACT_PATHS = Dir.glob(File.join(ARTIFACTS_ROOT, '*'))
+ZIP_FILE_PATH = File.join(PROJECT_ROOT_FOLDER, '.build', 'artifacts', 'hostmgr.zip')
+GITHUB_REPO = 'automattic/hostmgr'
+
+APPLE_TEAM_ID = 'PZYM8XX95Q'
+APPLE_BUNDLE_IDENTIFIER = 'com.automattic.hostmgr'
+
+# Use this instead of getting values from ENV directly
+# It will throw an error if the requested value is missing
+def get_required_env(key)
+  UI.user_error!("Environment variable `#{key}` is not set.") unless ENV.key?(key)
+  ENV.fetch(key)
+end
+
+before_all do |_lane|
+  setup_ci  # Fixes weird Keychain bugs
+end
+
+desc 'Upload the Release Build products to Github under a new release'
+lane :upload_release do |_options|
+  UI.user_error!('No build products are present – did you run `make build-release`?') if ARTIFACT_PATHS.empty?
+
+  create_release_zip
+
+  tag = ENV['BUILDKITE_TAG'] ||= prompt(text: "Enter the tag name you'd like to use")
+
+  set_github_release(
+    repository_name: GITHUB_REPO,
+    api_token: ENV.fetch('GITHUB_TOKEN', nil),
+    name: tag,
+    tag_name: tag,
+    description: Digest::SHA256.file(ZIP_FILE_PATH).to_s,
+    upload_assets: [ZIP_FILE_PATH] + ARTIFACT_PATHS,
+    is_prerelease: true
+  )
+end
+
+desc 'Download the development signing certificates to this machine'
+lane :set_up_signing do |_options|
+  sync_code_signing(
+    platform: 'macos',
+    app_identifier: APPLE_BUNDLE_IDENTIFIER,
+    team_id: APPLE_TEAM_ID,
+    type: 'development',
+
+    storage_mode: 's3',
+    s3_region: 'us-east-2',
+    s3_bucket: 'a8c-fastlane-match',
+
+    readonly: true
+  )
+end
+
+def create_release_zip
+  File.delete(ZIP_FILE_PATH) if File.file? ZIP_FILE_PATH
+
+  Dir.chdir(ARTIFACTS_ROOT) do
+    Zip::File.open(ZIP_FILE_PATH, Zip::File::CREATE) do |zipfile|
+      %w[hostmgr hostmgr-helper].each do |f|
+        zipfile.add(File.basename(f), File.join(ARTIFACTS_ROOT, f))
+      end
+    end
+  end
+end

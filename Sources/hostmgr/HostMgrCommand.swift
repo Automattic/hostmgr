@@ -1,11 +1,11 @@
+import Foundation
 import ArgumentParser
-import Logging
 import libhostmgr
+import OSLog
 
 @main
 struct Hostmgr: AsyncParsableCommand {
-
-    private static var appVersion = "0.17.3"
+    private static let appVersion = libhostmgr.hostmgrVersion
 
     static var configuration = CommandConfiguration(
         abstract: "A utility for managing VM hosts",
@@ -14,22 +14,19 @@ struct Hostmgr: AsyncParsableCommand {
             VMCommand.self,
             SyncCommand.self,
             InitCommand.self,
+            InstallCommand.self,
             RunCommand.self,
             SetCommand.self,
             BenchmarkCommand.self,
-            ConfigCommand.self
+            ConfigCommand.self,
+            CacheCommand.self
         ]
     )
 
     mutating func run() async throws {
-        Logger.initializeLoggingSystem()
+        Logger.cli.debug("Starting up")
 
-        logger.trace("Starting Up")
-
-        guard Configuration.isValid else {
-            print("Invalid configuration – exiting")
-            throw ExitCode(1)
-        }
+        try Configuration.validate()
 
         throw CleanExit.helpRequest(self)
     }
@@ -45,6 +42,16 @@ struct SetCommand: ParsableCommand {
     )
 }
 
+struct InstallCommand: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "install",
+        abstract: "Install components",
+        subcommands: [
+            InstallHostmgrHelperCommand.self
+        ]
+    )
+}
+
 struct InitCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "init",
@@ -52,102 +59,7 @@ struct InitCommand: ParsableCommand {
     )
 
     func run() throws {
-        if ConfigurationRepository.configurationFileExists {
-            if !confirm("A configuration file already exists – would you like to continue?") {
-                return
-            }
-        }
-
-        print("== VM Image Storage ==\n")
-
-        Configuration.shared.vmImagesBucket = prompt(
-            "Which S3 bucket contains your VM images?",
-            currentValue: Configuration.shared.vmImagesBucket
-        )
-
-        Configuration.shared.vmImagesRegion = prompt(
-            "Which AWS region contains the \(Configuration.shared.vmImagesBucket) bucket?",
-            currentValue: Configuration.shared.vmImagesRegion
-        )
-
-        print("== Authorized Keys Sync ==\n")
-
-        Configuration.shared.authorizedKeysBucket = prompt(
-            "Which S3 bucket contains your authorized_keys file?",
-            currentValue: Configuration.shared.authorizedKeysBucket
-        )
-
-        Configuration.shared.authorizedKeysRegion = prompt(
-            "Which AWS region contains the \(Configuration.shared.authorizedKeysBucket) bucket?",
-            currentValue: Configuration.shared.authorizedKeysRegion
-        )
-
-        Configuration.shared.gitMirrorBucket = prompt(
-            "Which S3 bucket would you like to use as the data source for the git mirror server?",
-            currentValue: Configuration.shared.gitMirrorBucket
-        )
-
-        try Configuration.shared.save()
-
-        print("Configuration Complete")
-    }
-
-    private func confirm(_ message: String) -> Bool {
-        repeat {
-            print(message + " (Y/N)")
-            if let response = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines) {
-                if response.uppercased() == "Y" {
-                    return true
-                } else if response.uppercased() == "N" {
-                    return false
-                }
-            }
-
-        } while true
-    }
-
-    typealias ValidationCallback = (String) -> Bool
-
-    private func promptForUInt(_ message: String, currentValue: UInt) -> UInt {
-        let value = prompt(message, currentValue: "\(currentValue)") { value in
-            UInt(value) != nil
-        }
-
-        return UInt(value)!
-    }
-
-    private func prompt(_ message: String, currentValue: String?, isValid: ValidationCallback? = nil) -> String {
-
-        repeat {
-            if let currentValue = currentValue, !currentValue.isEmpty {
-                print(message + "[" + currentValue + "]:")
-            } else {
-                print(message + ":")
-            }
-
-            if let value = readLine()?.trimmingCharacters(in: .whitespacesAndNewlines) {
-
-                if let isValid = isValid {
-                    if isValid(value) {
-                        return value
-                    } else {
-                        if let currentValue = currentValue, isValid(currentValue) {
-                            return currentValue
-                        } else {
-                            continue
-                        }
-                    }
-                }
-
-                if !value.isEmpty {
-                    return value
-                }
-
-                if value.isEmpty, let currentValue = currentValue, !currentValue.isEmpty {
-                    return currentValue
-                }
-            }
-
-        } while true
+        try FileManager.default.createDirectory(at: Paths.gitMirrorStorageDirectory, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: Paths.vmImageStorageDirectory, withIntermediateDirectories: true)
     }
 }

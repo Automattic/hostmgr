@@ -1,5 +1,4 @@
 import Foundation
-import TSCBasic
 
 public struct BuildkiteScriptBuilder {
 
@@ -12,8 +11,7 @@ public struct BuildkiteScriptBuilder {
     /// A list of commands to run in the script.
     var commands = [Command]()
 
-    public init() {
-    }
+    public init() {}
 
     /// Add another dependency to the build script.
     ///
@@ -27,6 +25,16 @@ public struct BuildkiteScriptBuilder {
     /// If there's an existing environment variable with the same name, it will be overwritten.
     public mutating func addEnvironmentVariable(named key: String, value: String) {
         self.environmentVariables[key] = Value(wrapping: value)
+    }
+
+    /// Removes an environment variable pair from the build script.
+    public mutating func removeEnvironmentVariable(named key: String) {
+        self.environmentVariables.removeValue(forKey: key)
+    }
+
+    public mutating func removingEnvironmentVariable(named key: String) -> Self {
+        self.removeEnvironmentVariable(named: key)
+        return self
     }
 
     /// Copy environment variables from the existing environment into the build script based on their prefix.
@@ -127,10 +135,6 @@ public struct BuildkiteScriptBuilder {
             self.arguments = arguments
         }
 
-        init(_ command: String, _ arguments: String...) {
-            self.init(command: command, arguments: arguments)
-        }
-
         /// The escaped command text, sutible for placement in a shell script
         var escapedText: String {
             "\(command) \(escapedArguments.joined(separator: " "))".trimmingWhitespace
@@ -154,9 +158,5 @@ extension String {
 
     var escapingDoubleQuotes: String {
         replacingOccurrences(of: "\"", with: "\\\"")
-    }
-
-    var trimmingWhitespace: String {
-        trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

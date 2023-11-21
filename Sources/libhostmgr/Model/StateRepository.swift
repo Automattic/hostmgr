@@ -60,28 +60,3 @@ struct FileStateRepository: StateRepository {
         try FileManager.default.removeItem(at: stateStorageDirectory)
     }
 }
-
-class InMemoryStateRepository: StateRepository {
-    private var internalStorage = [String: Data]()
-
-    func read<T>(fromKey key: String) throws -> T? where T: Decodable, T: Encodable {
-        guard let data = internalStorage[key] else {
-            return nil
-        }
-
-        return try JSONDecoder().decode(T.self, from: data)
-    }
-
-    func write<T>(_ object: T, toKey key: String) throws where T: Decodable, T: Encodable {
-        let data = try JSONEncoder().encode(object)
-        internalStorage[key] = data
-    }
-
-    func delete(key: String) throws {
-        internalStorage[key] = nil
-    }
-
-    func deleteAll() throws {
-        internalStorage = [String: Data]()
-    }
-}

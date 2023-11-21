@@ -19,30 +19,27 @@ struct SetAutomaticLoginPasswordCommand: ParsableCommand {
     )
     var force: Bool = false
 
-    var path: String {
-        "/etc/kcpassword"
-    }
+    private let path = URL(fileURLWithPath: "/etc/kcpassword")
 
-    var url: URL {
-        URL(fileURLWithPath: path)
+    enum CodingKeys: CodingKey {
+        case password
+        case force
     }
 
     func run() throws {
 
         // Don't run if the file exists (unless the user specifies `--force`)
-        guard !FileManager.default.fileExists(atPath: path) || force else {
+        guard !FileManager.default.fileExists(at: path) || force else {
             print("Not writing to \(path) – it already exists")
             return
         }
 
-        if FileManager.default.fileExists(atPath: path) {
-            try FileManager.default.removeItem(at: url)
+        if FileManager.default.fileExists(at: path) {
+            try FileManager.default.removeItem(at: path)
         }
 
         let data = kcpassword(encrypting: password)
-        try data.write(to: url, options: .atomicWrite)
-        try FileManager.default.setAttributes([
-            .posixPermissions: 0o600
-        ], ofItemAtPath: path)
+        try data.write(to: path, options: .atomicWrite)
+        try FileManager.default.set(filePermissions: .ownerReadWrite, forItemAt: path)
     }
 }

@@ -13,21 +13,37 @@ struct VMFetchCommand: AsyncParsableCommand {
     )
     var name: String
 
+    var vmLibrary = RemoteVMLibrary()
+
+    let vmManager = VMManager()
+
+    enum CodingKeys: CodingKey {
+        case name
+    }
+
     func run() async throws {
-
-        if let localVM = try LocalVMRepository().lookupVM(withName: name) {
-            if localVM.state == .packaged {
-                try await libhostmgr.unpackVM(name: localVM.basename)
-                return
-            } else {
-                Console.exit(
-                    message: "VM is present locally",
-                    style: .success
-                )
-            }
-
+        // If we already have the VM ready to go, don't re-download it
+        if try vmManager.hasLocalVMTemplate(named: name, state: .ready) {
+            Console.exit("VM is present locally", style: .success)
         }
 
-        try await libhostmgr.fetchRemoteImage(name: self.name)
+        // If it just needs to be unpacked, try that
+        if try vmManager.hasLocalVMTemplate(named: name, state: .packaged) {
+            Console.info("Existing package found – extracting")
+            try await vmManager.unpackVM(name: name)
+            Console.exit("VM is present locally", style: .success)
+        }
+
+        // Otherwise download the whole thing
+        let vmImage = try await vmLibrary.lookupImage(named: name)
+
+        try await Console.startImageDownload(vmImage) {
+            try await vmLibrary.download(vmNamed: name, progressCallback: $0.update)
+        }
+
+        // Then unpack it
+        try await vmManager.unpackVM(name: name)
+
+        Console.exit("VM is present locally", style: .success)
     }
 }

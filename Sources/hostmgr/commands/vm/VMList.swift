@@ -25,36 +25,49 @@ struct VMListCommand: AsyncParsableCommand {
     @Option(help: "Filter VMs by location – can be 'remote', 'local', or 'all'.")
     var location: Location = Location.all
 
+    let vmManager = VMManager()
+
+    let vmRemote = RemoteVMLibrary()
+
+    enum CodingKeys: CodingKey {
+        case location
+    }
+
     func run() async throws {
         var data = Console.Table()
 
         if self.location.includesLocal {
-            data.append(contentsOf: try LocalVMRepository().list().map(self.format))
+            data.append(contentsOf: try await vmManager.list(sortedBy: .name).map(self.format))
         }
 
         if self.location.includesRemote {
-            data.append(contentsOf: try await RemoteVMRepository().listImages().map(self.format))
+            data.append(contentsOf: try await vmRemote.listImages().map(self.format))
         }
 
         Console.printTable(
             data: data,
-            columnTitles: ["Location", "Filename", "Size"]
+            columnTitles: ["Location", "Filename", "State", "Architecture", "Size"]
         )
     }
 
-    private func format(localVM: LocalVMImage) throws -> [String] {
+    private func format(localVM: LocalVMImage) throws -> Console.TableRow {
         return [
             "Local",
-            localVM.basename,
+//            localVM.basename,
+//            localVM.state.rawValue,
+//            localVM.architecture.rawValue,
+            localVM.name,
             Format.fileBytes(try localVM.fileSize)
         ]
     }
 
-    private func format(remoteVM: RemoteVMImage) throws -> [String] {
+    private func format(remoteVM: RemoteVMImage) throws -> Console.TableRow {
         return [
             "Remote",
-            remoteVM.basename,
-            Format.fileBytes(remoteVM.imageObject.size)
+            remoteVM.name,
+            "Packaged",
+            "",
+            Format.fileBytes(remoteVM.size)
         ]
     }
 }

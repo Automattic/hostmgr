@@ -2,26 +2,30 @@ import Foundation
 import ArgumentParser
 import libhostmgr
 
-struct VMStopCommand: ParsableCommand {
+struct VMStopCommand: AsyncParsableCommand {
 
     static let configuration = CommandConfiguration(
         commandName: "stop",
         abstract: "Stops a VM"
     )
 
-    @Argument(help: "The Name or ID of the VM you'd like to stop")
+    @Argument(help: "The Name, ID, or Handle of the VM you'd like to stop")
     var identifier: String?
-
-    @Flag(help: "Kill the VM immediately, without waiting for it to shut down")
-    var immediately: Bool = false
 
     @Flag(help: "Shutdown all VMs")
     var all: Bool = false
 
-    func run() throws {
+    let vmManager = VMManager()
+
+    enum CodingKeys: CodingKey {
+        case identifier
+        case all
+    }
+
+    func run() async throws {
 
         guard all == false else {
-            try libhostmgr.stopAllRunningVMs(immediately: self.immediately)
+            try await vmManager.stopAllRunningVMs()
             Console.exit()
         }
 
@@ -30,6 +34,6 @@ struct VMStopCommand: ParsableCommand {
             throw CleanExit.helpRequest()
         }
 
-        try libhostmgr.stopRunningVM(name: identifier, immediately: immediately)
+        try await vmManager.stopVM(handle: identifier)
     }
 }

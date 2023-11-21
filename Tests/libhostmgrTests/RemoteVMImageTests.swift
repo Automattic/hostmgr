@@ -3,41 +3,31 @@ import XCTest
 @testable import tinys3
 
 final class RemoteVMImageTests: XCTestCase {
-
     private let testSubject = RemoteVMImage(
-        imageObject: S3Object(
-            key: "foo/bar.txt",
-            size: 1234,
-            eTag: "",
-            lastModifiedAt: Date.distantPast,
-            storageClass: ""
-        ),
-        checksumObject: S3Object(
-            key: "foo/bar.sha1.txt",
-            size: 64,
-            eTag: "",
-            lastModifiedAt: Date.distantPast,
-            storageClass: ""
-        )
-    )
+        imageFile: RemoteFile(size: 4096, path: "/foo/bar.vmtemplate.aar", lastModifiedAt: .testDefault)
+    )!
 
-    func testThatImagePathIsValid() throws {
-        XCTAssertEqual("foo/bar.txt", testSubject.imageObject.key)
+    func testThatInvalidKeyEmitsNilObject() throws {
+        XCTAssertNil(RemoteVMImage(imageFile: S3Object.with(key: "/bar/baz", size: 0).asFile))
     }
 
-    func testThatFileNameIsValid() throws {
-        XCTAssertEqual("bar.txt", testSubject.fileName)
+    func testThatNameIsCorrect() throws {
+        XCTAssertEqual("bar", testSubject.name)
     }
 
-    func testThatBaseNameIsValid() throws {
-        XCTAssertEqual("bar", testSubject.basename)
+    func testThatfileNameIsCorrect() throws {
+        XCTAssertEqual("bar.vmtemplate.aar", testSubject.fileName)
     }
 
-    func testThatSizeCanBeRetrieved() throws {
-        XCTAssertEqual(1234, testSubject.imageObject.size)
+    func testThatPathIsCorrect() throws {
+        XCTAssertEqual("/foo/bar.vmtemplate.aar", testSubject.path)
     }
 
-    func testThatChecksumCanBeRetrieved() throws {
-        XCTAssertEqual("foo/bar.sha1.txt", testSubject.checksumObject.key)
+    func testThatSizeIsCorrect() throws {
+        XCTAssertEqual(4096, testSubject.size)
+    }
+
+    func testThatDateIsCorrect() throws {
+        XCTAssertEqual(.testDefault, testSubject.lastModifiedAt)
     }
 }
