@@ -11,8 +11,8 @@ steps:
   #################
   # Build and Test
   #################
-  - label: "🧪 Build and Test (arm64)"
-    key: "test-arm64"
+  - label: "🧪 Build and Test"
+    key: "test"
     command: |
       echo "--- :swift: Building + Testing"
       install_swiftpm_dependencies
@@ -34,12 +34,11 @@ steps:
 
   - label: "🧪 Lint Ruby"
     command: |
-      install_gems
-      bundle exec rubocop
+      make lint-ruby
     env: *common_env
     plugins: *common_plugins
     agents:
-      queue: mac
+      queue: default
 
   #################
   # Validate Release Build

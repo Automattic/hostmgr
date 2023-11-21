@@ -2,6 +2,7 @@
 
 RELEASE_VERSION = $(shell .build/release/hostmgr --version)
 SWIFTLINT_VERSION = 0.53.0
+RUBY_VERSION = $(shell cat .ruby-version)
 
 clean:
 	rm -rf .build
@@ -69,7 +70,7 @@ lintfix-swift:
 
 ## Ruby Tooling
 lint-ruby:
-	docker run -it --rm -v `pwd`:`pwd` -w `pwd` ruby:2.7.7 /bin/bash -c "bundle install && bundle exec rubocop"
+	docker run -it --rm -v `pwd`:`pwd` -w `pwd` ruby:$(RUBY_VERSION) /bin/bash -c "bundle install && bundle exec rubocop"
 
 lintfix-ruby:
-	docker run -it --rm -v `pwd`:`pwd` -w `pwd` ruby:2.7.7 /bin/bash -c "bundle install && bundle exec rubocop --autocorrect"
+	docker run -it --rm -v `pwd`:`pwd` -w `pwd` ruby:$(RUBY_VERSION) /bin/bash -c "bundle install && bundle exec rubocop --autocorrect"
