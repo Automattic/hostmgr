@@ -37,6 +37,17 @@ struct GitMirrorPublishCommand: AsyncParsableCommand {
         Console.info("Compressing \(gitMirror.localPath.path()) to \(gitMirror.archivePath)")
         try gitMirror.compress()
 
+        // At the moment `service.uploadFile` does a multi-part upload, which fails if one of those batches is less
+        // than 5 MB. Instead of implementing a direct upload in tinys3, we'll put a random minimal size limit (50 MB)
+        // to git mirror files. If the file size is too small, git checkout should be pretty fast and it's okay to not
+        // save the git repo in S3.
+        let archiveSize = try FileManager.default.size(ofObjectAt: gitMirror.archivePath)
+        let archiveSizeInMB = Measurement(value: Double(archiveSize), unit: UnitInformationStorage.bytes).converted(to: .megabytes)
+        if archiveSizeInMB.value < 50 {
+            Console.info("Skipping uploading the git mirror because it is too small")
+            return
+        }
+
         let progress = Console.startProgress("Uploading mirror to \(gitMirror.remoteFilename)", type: .upload)
         try await server.uploadFile(at: gitMirror.archivePath, to: gitMirror.remoteFilename, progress: progress.update)
 
