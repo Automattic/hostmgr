@@ -42,7 +42,8 @@ struct GitMirrorPublishCommand: AsyncParsableCommand {
         // to git mirror files. If the file size is too small, git checkout should be pretty fast and it's okay to not
         // save the git repo in S3.
         let archiveSize = try FileManager.default.size(ofObjectAt: gitMirror.archivePath)
-        let archiveSizeInMB = Measurement(value: Double(archiveSize), unit: UnitInformationStorage.bytes).converted(to: .megabytes)
+        let archiveSizeInMB = Measurement(value: Double(archiveSize), unit: UnitInformationStorage.bytes)
+            .converted(to: .megabytes)
         if archiveSizeInMB.value < 50 {
             Console.info("Skipping uploading the git mirror because it is too small")
             return
