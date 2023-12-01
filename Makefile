@@ -26,6 +26,9 @@ install: build
 	launchctl unload ~/Library/LaunchAgents/com.automattic.hostmgr.helper.plist
 	launchctl load ~/Library/LaunchAgents/com.automattic.hostmgr.helper.plist
 
+stop:
+	launchctl unload ~/Library/LaunchAgents/com.automattic.hostmgr.helper.plist
+
 release: build
 	@echo "--- Tagging Release"
 	git tag $(RELEASE_VERSION)
