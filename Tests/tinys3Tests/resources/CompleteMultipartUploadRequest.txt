@@ -1,0 +1,6 @@
+<CompleteMultipartUpload xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+    <Part>
+        <PartNumber>1234</PartNumber>
+        <ETag>a9021bcb06da4ad5a7798b206a2508a7c2231ca183bd20492b1f0612883ab1e5</ETag>
+    </Part>
+</CompleteMultipartUpload>

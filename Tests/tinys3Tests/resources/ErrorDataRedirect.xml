@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Error>
+  <Code>PermanentRedirect</Code>
+  <Message>The bucket you are attempting to access must be addressed using the specified endpoint. Please send all future requests to this endpoint.</Message>
+  <Endpoint>my-test-bucket.s3.us-east-1.amazonaws.com</Endpoint>
+  <Bucket>my-test-bucket</Bucket>
+  <RequestId>GVFEBNFDE20VQA1J</RequestId>
+  <HostId>a0dYNTP713XzlbobHEBaEZjD6X4de5ISMPkjJlk6c9ImK0aaTCdjxVK953Ix/JH+zEsnB0g1BWI=</HostId>
+</Error>
