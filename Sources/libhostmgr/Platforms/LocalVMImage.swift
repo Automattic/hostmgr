@@ -52,7 +52,7 @@ public struct LocalVMImage: Equatable {
     }
 }
 
-public enum VMImageState {
-    case packaged
-    case ready
+public enum VMImageState: String {
+    case packaged = "Packaged"
+    case ready = "Ready"
 }
