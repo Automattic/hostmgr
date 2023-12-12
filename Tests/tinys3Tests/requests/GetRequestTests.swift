@@ -67,3 +67,4 @@ final class PresignedGetRequestTests: XCTestCase, RequestTest {
     """, request.authorizationHeaderValue)
     }
 }
+// swiftlint:enable line_length

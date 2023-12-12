@@ -64,3 +64,4 @@ AWS4-HMAC-SHA256 Credential=AKIAIOSFODNN7EXAMPLE/20130524/us-east-1/s3/aws4_requ
 """, request.authorizationHeaderValue)
     }
 }
+// swiftlint:enable line_length

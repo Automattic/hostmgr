@@ -161,6 +161,7 @@ extension S3ListResponseParser: XMLParserDelegate {
         default: break
         }
     }
+    // swiftlint:enable cyclomatic_complexity
 
     func parser(_ parser: XMLParser, parseErrorOccurred error: Error) {
         self.error = error

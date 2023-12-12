@@ -71,3 +71,4 @@ https://examplebucket.s3.amazonaws.com/test.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256
         XCTAssertEqual(correctURL, request.url.absoluteString)
     }
 }
+// swiftlint:enable line_length

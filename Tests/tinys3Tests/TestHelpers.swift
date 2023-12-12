@@ -24,6 +24,7 @@ extension Date {
 
 // swiftlint:disable type_name
 struct R {
+// swiftlint:enable type_name
     static func string(_ name: String) throws -> String {
         return try String(contentsOf: url(forResourceName: name, withExtension: "txt"))
             .trimmingCharacters(in: .whitespacesAndNewlines)
