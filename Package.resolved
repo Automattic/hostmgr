@@ -98,15 +98,6 @@
         "revision" : "3db5c4aeee8100d2db6f1eaf3864afdad5dc68fd",
         "version" : "2.59.0"
       }
-    },
-    {
-      "identity" : "tinys3",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/jkmassel/tinys3.git",
-      "state" : {
-        "branch" : "main",
-        "revision" : "0e2e4f57b6e9c870a42ece8860a07ace456728c3"
-      }
     }
   ],
   "version" : 2

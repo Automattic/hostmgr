@@ -15,12 +15,13 @@ let package = Package(
     products: [
         .executable(name: "hostmgr", targets: ["hostmgr"]),
         .executable(name: "hostmgr-helper", targets: ["hostmgr-helper"]),
+        .executable(name: "tinys3-cli", targets: ["tinys3-cli"]),
         .library(name: "libhostmgr", targets: ["libhostmgr"]),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.1.4"),
-        .package(url: "https://github.com/jkmassel/tinys3.git", branch: "main"),
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "2.0.0"),
         .package(url: "https://github.com/jkmassel/kcpassword-swift.git", from: "1.0.0"),
         .package(url: "https://github.com/vapor/console-kit.git", .upToNextMajor(from: "4.9.0")),
         .package(url: "https://github.com/swhitty/FlyingFox.git", .upToNextMajor(from: "0.12.2")),
@@ -55,7 +56,7 @@ let package = Package(
             name: "libhostmgr",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "tinys3", package: "tinys3"),
+                .target(name: "tinys3"),
                 .product(name: "ConsoleKit", package: "console-kit"),
                 .product(name: "FlyingFox", package: "FlyingFox")
             ],
@@ -83,6 +84,40 @@ let package = Package(
                 .copy("resources/vm-config-file-sample-1.json"),
                 .copy("resources/vm-config-file-sample-2.json"),
                 .copy("resources/vm-config-file-sample-3.json")
+            ]
+        ),
+        .executableTarget(
+            name: "tinys3-cli",
+            dependencies: [
+                "tinys3",
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+            ]
+        ),
+        .target(
+            name: "tinys3",
+            dependencies: [
+                .product(name: "Crypto", package: "swift-crypto"),
+            ]
+        ),
+        .testTarget(
+            name: "tinys3Tests",
+            dependencies: [
+                "tinys3",
+                .product(name: "Crypto", package: "swift-crypto"),
+            ],
+            resources: [
+                .copy("resources/aws-credentials-file-multiple.txt"),
+                .copy("resources/aws-credentials-file-no-region.txt"),
+                .copy("resources/aws-credentials-file-single.txt"),
+                .copy("resources/CompleteMultipartUploadDocument.txt"),
+                .copy("resources/CompleteMultipartUploadRequest.txt"),
+                .copy("resources/CreateMultipartUpload.xml"),
+                .copy("resources/EmptyXML.xml"),
+                .copy("resources/ErrorDataRedirect.xml"),
+                .copy("resources/EscapedCompleteMultipartBody.xml"),
+                .copy("resources/ListBucketData.xml"),
+                .copy("resources/ListBucketDataEmpty.xml"),
+                .copy("resources/ListBucketDataInvalid.xml"),
             ]
         ),
     ]

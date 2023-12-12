@@ -6,6 +6,8 @@ import tinys3
 @main
 struct CLI: AsyncParsableCommand {
 
+    static var configuration = CommandConfiguration(commandName: "tinys3-cli")
+
     enum Operation: String, ExpressibleByArgument {
         case upload
         case download
