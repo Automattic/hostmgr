@@ -53,10 +53,9 @@ struct VMListCommand: AsyncParsableCommand {
     private func format(localVM: LocalVMImage) throws -> Console.TableRow {
         return [
             "Local",
-//            localVM.basename,
-//            localVM.state.rawValue,
-//            localVM.architecture.rawValue,
             localVM.name,
+            localVM.state.rawValue,
+            "", // localVM.architecture.rawValue,
             Format.fileBytes(try localVM.fileSize)
         ]
     }
