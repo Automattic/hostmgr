@@ -11,6 +11,11 @@ public struct VMBundle: Sendable {
         self.root = root
         self.config = try VMConfigFile.from(url: Self.configurationFilePath(for: self.root))
     }
+
+    init(at root: URL, config: VMConfigFile) {
+        self.root = root
+        self.config = config
+    }
 }
 
 extension VMBundle: Bundle {
@@ -90,8 +95,6 @@ extension VMBundle: Bundle {
         try FileManager.default.createDirectory(at: bundleRoot, withIntermediateDirectories: true)
         Console.success("Created bundle at \(bundleRoot.path)")
 
-        let bundle = try VMBundle(at: bundleRoot)
-
         let configFile = VMConfigFile(
             name: name,
             hardwareModel: macOSConfiguration.hardwareModel,
@@ -99,6 +102,7 @@ extension VMBundle: Bundle {
             macAddress: .randomLocallyAdministered()
         )
 
+        let bundle = VMBundle(at: bundleRoot, config: configFile)
         try bundle.set(config: configFile)
         try bundle.initializeStorageVolume(withSize: capacity)
 
