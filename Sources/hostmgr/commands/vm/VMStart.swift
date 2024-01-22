@@ -57,7 +57,8 @@ struct VMStartCommand: AsyncParsableCommand {
             }
 
             if waitForever {
-                try await vmManager.waitForVMStartup(for: configuration, timeout: .seconds(.greatestFiniteMagnitude))
+                let timeout = Duration.seconds(1_000_000_000) // Doesn't crash like .greatestFiniteMagnitude
+                try await vmManager.waitForVMStartup(for: configuration, timeout: timeout)
             } else {
                 try await vmManager.waitForVMStartup(for: configuration, timeout: .seconds(30))
             }
