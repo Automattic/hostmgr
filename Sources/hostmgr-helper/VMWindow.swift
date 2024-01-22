@@ -14,6 +14,10 @@ struct VMWindowContent: View {
         case .empty:  Text("VM not running")
         case .starting: ProgressView()
         case .running: VirtualMachineDisplayView(virtualMachine: vmSlot.virtualMachine!)
+        .onAppear {
+            NSApp.setActivationPolicy(.regular)
+            NSApp.activate(ignoringOtherApps: true)
+        }
         case .stopping: ProgressView()
         case .crashed(let err): Text("VM Error: \(err.localizedDescription)")
         }
