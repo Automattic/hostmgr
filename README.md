@@ -27,7 +27,7 @@ _(We can potentially automate this step, but for now this is still manual)_
    - Either by right-clicking the executable in the Finder, selecting "Open" in the context menu, and click "Open" button.
    - Or by running `xattr -d com.apple.quarantine /opt/ci/bin/hostmgr /opt/ci/bin/hostmgr-helper`.
 1. Add `/opt/ci/bin` to your PATH so that the VM tools will be able to use `hostmgr` and `hostmgr-helper`
-1. Create a config file in `/opt/ci/hostmgr.json`. You can copy [the file we use to provision our macOS CI hosts](src/agents/macos-hosts/resources/hostmgr.json) directly there.
+1. Create a config file in `/opt/ci/hostmgr.json`. You can copy [the file we use to provision our macOS CI hosts](https://github.com/Automattic/buildkite-ci/blob/trunk/src/agents/macos-hosts/resources/hostmgr.json) directly there.
 1. Open a Terminal and run `hostmgr-helper` to launch the "hostmgr-helper" macOS app, which needs to be running during building VM images.
 
 ## Release
