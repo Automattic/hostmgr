@@ -8,7 +8,7 @@ This tool suite is used to create and manage VMs on our Buildkite CI Mac hosts:
     - Create, package and publish VMs… (when we prepare new VMs for new macOS or Xcode versions)
     - List installed VMs, fetch VMs, start and stop VMs… (when running this tool on our CI hosts, to boot VMs and run Buildkite jobs in them)
  - `hostmgr-helper` is a helper tool used to display the VM's GUI in a window on the host machine.
-    - This helper shows up as a Menu Bar item in your Mac
+    - This helper shows up as a Menu Bar item in your Mac, listing running VMs and allowing you to VNC to them, show their UI in a window, or stop them.
     - It is especially useful when [creating new OS templates for VMs](https://github.com/Automattic/buildkite-ci/blob/trunk/src/agents/macos-vms/README.md), to go through the macOS setup wizard via the GUI when configuring the template VM.
 
 ## Installation
