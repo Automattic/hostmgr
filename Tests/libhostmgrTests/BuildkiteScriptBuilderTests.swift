@@ -151,7 +151,7 @@ class BuildkiteScriptBuilderTests: XCTestCase {
 
     private func getContentsOfResource(named key: String, withExtension extension: String) throws -> String {
         let path = try XCTUnwrap(Bundle.module.path(forResource: key, ofType: `extension`))
-        return try XCTUnwrap(String(contentsOfFile: path)).trimmingWhitespace
+        return try XCTUnwrap(String(contentsOfFile: path))
     }
 
     private func getEnvironmentVariables(from path: URL) throws -> [String: String] {

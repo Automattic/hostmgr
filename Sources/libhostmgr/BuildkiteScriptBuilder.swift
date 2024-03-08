@@ -67,7 +67,8 @@ public struct BuildkiteScriptBuilder {
                 .joined(separator: "\n"),
             commands
                 .map(escapeCommand)
-                .joined(separator: "\n")
+                .joined(separator: "\n"),
+            "" // Enforce newline at EOF
         ].joined(separator: "\n")
     }
 
