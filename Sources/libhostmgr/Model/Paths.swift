@@ -4,71 +4,67 @@ public struct Paths {
 
     private static let storageDirectoryIdentifier = "com.automattic.hostmgr"
 
-    static var storageRoot: URL {
-        URL(fileURLWithPath: "/opt/ci", isDirectory: true)
-    }
+    static let storageRoot: URL = URL(fileURLWithPath: "/opt/ci", isDirectory: true)
 
-    static var configurationRoot: URL {
-        storageRoot
-    }
-
-    static var stateRoot: URL {
-        storageRoot
-            .appendingPathComponent("hostmgr", isDirectory: true)
-            .appendingPathComponent("state", isDirectory: true)
-    }
-
-    public static var vmImageStorageDirectory: URL {
-        storageRoot.appendingPathComponent("vm-images", isDirectory: true)
-    }
-
-    public static var tempDirectory: URL {
+    public static let tempDirectory: URL = {
         storageRoot
             .appendingPathComponent("var", isDirectory: true)
             .appendingPathComponent("tmp", isDirectory: true)
-    }
+    }()
 
-    public static var ephemeralVMStorageDirectory: URL {
+    static let configurationRoot: URL = storageRoot
+
+    static let stateRoot: URL = {
+        storageRoot
+            .appendingPathComponent("hostmgr", isDirectory: true)
+            .appendingPathComponent("state", isDirectory: true)
+    }()
+
+    public static let vmImageStorageDirectory: URL = {
+        storageRoot.appendingPathComponent("vm-images", isDirectory: true)
+    }()
+
+    public static let ephemeralVMStorageDirectory: URL = {
         tempDirectory.appendingPathComponent("virtual-machines", isDirectory: true)
-    }
+    }()
 
-    public static var vmWorkingStorageDirectory: URL {
+    public static let vmWorkingStorageDirectory: URL = {
         storageRoot.appendingPathComponent("working-vm-images")
-    }
+    }()
 
-    public static var gitMirrorStorageDirectory: URL {
+    public static let gitMirrorStorageDirectory: URL = {
         storageRoot.appendingPathComponent("git-mirrors", isDirectory: true)
-    }
+    }()
 
-    public static var restoreImageDirectory: URL {
+    public static let restoreImageDirectory: URL = {
         storageRoot.appendingPathComponent("restore-images", isDirectory: true)
-    }
+    }()
 
-    public static var authorizedKeysFilePath: URL {
+    public static let authorizedKeysFilePath: URL = {
         FileManager.default
             .homeDirectoryForCurrentUser
             .appendingPathComponent(".ssh")
             .appendingPathComponent("authorized_keys")
-    }
+    }()
 
-    static var configurationFilePath: URL {
-        storageRoot.appendingPathComponent("hostmgr.json")
-    }
+    static let configurationFilePath: URL = {
+        stateRoot.appendingPathComponent("hostmgr.json")
+    }()
 
-    public static var userLaunchAgentsDirectory: URL {
+    public static let userLaunchAgentsDirectory: URL = {
         FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)
             .first!
             .appendingPathComponent("LaunchAgents")
-    }
+    }()
 
-    public static var logsDirectory: URL {
+    public static let logsDirectory: URL = {
         FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)
             .first!
             .appendingPathComponent("Logs")
             .appendingPathComponent(storageDirectoryIdentifier)
-    }
+    }()
 
-    public static let vmUsageFile = stateRoot.appending(path: "vm-usage")
+    public static let vmUsageFile = stateRoot.appendingPathComponent("vm-usage")
 
     public static func toAppleSiliconVM(named name: String) -> URL {
         Paths.vmImageStorageDirectory.appendingPathComponent(name).appendingPathExtension("bundle")
@@ -100,15 +96,15 @@ public struct Paths {
 
 extension Paths {
 
-    public static var buildkiteBuildDirectory: URL {
+    public static let buildkiteBuildDirectory: URL = {
         storageRoot.appendingPathComponent("builds")
-    }
+    }()
 
-    public static var buildkiteHooksDirectory: URL {
+    public static let buildkiteHooksDirectory: URL = {
         storageRoot.appendingPathComponent("hooks")
-    }
+    }()
 
-    public static var buildkitePluginsDirectory: URL {
+    public static let buildkitePluginsDirectory: URL = {
         storageRoot.appendingPathComponent("plugins")
-    }
+    }()
 }
