@@ -39,22 +39,6 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
         scriptBuilder.addEnvironmentVariable(named: "BUILDKITE", value: "true")
         scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_")
 
-        scriptBuilder.addEnvironmentVariable(named: "BUILDKITE_BIN_PATH", value: "/usr/local/bin")
-        scriptBuilder.addEnvironmentVariable(
-            named: "BUILDKITE_BUILD_CHECKOUT_PATH",
-            value: "/usr/local/var/buildkite-agent/builds/\(hostname)/\(buildkiteOrganization)\(buildkitePipelineSlug)"
-        )
-
-        scriptBuilder.addEnvironmentVariable(
-            named: "BUILDKITE_HOOKS_PATH",
-            value: "/usr/local/etc/buildkite-agent/hooks"
-        )
-
-        scriptBuilder.addEnvironmentVariable(
-            named: "BUILDKITE_PLUGINS_PATH",
-            value: "/usr/local/var/buildkite-agent/plugins"
-        )
-
         scriptBuilder.addEnvironmentVariable(
             named: "PATH",
             value: "/opt/homebrew/bin:/opt/ci/bin:$PATH"
@@ -80,15 +64,5 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
 
         let path = try FileManager.default.createTemporaryFile(containing: scriptText).path
         print(path)
-    }
-
-    let hostname: String = Host.current().name!
-
-    var buildkiteOrganization: String {
-        ProcessInfo.processInfo.environment["BUILDKITE_ORGANIZATION_SLUG"]!
-    }
-
-    var buildkitePipelineSlug: String {
-        ProcessInfo.processInfo.environment["BUILDKITE_PIPELINE_SLUG"]!
     }
 }
