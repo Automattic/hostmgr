@@ -115,4 +115,8 @@ public extension Paths {
     static let buildkitePluginsDirectory: URL = {
         storageRoot.appendingPathComponent("plugins")
     }()
+
+    static let buildkiteSocketsDirectory: URL = {
+        tempDirectory.appendingPathComponent("sockets")
+    }()
 }

@@ -17,15 +17,18 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
             "BUILDKITE_BUILD_PATH": Paths.buildkiteBuildDirectory.path,
             "BUILDKITE_HOOKS_PATH": Paths.buildkiteHooksDirectory.path,
             "BUILDKITE_PLUGINS_PATH": Paths.buildkitePluginsDirectory.path,
+            "BUILDKITE_SOCKETS_PATH": Paths.buildkiteSocketsDirectory.path,
             "BUILDKITE_GIT_MIRRORS_PATH": "/Volumes/My Shared Files/git-mirrors",
-            "BUILDKITE_GIT_MIRRORS_SKIP_UPDATE": "true"   // The agent can't write to the Git Mirror, so don't try
+            "BUILDKITE_GIT_MIRRORS_SKIP_UPDATE": "true" // The agent can't write to the Git Mirror, so don't try
         ]
     }
 
     private let disallowedKeys = [
         "BUILDKITE_BIN_PATH",
         "BUILDKITE_BUILD_CHECKOUT_PATH",
-        "BUILDKITE_CONFIG_PATH"
+        "BUILDKITE_CONFIG_PATH",
+        "BUILDKITE_AGENT_JOB_API_SOCKET",
+        "BUILDKITE_AGENT_JOB_API_TOKEN"
     ]
 
     enum CodingKeys: CodingKey {}
