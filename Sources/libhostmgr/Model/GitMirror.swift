@@ -29,7 +29,7 @@ public struct GitMirror {
     }
 
     public var archivePath: URL {
-        Paths.tempFilePath.appendingPathComponent(remoteFilename)
+        Paths.tempDirectory.appendingPathComponent(remoteFilename)
     }
 
     public var remoteFilename: String {

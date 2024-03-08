@@ -111,8 +111,4 @@ extension Paths {
     public static var buildkitePluginsDirectory: URL {
         storageRoot.appendingPathComponent("plugins")
     }
-
-    static var tempFilePath: URL {
-        storageRoot.appendingPathComponent("var").appendingPathComponent("tmp")
-    }
 }
