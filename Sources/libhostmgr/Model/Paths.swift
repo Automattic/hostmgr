@@ -1,10 +1,15 @@
 import Foundation
 
 public struct Paths {
-
     private static let storageDirectoryIdentifier = "com.automattic.hostmgr"
 
     static let storageRoot: URL = URL(fileURLWithPath: "/opt/ci", isDirectory: true)
+
+    static let configurationRoot: URL = storageRoot
+
+    static let configurationFilePath: URL = {
+        configurationRoot.appendingPathComponent("hostmgr.json")
+    }()
 
     public static let tempDirectory: URL = {
         storageRoot
@@ -12,13 +17,13 @@ public struct Paths {
             .appendingPathComponent("tmp", isDirectory: true)
     }()
 
-    static let configurationRoot: URL = storageRoot
-
     static let stateRoot: URL = {
         storageRoot
             .appendingPathComponent("hostmgr", isDirectory: true)
             .appendingPathComponent("state", isDirectory: true)
     }()
+    
+    public static let vmUsageFile = stateRoot.appendingPathComponent("vm-usage")
 
     public static let vmImageStorageDirectory: URL = {
         storageRoot.appendingPathComponent("vm-images", isDirectory: true)
@@ -39,16 +44,15 @@ public struct Paths {
     public static let restoreImageDirectory: URL = {
         storageRoot.appendingPathComponent("restore-images", isDirectory: true)
     }()
+}
 
+// Other Paths outside `/opt/ci`
+extension Paths {
     public static let authorizedKeysFilePath: URL = {
         FileManager.default
             .homeDirectoryForCurrentUser
             .appendingPathComponent(".ssh")
             .appendingPathComponent("authorized_keys")
-    }()
-
-    static let configurationFilePath: URL = {
-        stateRoot.appendingPathComponent("hostmgr.json")
     }()
 
     public static let userLaunchAgentsDirectory: URL = {
@@ -63,9 +67,10 @@ public struct Paths {
             .appendingPathComponent("Logs")
             .appendingPathComponent(storageDirectoryIdentifier)
     }()
+}
 
-    public static let vmUsageFile = stateRoot.appendingPathComponent("vm-usage")
-
+// Functions to get Paths to a specific VM name or repo
+extension Paths {
     public static func toAppleSiliconVM(named name: String) -> URL {
         Paths.vmImageStorageDirectory.appendingPathComponent(name).appendingPathExtension("bundle")
     }
@@ -94,8 +99,8 @@ public struct Paths {
     }
 }
 
+// Paths needed by Buildkite's own config
 extension Paths {
-
     public static let buildkiteBuildDirectory: URL = {
         storageRoot.appendingPathComponent("builds")
     }()
