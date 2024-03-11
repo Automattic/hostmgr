@@ -17,15 +17,18 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
             "BUILDKITE_BUILD_PATH": Paths.buildkiteBuildDirectory.path,
             "BUILDKITE_HOOKS_PATH": Paths.buildkiteHooksDirectory.path,
             "BUILDKITE_PLUGINS_PATH": Paths.buildkitePluginsDirectory.path,
+            "BUILDKITE_SOCKETS_PATH": Paths.buildkiteSocketsDirectory.path,
             "BUILDKITE_GIT_MIRRORS_PATH": "/Volumes/My Shared Files/git-mirrors",
-            "BUILDKITE_GIT_MIRRORS_SKIP_UPDATE": "true"   // The agent can't write to the Git Mirror, so don't try
+            "BUILDKITE_GIT_MIRRORS_SKIP_UPDATE": "true" // The agent can't write to the Git Mirror, so don't try
         ]
     }
 
     private let disallowedKeys = [
         "BUILDKITE_BIN_PATH",
         "BUILDKITE_BUILD_CHECKOUT_PATH",
-        "BUILDKITE_CONFIG_PATH"
+        "BUILDKITE_CONFIG_PATH",
+        "BUILDKITE_AGENT_JOB_API_SOCKET",
+        "BUILDKITE_AGENT_JOB_API_TOKEN"
     ]
 
     enum CodingKeys: CodingKey {}
@@ -35,22 +38,6 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
 
         scriptBuilder.addEnvironmentVariable(named: "BUILDKITE", value: "true")
         scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_")
-
-        scriptBuilder.addEnvironmentVariable(named: "BUILDKITE_BIN_PATH", value: "/usr/local/bin")
-        scriptBuilder.addEnvironmentVariable(
-            named: "BUILDKITE_BUILD_CHECKOUT_PATH",
-            value: "/usr/local/var/buildkite-agent/builds/\(hostname)/\(buildkiteOrganization)\(buildkitePipelineSlug)"
-        )
-
-        scriptBuilder.addEnvironmentVariable(
-            named: "BUILDKITE_HOOKS_PATH",
-            value: "/usr/local/etc/buildkite-agent/hooks"
-        )
-
-        scriptBuilder.addEnvironmentVariable(
-            named: "BUILDKITE_PLUGINS_PATH",
-            value: "/usr/local/var/buildkite-agent/plugins"
-        )
 
         scriptBuilder.addEnvironmentVariable(
             named: "PATH",
@@ -77,15 +64,5 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
 
         let path = try FileManager.default.createTemporaryFile(containing: scriptText).path
         print(path)
-    }
-
-    let hostname: String = Host.current().name!
-
-    var buildkiteOrganization: String {
-        ProcessInfo.processInfo.environment["BUILDKITE_ORGANIZATION_SLUG"]!
-    }
-
-    var buildkitePipelineSlug: String {
-        ProcessInfo.processInfo.environment["BUILDKITE_PIPELINE_SLUG"]!
     }
 }

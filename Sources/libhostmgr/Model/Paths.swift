@@ -1,118 +1,122 @@
 import Foundation
 
 public struct Paths {
-
     private static let storageDirectoryIdentifier = "com.automattic.hostmgr"
 
-    static var storageRoot: URL {
-        URL(fileURLWithPath: "/opt/ci", isDirectory: true)
-    }
+    static let storageRoot: URL = URL(fileURLWithPath: "/opt/ci", isDirectory: true)
 
-    static var configurationRoot: URL {
-        storageRoot
-    }
+    static let configurationRoot: URL = storageRoot
 
-    static var stateRoot: URL {
-        storageRoot
-            .appendingPathComponent("hostmgr", isDirectory: true)
-            .appendingPathComponent("state", isDirectory: true)
-    }
+    static let configurationFilePath: URL = {
+        configurationRoot.appendingPathComponent("hostmgr.json")
+    }()
 
-    public static var vmImageStorageDirectory: URL {
-        storageRoot.appendingPathComponent("vm-images", isDirectory: true)
-    }
-
-    public static var tempDirectory: URL {
+    public static let tempDirectory: URL = {
         storageRoot
             .appendingPathComponent("var", isDirectory: true)
             .appendingPathComponent("tmp", isDirectory: true)
-    }
+    }()
 
-    public static var ephemeralVMStorageDirectory: URL {
+    static let stateRoot: URL = {
+        storageRoot
+            .appendingPathComponent("hostmgr", isDirectory: true)
+            .appendingPathComponent("state", isDirectory: true)
+    }()
+}
+
+// Public Paths to hostmgr-specific directories
+public extension Paths {
+    static let vmUsageFile = stateRoot.appendingPathComponent("vm-usage")
+
+    static let vmImageStorageDirectory: URL = {
+        storageRoot.appendingPathComponent("vm-images", isDirectory: true)
+    }()
+
+    static let ephemeralVMStorageDirectory: URL = {
         tempDirectory.appendingPathComponent("virtual-machines", isDirectory: true)
-    }
+    }()
 
-    public static var vmWorkingStorageDirectory: URL {
+    static let vmWorkingStorageDirectory: URL = {
         storageRoot.appendingPathComponent("working-vm-images")
-    }
+    }()
 
-    public static var gitMirrorStorageDirectory: URL {
+    static let gitMirrorStorageDirectory: URL = {
         storageRoot.appendingPathComponent("git-mirrors", isDirectory: true)
-    }
+    }()
 
-    public static var restoreImageDirectory: URL {
+    static let restoreImageDirectory: URL = {
         storageRoot.appendingPathComponent("restore-images", isDirectory: true)
-    }
+    }()
+}
 
-    public static var authorizedKeysFilePath: URL {
+// System Paths outside `/opt/ci`
+public extension Paths {
+    static let authorizedKeysFilePath: URL = {
         FileManager.default
             .homeDirectoryForCurrentUser
             .appendingPathComponent(".ssh")
             .appendingPathComponent("authorized_keys")
-    }
+    }()
 
-    static var configurationFilePath: URL {
-        storageRoot.appendingPathComponent("hostmgr.json")
-    }
-
-    public static var userLaunchAgentsDirectory: URL {
+    static let userLaunchAgentsDirectory: URL = {
         FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)
             .first!
             .appendingPathComponent("LaunchAgents")
-    }
+    }()
 
-    public static var logsDirectory: URL {
+    static let logsDirectory: URL = {
         FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)
             .first!
             .appendingPathComponent("Logs")
             .appendingPathComponent(storageDirectoryIdentifier)
-    }
+    }()
+}
 
-    public static let vmUsageFile = stateRoot.appending(path: "vm-usage")
-
-    public static func toAppleSiliconVM(named name: String) -> URL {
+// Functions to get Paths to a specific VM name or repo
+public extension Paths {
+    static func toAppleSiliconVM(named name: String) -> URL {
         Paths.vmImageStorageDirectory.appendingPathComponent(name).appendingPathExtension("bundle")
     }
 
-    public static func toWorkingAppleSiliconVM(named name: String) -> URL {
+    static func toWorkingAppleSiliconVM(named name: String) -> URL {
         Paths.vmWorkingStorageDirectory.appendingPathComponent(name).appendingPathExtension("bundle")
     }
 
-    public static func toWorkingParallelsVM(named name: String) -> URL {
+    static func toWorkingParallelsVM(named name: String) -> URL {
         Paths.vmWorkingStorageDirectory.appendingPathComponent(name).appendingPathExtension("pvm")
     }
 
-    public static func toVMTemplate(named name: String) -> URL {
+    static func toVMTemplate(named name: String) -> URL {
         Paths.vmImageStorageDirectory.appendingPathComponent(name).appendingPathExtension("vmtemplate")
     }
 
-    public static func toArchivedVM(named name: String) -> URL {
+    static func toArchivedVM(named name: String) -> URL {
         Paths.vmImageStorageDirectory
             .appendingPathComponent(name)
             .appendingPathExtension("vmtemplate")
             .appendingPathExtension("aar")
     }
 
-    public static func toGitMirror(atURL url: URL) -> URL {
+    static func toGitMirror(atURL url: URL) -> URL {
         gitMirrorStorageDirectory.appendingPathComponent(url.absoluteString.slugify())
     }
 }
 
-extension Paths {
-
-    public static var buildkiteBuildDirectory: URL {
+// Paths needed by Buildkite's own config
+public extension Paths {
+    static let buildkiteBuildDirectory: URL = {
         storageRoot.appendingPathComponent("builds")
-    }
+    }()
 
-    public static var buildkiteHooksDirectory: URL {
+    static let buildkiteHooksDirectory: URL = {
         storageRoot.appendingPathComponent("hooks")
-    }
+    }()
 
-    public static var buildkitePluginsDirectory: URL {
+    static let buildkitePluginsDirectory: URL = {
         storageRoot.appendingPathComponent("plugins")
-    }
+    }()
 
-    static var tempFilePath: URL {
-        storageRoot.appendingPathComponent("var").appendingPathComponent("tmp")
-    }
+    static let buildkiteSocketsDirectory: URL = {
+        tempDirectory.appendingPathComponent("sockets")
+    }()
 }
