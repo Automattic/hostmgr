@@ -52,7 +52,7 @@ struct VMListCommand: AsyncParsableCommand {
 
     private func format(localVM: LocalVMImage) throws -> Console.TableRow {
         return [
-            "Local",
+            "💻 Local",
             localVM.name,
             localVM.state.rawValue,
             Format.fileBytes(try localVM.fileSize)
@@ -61,9 +61,9 @@ struct VMListCommand: AsyncParsableCommand {
 
     private func format(remoteVM: RemoteVMImage) throws -> Console.TableRow {
         return [
-            "Remote",
+            "🌐 Remote",
             remoteVM.name,
-            "Packaged",
+            VMImageState.packaged.rawValue,
             Format.fileBytes(remoteVM.size)
         ]
     }

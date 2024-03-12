@@ -18,6 +18,10 @@ public struct LocalVMImage: Equatable {
     }
 
     public var state: VMImageState {
+        if self.path.pathComponents.starts(with: Paths.vmWorkingStorageDirectory.pathComponents) {
+            return .running
+        }
+
         if path.path.hasSuffix(".vmtemplate") {
             return .ready
         }
@@ -52,7 +56,8 @@ public struct LocalVMImage: Equatable {
     }
 }
 
-public enum VMImageState: String {
-    case packaged = "Packaged"
-    case ready = "Ready"
+public enum VMImageState: String, CaseIterable {
+    case packaged = "📦 Packaged"
+    case ready = "💾 Ready"
+    case running = "▶️ Running"
 }
