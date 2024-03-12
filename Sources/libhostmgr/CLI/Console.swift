@@ -80,7 +80,8 @@ public struct Console: Consolable {
     @discardableResult public func printTable(
         data: Table,
         columnTitles: [String] = [],
-        columnSeparator: String = "  "
+        titleRowSeparator: Character? = "-",
+        columnSeparator: String = " | "
     ) -> Self {
 
         if data.isEmpty {
@@ -89,9 +90,14 @@ public struct Console: Consolable {
         }
 
         // Prepend the Column Titles, if present
-        let table = columnTitles.isEmpty ? data : [columnTitles] + data
+        var table = columnTitles.isEmpty ? data : [columnTitles] + data
 
         let columnCount = columnCounts(for: table)
+
+        if let titleRowSeparator {
+            let headerSeparatorRow = columnCount.map { String(repeating: titleRowSeparator, count: $0) }
+            table.insert(headerSeparatorRow, at: 1)
+        }
 
         for row in table {
             let string = zip(row, columnCount).map(self.padString).joined(separator: columnSeparator)
@@ -330,7 +336,7 @@ extension Console {
     public typealias Table = [TableRow]
 
     func columnCounts(for table: Table) -> [Int] {
-        transpose(matrix: table).map { $0.map(\.count).max() ?? 0 }
+        transpose(matrix: table).map { $0.map(\.monospaceWidth).max() ?? 0 }
     }
 
     func transpose(matrix: Table) -> Table {

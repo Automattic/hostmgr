@@ -1,9 +1,14 @@
 import Foundation
 
 extension String {
-
     public var trimmingWhitespace: String {
         trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    // In a Terminal, emoji characters take near to twice the width as regular characters
+    // This thus accounts for that difference, to reflect the number of Terminal columns this string will span
+    public var monospaceWidth: Int {
+        self.count + self.unicodeScalars.filter(\.properties.isEmojiPresentation).count
     }
 }
 
