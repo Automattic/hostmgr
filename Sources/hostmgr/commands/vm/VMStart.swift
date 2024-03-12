@@ -64,6 +64,7 @@ struct VMStartCommand: AsyncParsableCommand {
             }
 
             Console.success("Booted \(name) in \(Format.elapsedTime(between: startTime, and: .now))")
+            Console.success("VM Handle: \(self.handle)")
         } catch let error as HostmgrError {
             Console.crash(error)
         }
