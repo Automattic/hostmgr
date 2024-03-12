@@ -46,7 +46,7 @@ struct VMListCommand: AsyncParsableCommand {
 
         Console.printTable(
             data: data,
-            columnTitles: ["Location", "Filename", "State", "Architecture", "Size"]
+            columnTitles: ["Location", "Filename", "State", "Size"]
         )
     }
 
@@ -55,7 +55,6 @@ struct VMListCommand: AsyncParsableCommand {
             "Local",
             localVM.name,
             localVM.state.rawValue,
-            "", // localVM.architecture.rawValue,
             Format.fileBytes(try localVM.fileSize)
         ]
     }
@@ -65,7 +64,6 @@ struct VMListCommand: AsyncParsableCommand {
             "Remote",
             remoteVM.name,
             "Packaged",
-            "",
             Format.fileBytes(remoteVM.size)
         ]
     }
