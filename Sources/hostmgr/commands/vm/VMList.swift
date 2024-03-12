@@ -37,7 +37,7 @@ struct VMListCommand: AsyncParsableCommand {
         var data = Console.Table()
 
         if self.location.includesLocal {
-            data.append(contentsOf: try await vmManager.list(sortedBy: .name).map(self.format))
+            data.append(contentsOf: try await vmManager.list(sortedBy: .state).map(self.format))
         }
 
         if self.location.includesRemote {
