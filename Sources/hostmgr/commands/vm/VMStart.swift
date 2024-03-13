@@ -50,6 +50,7 @@ struct VMStartCommand: AsyncParsableCommand {
                 waitForNetworking: !skipNetworkChecks
             )
 
+            Console.success("Starting VM with handle: \(self.handle)")
             try await vmManager.startVM(configuration: configuration)
 
             if skipNetworkChecks {
@@ -66,8 +67,7 @@ struct VMStartCommand: AsyncParsableCommand {
             }
 
             Console.success("Booted \(name) in \(Format.elapsedTime(between: startTime, and: .now))")
-            Console.success("- VM Handle: \(self.handle)")
-            Console.success("- VM IP Address: \(ipAddress)")
+            Console.success("VM SSH IP Address: \(ipAddress)")
         } catch let error as HostmgrError {
             Console.crash(error)
         }
