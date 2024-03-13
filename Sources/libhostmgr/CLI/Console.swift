@@ -81,7 +81,8 @@ public struct Console: Consolable {
         data: Table,
         columnTitles: [String] = [],
         titleRowSeparator: Character? = "-",
-        columnSeparator: String = " | "
+        columnSeparator: String = " | ",
+        columnsAlignments: [TableColumnAlignment] = []
     ) -> Self {
 
         if data.isEmpty {
@@ -100,7 +101,11 @@ public struct Console: Consolable {
         }
 
         for row in table {
-            let string = zip(row, columnCount).map(self.padString).joined(separator: columnSeparator)
+            let string = zip(row, columnCount.indices).map { text, colIdx in
+                let colWidth = columnCount[colIdx]
+                let alignment: TableColumnAlignment = columnsAlignments.indices ~= colIdx ? columnsAlignments[colIdx] : .left
+                return self.padString(text, toLength: colWidth, align: alignment)
+            }.joined(separator: columnSeparator)
             self.terminal.print(string)
         }
 
@@ -311,8 +316,8 @@ extension Console {
         return Console().printList(list, title: title)
     }
 
-    @discardableResult public static func printTable(data: TableConvertable, columnTitles: [String] = []) -> Self {
-        return Console().printTable(data: data.asTable(), columnTitles: columnTitles)
+    @discardableResult public static func printTable(data: TableConvertable, columnTitles: [String] = [], columnsAlignments: [TableColumnAlignment] = []) -> Self {
+        return Console().printTable(data: data.asTable(), columnTitles: columnTitles, columnsAlignments: columnsAlignments)
     }
 
     public static func crash(_ error: HostmgrError) -> Never {
@@ -334,6 +339,10 @@ extension Console {
 
     public typealias TableRow = [String]
     public typealias Table = [TableRow]
+    public enum TableColumnAlignment {
+        case left
+        case right
+    }
 
     func columnCounts(for table: Table) -> [Int] {
         transpose(matrix: table).map { $0.map(\.monospaceWidth).max() ?? 0 }
@@ -355,8 +364,9 @@ extension Console {
         return newTable
     }
 
-    func padString(_ string: String, toLength length: Int) -> String {
-        string.padding(toLength: length, withPad: " ", startingAt: 0)
+    func padString(_ string: String, toLength length: Int, align: TableColumnAlignment) -> String {
+        let leftPad = align == .right ? String(repeating: " ", count: max(length - string.count, 0)) : ""
+        return "\(leftPad)\(string)".padding(toLength: length, withPad: " ", startingAt: 0)
     }
 }
 

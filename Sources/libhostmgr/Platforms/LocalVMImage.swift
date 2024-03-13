@@ -51,7 +51,13 @@ public struct LocalVMImage: Equatable {
 
     public var fileSize: Int {
         get throws {
-            try FileManager.default.size(ofObjectAt: path)
+            try FileManager.default.size(ofObjectAt: path, useAllocatedSize: false)
+        }
+    }
+
+    public var allocatedFileSize: Int {
+        get throws {
+            try FileManager.default.size(ofObjectAt: path, useAllocatedSize: true)
         }
     }
 }
