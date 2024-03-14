@@ -36,19 +36,16 @@ extension FileManager {
         return values.volumeAvailableCapacityForImportantUsage ?? 0
     }
 
-    public func size(ofObjectAt url: URL, useAllocatedSize: Bool = false) throws -> Int {
+    public func size(ofObjectAt url: URL) throws -> Int {
         if try directoryExists(at: url) {
-            return try directorySize(of: url, useAllocatedSize: useAllocatedSize)
+            return try directorySize(of: url)
         } else {
-            return try fileSize(of: url, useAllocatedSize: useAllocatedSize)
+            return try fileSize(of: url)
         }
     }
 
-    func fileSize(of url: URL, useAllocatedSize: Bool) throws -> Int {
-        let key: URLResourceKey = useAllocatedSize ? .totalFileAllocatedSizeKey : .totalFileSizeKey
-        let property: KeyPath<URLResourceValues, Int?> = useAllocatedSize ? \.totalFileAllocatedSize : \.totalFileSize
-
-        guard let size = try url.resourceValues(forKeys: [key])[keyPath: property] else {
+    func fileSize(of url: URL) throws -> Int {
+        guard let size = try url.resourceValues(forKeys: [.totalFileSizeKey]).totalFileSize else {
             throw CocoaError(.fileReadUnknown)
         }
 
@@ -56,19 +53,16 @@ extension FileManager {
     }
 
     /// returns total allocated size of a the directory including its subFolders or not
-    func directorySize(of url: URL, useAllocatedSize: Bool) throws -> Int {
-        let key: URLResourceKey = useAllocatedSize ? .totalFileAllocatedSizeKey : .totalFileSizeKey
-        let property: KeyPath<URLResourceValues, Int?> = useAllocatedSize ? \.totalFileAllocatedSize : \.totalFileSize
-
+    func directorySize(of url: URL) throws -> Int {
         guard
-            let enumerator = enumerator(at: url, includingPropertiesForKeys: [key]),
+            let enumerator = enumerator(at: url, includingPropertiesForKeys: [.totalFileSizeKey]),
             let urls = enumerator.allObjects as? [URL]
         else {
             return 0
         }
 
         let sizes = try urls
-            .compactMap { try $0.resourceValues(forKeys: [key])[keyPath: property] }
+            .compactMap { try $0.resourceValues(forKeys: [.totalFileSizeKey]).totalFileSize }
 
         return sizes.reduce(0, +)
      }
