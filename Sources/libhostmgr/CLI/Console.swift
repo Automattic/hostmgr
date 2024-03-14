@@ -82,7 +82,7 @@ public struct Console: Consolable {
         columnTitles: [String] = [],
         titleRowSeparator: Character? = "-",
         columnSeparator: String = " | ",
-        columnsAlignments: [TableColumnAlignment] = []
+        columnAlignments: [TableColumnAlignment] = []
     ) -> Self {
 
         if data.isEmpty {
@@ -103,7 +103,7 @@ public struct Console: Consolable {
         for row in table {
             let string = zip(row, columnCount.indices).map { text, colIdx in
                 let colWidth = columnCount[colIdx]
-                let alignment: TableColumnAlignment = columnsAlignments.indices ~= colIdx ? columnsAlignments[colIdx] : .left
+                let alignment: TableColumnAlignment = columnAlignments.indices ~= colIdx ? columnAlignments[colIdx] : .left
                 return self.padString(text, toLength: colWidth, align: alignment)
             }.joined(separator: columnSeparator)
             self.terminal.print(string)
@@ -316,8 +316,8 @@ extension Console {
         return Console().printList(list, title: title)
     }
 
-    @discardableResult public static func printTable(data: TableConvertable, columnTitles: [String] = [], columnsAlignments: [TableColumnAlignment] = []) -> Self {
-        return Console().printTable(data: data.asTable(), columnTitles: columnTitles, columnsAlignments: columnsAlignments)
+    @discardableResult public static func printTable(data: TableConvertable, columnTitles: [String] = [], columnAlignments: [TableColumnAlignment] = []) -> Self {
+        return Console().printTable(data: data.asTable(), columnTitles: columnTitles, columnAlignments: columnAlignments)
     }
 
     public static func crash(_ error: HostmgrError) -> Never {

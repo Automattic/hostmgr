@@ -47,7 +47,7 @@ struct VMListCommand: AsyncParsableCommand {
         Console.printTable(
             data: data,
             columnTitles: ["Location", "Filename", "State", "Size"],
-            columnsAlignments: [.left, .left, .left, .right]
+            columnAlignments: [.left, .left, .left, .right]
         )
     }
 
