@@ -95,7 +95,7 @@ public struct Console: Consolable {
 
         let columnCount = columnCounts(for: table)
 
-        if let titleRowSeparator {
+        if !columnTitles.isEmpty, let titleRowSeparator {
             let headerSeparatorRow = columnCount.map { String(repeating: titleRowSeparator, count: $0) }
             table.insert(headerSeparatorRow, at: 1)
         }
