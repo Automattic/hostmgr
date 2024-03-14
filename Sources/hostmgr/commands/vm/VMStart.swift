@@ -58,13 +58,12 @@ struct VMStartCommand: AsyncParsableCommand {
                 return
             }
 
-            let ipAddress: IPv4Address
-            if waitForever {
-                let timeout = Duration.seconds(1_000_000_000) // Doesn't crash like .greatestFiniteMagnitude
-                ipAddress = try await vmManager.waitForVMStartup(for: configuration, timeout: timeout)
+            let timeout: Duration = if waitForever {
+                .seconds(1_000_000_000) // Doesn't crash like .greatestFiniteMagnitude
             } else {
-                ipAddress = try await vmManager.waitForVMStartup(for: configuration, timeout: .seconds(30))
+                .seconds(30)
             }
+            let ipAddress = try await vmManager.waitForVMStartup(for: configuration, timeout: timeout)
 
             Console.success("Booted \(name) in \(Format.elapsedTime(between: startTime, and: .now))")
             Console.success("VM SSH IP Address: \(ipAddress)")
