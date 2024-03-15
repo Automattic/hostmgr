@@ -103,7 +103,7 @@ public struct Console: Consolable {
         for row in table {
             let string = zip(row, columnCount.indices).map { text, colIdx in
                 let colWidth = columnCount[colIdx]
-                let alignment: TableColumnAlignment = columnAlignments.indices ~= colIdx ? columnAlignments[colIdx] : .left
+                let alignment = columnAlignments.indices ~= colIdx ? columnAlignments[colIdx] : .left
                 return self.padString(text, toLength: colWidth, align: alignment)
             }.joined(separator: columnSeparator)
             self.terminal.print(string)
@@ -316,8 +316,16 @@ extension Console {
         return Console().printList(list, title: title)
     }
 
-    @discardableResult public static func printTable(data: TableConvertable, columnTitles: [String] = [], columnAlignments: [TableColumnAlignment] = []) -> Self {
-        return Console().printTable(data: data.asTable(), columnTitles: columnTitles, columnAlignments: columnAlignments)
+    @discardableResult public static func printTable(
+        data: TableConvertable,
+        columnTitles: [String] = [],
+        columnAlignments: [TableColumnAlignment] = []
+    ) -> Self {
+        return Console().printTable(
+            data: data.asTable(),
+            columnTitles: columnTitles,
+            columnAlignments: columnAlignments
+        )
     }
 
     public static func crash(_ error: HostmgrError) -> Never {
