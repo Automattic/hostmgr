@@ -51,9 +51,9 @@ final class MultipartUploadFileTests: XCTestCase {
         XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 4094), 4094)                     //    4kb
         XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 4_094_000), 4_094_000)           //    4mb
         XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 40_094_000), 5_000_000)          //   40mb
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 400_094_000), 33_341_166)        //  400mb
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 4_000_094_000), 333_341_166)     //    4gb
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 40_000_094_000), 3_333_341_166)  //   40gb
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 400_094_000), 8_001_880)         //  400mb
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 4_000_094_000), 80_001_880)      //    4gb
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 40_000_094_000), 800_001_880)    //   40gb
         XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 400_000_094_000), 4_900_000_000) //  400gb
         XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 400_000_094_000), 4_900_000_000) //    4tb
     }
