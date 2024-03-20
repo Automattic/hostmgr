@@ -10,6 +10,7 @@ class MultipartUploadOperation: NSObject, RequestPerformer {
     let path: URL
     let credentials: AWSCredentials
     let endpoint: S3Endpoint
+    let allowResume: Bool
 
     let urlSession: URLSession = .shared
 
@@ -47,12 +48,13 @@ class MultipartUploadOperation: NSObject, RequestPerformer {
     private var progressCallback: ProgressCallback?
     private var startDate: Date!
 
-    init(bucket: String, key: String, path: URL, credentials: AWSCredentials, endpoint: S3Endpoint = .default) throws {
+    init(bucket: String, key: String, path: URL, credentials: AWSCredentials, endpoint: S3Endpoint = .default, allowResume: Bool) throws {
         self.bucket = bucket
         self.key = key
         self.path = path
         self.credentials = credentials
         self.endpoint = endpoint
+        self.allowResume = allowResume
 
         self.file = try MultipartUploadFile(path: path)
         self.progress = Progress.from(self.file.fileSize)
@@ -66,7 +68,7 @@ class MultipartUploadOperation: NSObject, RequestPerformer {
         let alreadyUploadedParts: [AWSUploadedPart]
 
         // Check if pending upload requests matching the file to be uploaded
-        if let existingPartsResponse = try await findMostRecentUncompletedParts() {
+        if self.allowResume, let existingPartsResponse = try await findMostRecentUncompletedParts() {
             alreadyUploadedParts = existingPartsResponse.parts
             uploadId = existingPartsResponse.uploadId
         } else {
