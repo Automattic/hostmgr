@@ -109,6 +109,37 @@ struct AWSRequest {
             endpoint: endpoint
         )
     }
+  
+    static func listMultipartUploadsRequest(
+        bucket: String,
+        key: String,
+        credentials: AWSCredentials
+    ) -> AWSRequest {
+        AWSRequest(
+            verb: .get,
+            bucket: bucket,
+            query: [
+                URLQueryItem(name: "uploads", value: nil),
+                URLQueryItem(name: "prefix", value: String(key.trimmingPrefix("/"))),
+            ],
+            credentials: credentials
+        )
+    }
+    
+    static func listPartsRequest(
+        bucket: String,
+        key: String,
+        uploadId: String,
+        credentials: AWSCredentials
+    ) -> AWSRequest {
+        AWSRequest(
+            verb: .get,
+            bucket: bucket,
+            path: key,
+            query: [URLQueryItem(name: "uploadId", value: uploadId)],
+            credentials: credentials
+        )
+    }
 
     static func createMultipartUploadRequest(
         bucket: String,
@@ -185,7 +216,9 @@ extension AWSRequest {
     }
 
     var canonicalQueryString: String {
-        queryItems.asEscapedQueryString
+        queryItems
+            .sorted { $0.name < $1.name }
+            .asEscapedQueryString
     }
 
     var canonicalHeaders: HttpHeaders {
