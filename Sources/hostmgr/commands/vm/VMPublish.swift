@@ -11,6 +11,7 @@ struct VMPublishCommand: AsyncParsableCommand {
 
     enum CodingKeys: CodingKey {
         case name
+        case noResume
     }
 
     @Argument(
@@ -18,11 +19,14 @@ struct VMPublishCommand: AsyncParsableCommand {
     )
     var name: String
 
+    @Flag(help: "Do not attempt to resume previous uncompleted uploads")
+    var noResume = false
+
     let vmLibrary = RemoteVMLibrary()
 
     func run() async throws {
-        let progress = try Console.startImageUpload(Paths.toVMTemplate(named: name))
-        try await vmLibrary.publish(vmNamed: name, progressCallback: progress.update)
+        let progress = try Console.startImageUpload(Paths.toArchivedVM(named: name))
+        try await vmLibrary.publish(vmNamed: name, allowResume: !noResume, progressCallback: progress.update)
         progress.succeed()
     }
 }

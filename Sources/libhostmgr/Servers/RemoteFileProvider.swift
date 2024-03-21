@@ -9,7 +9,12 @@ public protocol ReadableRemoteFileProvider: RemoteFileProvider {
 }
 
 protocol WritableRemoteFileProvider: RemoteFileProvider {
-    func uploadFile(at source: URL, to destination: String, progress: @escaping ProgressCallback) async throws
+    func uploadFile(
+        at source: URL,
+        to destination: String,
+        allowResume: Bool,
+        progress: @escaping ProgressCallback
+    ) async throws
 }
 
 public extension [ReadableRemoteFileProvider] {

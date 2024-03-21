@@ -77,98 +77,6 @@ struct AWSRequest {
     public var headers: HttpHeaders {
         HttpHeaders().adding(request.allHTTPHeaderFields!)
     }
-
-    static func headRequest(
-        bucket: String,
-        key: String,
-        credentials: AWSCredentials
-    ) -> AWSRequest {
-        AWSRequest(
-            verb: .head,
-            bucket: bucket,
-            path: key,
-            credentials: credentials
-        )
-    }
-
-    static func downloadRequest(
-        bucket: String,
-        key: String,
-        range: Range<Int>? = nil,
-        credentials: AWSCredentials,
-        endpoint: S3Endpoint = .default,
-        date: Date = Date()
-    ) -> AWSRequest {
-        AWSRequest(
-            verb: .get,
-            bucket: bucket,
-            path: key,
-            range: range,
-            credentials: credentials,
-            date: date,
-            endpoint: endpoint
-        )
-    }
-
-    static func createMultipartUploadRequest(
-        bucket: String,
-        key: String,
-        path: URL,
-        credentials: AWSCredentials
-    ) -> AWSRequest {
-        AWSRequest(
-            verb: .post,
-            bucket: bucket,
-            path: key,
-            query: [URLQueryItem(name: "uploads", value: nil)],
-            credentials: credentials
-        )
-    }
-
-    static func uploadPartRequest(
-        bucket: String,
-        key: String,
-        part: MultipartUploadOperation.AWSPartData,
-        credentials: AWSCredentials,
-        endpoint: S3Endpoint = .default
-    ) throws -> AWSRequest {
-        AWSRequest(
-            verb: .put,
-            bucket: bucket,
-            path: key,
-            query: [
-                URLQueryItem(name: "partNumber", value: String(part.number)),
-                URLQueryItem(name: "uploadId", value: part.uploadId)
-            ],
-            content: part.data,
-            contentSignature: part.sha256Hash,
-            credentials: credentials,
-            endpoint: endpoint
-        )
-    }
-
-    static func completeMultipartUploadRequest(
-        bucket: String,
-        key: String,
-        uploadId: String,
-        data: Data,
-        credentials: AWSCredentials,
-        date: Date = Date()
-    ) -> AWSRequest {
-        AWSRequest(
-            verb: .post,
-            bucket: bucket,
-            path: key,
-            query: [URLQueryItem(name: "uploadId", value: uploadId)],
-            content: data,
-            contentSignature: sha256Hash(data: data),
-            credentials: credentials,
-            date: date,
-            extraHeaders: [
-                "Content-Type": "application/xml"
-            ]
-        )
-    }
 }
 
 // MARK: Canonical Requeat
@@ -185,7 +93,9 @@ extension AWSRequest {
     }
 
     var canonicalQueryString: String {
-        queryItems.asEscapedQueryString
+        queryItems
+            .sorted { $0.name < $1.name }
+            .asEscapedQueryString
     }
 
     var canonicalHeaders: HttpHeaders {
@@ -262,5 +172,128 @@ extension AWSRequest {
         AWSRequest(verb: .get, bucket: bucket, query: [
             URLQueryItem(name: "prefix", value: prefix)
         ], credentials: credentials)
+    }
+
+    static func headRequest(
+        bucket: String,
+        key: String,
+        credentials: AWSCredentials
+    ) -> AWSRequest {
+        AWSRequest(
+            verb: .head,
+            bucket: bucket,
+            path: key,
+            credentials: credentials
+        )
+    }
+
+    static func downloadRequest(
+        bucket: String,
+        key: String,
+        range: Range<Int>? = nil,
+        credentials: AWSCredentials,
+        endpoint: S3Endpoint = .default,
+        date: Date = Date()
+    ) -> AWSRequest {
+        AWSRequest(
+            verb: .get,
+            bucket: bucket,
+            path: key,
+            range: range,
+            credentials: credentials,
+            date: date,
+            endpoint: endpoint
+        )
+    }
+
+    static func listMultipartUploadsRequest(
+        bucket: String,
+        key: String,
+        credentials: AWSCredentials
+    ) -> AWSRequest {
+        AWSRequest(
+            verb: .get,
+            bucket: bucket,
+            query: [
+                URLQueryItem(name: "uploads", value: nil),
+                URLQueryItem(name: "prefix", value: String(key.trimmingPrefix("/")))
+            ],
+            credentials: credentials
+        )
+    }
+
+    static func listPartsRequest(
+        bucket: String,
+        key: String,
+        uploadId: String,
+        credentials: AWSCredentials
+    ) -> AWSRequest {
+        AWSRequest(
+            verb: .get,
+            bucket: bucket,
+            path: key,
+            query: [URLQueryItem(name: "uploadId", value: uploadId)],
+            credentials: credentials
+        )
+    }
+
+    static func createMultipartUploadRequest(
+        bucket: String,
+        key: String,
+        path: URL,
+        credentials: AWSCredentials
+    ) -> AWSRequest {
+        AWSRequest(
+            verb: .post,
+            bucket: bucket,
+            path: key,
+            query: [URLQueryItem(name: "uploads", value: nil)],
+            credentials: credentials
+        )
+    }
+
+    static func uploadPartRequest(
+        bucket: String,
+        key: String,
+        part: MultipartUploadOperation.AWSPartData,
+        credentials: AWSCredentials,
+        endpoint: S3Endpoint = .default
+    ) throws -> AWSRequest {
+        AWSRequest(
+            verb: .put,
+            bucket: bucket,
+            path: key,
+            query: [
+                URLQueryItem(name: "partNumber", value: String(part.number)),
+                URLQueryItem(name: "uploadId", value: part.uploadId)
+            ],
+            content: part.data,
+            contentSignature: part.sha256Hash,
+            credentials: credentials,
+            endpoint: endpoint
+        )
+    }
+
+    static func completeMultipartUploadRequest(
+        bucket: String,
+        key: String,
+        uploadId: String,
+        data: Data,
+        credentials: AWSCredentials,
+        date: Date = Date()
+    ) -> AWSRequest {
+        AWSRequest(
+            verb: .post,
+            bucket: bucket,
+            path: key,
+            query: [URLQueryItem(name: "uploadId", value: uploadId)],
+            content: data,
+            contentSignature: sha256Hash(data: data),
+            credentials: credentials,
+            date: date,
+            extraHeaders: [
+                "Content-Type": "application/xml"
+            ]
+        )
     }
 }

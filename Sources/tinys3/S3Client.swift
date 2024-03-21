@@ -99,13 +99,15 @@ public struct S3Client: RequestPerformer {
         objectAtPath path: URL,
         toBucket bucket: String,
         key: String,
+        allowResume: Bool = true,
         progressCallback: ProgressCallback? = nil
     ) async throws {
         let operation = try MultipartUploadOperation(
             bucket: bucket,
             key: key,
             path: path,
-            credentials: self.credentials
+            credentials: self.credentials,
+            allowResume: allowResume
         )
 
         try await operation.start(progressCallback)

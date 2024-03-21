@@ -10,6 +10,7 @@ class MultipartUploadOperation: NSObject, RequestPerformer {
     let path: URL
     let credentials: AWSCredentials
     let endpoint: S3Endpoint
+    let allowResume: Bool
 
     let urlSession: URLSession = .shared
 
@@ -47,12 +48,20 @@ class MultipartUploadOperation: NSObject, RequestPerformer {
     private var progressCallback: ProgressCallback?
     private var startDate: Date!
 
-    init(bucket: String, key: String, path: URL, credentials: AWSCredentials, endpoint: S3Endpoint = .default) throws {
+    init(
+        bucket: String,
+        key: String,
+        path: URL,
+        credentials: AWSCredentials,
+        endpoint: S3Endpoint = .default,
+        allowResume: Bool
+    ) throws {
         self.bucket = bucket
         self.key = key
         self.path = path
         self.credentials = credentials
         self.endpoint = endpoint
+        self.allowResume = allowResume
 
         self.file = try MultipartUploadFile(path: path)
         self.progress = Progress.from(self.file.fileSize)
@@ -62,19 +71,33 @@ class MultipartUploadOperation: NSObject, RequestPerformer {
         self.startDate = Date()
         self.progressCallback = progressCallback
 
-        let createRequest = AWSRequest.createMultipartUploadRequest(
-            bucket: bucket,
-            key: key,
-            path: path,
-            credentials: self.credentials
-        )
+        let uploadId: String
+        let alreadyUploadedParts: [AWSUploadedPart]
 
-        let createResponse = try S3CreateMultipartUploadResponse.from(response: await perform(createRequest).validate())
+        // Check if pending upload requests matching the file to be uploaded
+        if self.allowResume, let existingPartsResponse = try await findMostRecentUncompletedParts() {
+            alreadyUploadedParts = existingPartsResponse.parts
+            uploadId = existingPartsResponse.uploadId
+        } else {
+            alreadyUploadedParts = []
+            let createRequest = AWSRequest.createMultipartUploadRequest(
+                bucket: bucket,
+                key: key,
+                path: path,
+                credentials: self.credentials
+            )
+            let createResponse = try S3CreateMultipartUploadResponse.from(response: await perform(createRequest))
+            uploadId = createResponse.uploadId
+        }
 
-        let uploadId = createResponse.uploadId
-
-        let uploadedParts = try await file.uploadParts.parallelMap(parallelism: 8) {
-           try await self.uploadPart(withUploadId: uploadId, forRange: $0.1, atIndex: $0.0)
+        let uploadedParts = try await file.uploadParts.parallelMap(parallelism: 8) { part in
+            let existingPart = alreadyUploadedParts.first(where: { $0.number == part.0 })
+            return try await self.uploadPart(
+                withUploadId: uploadId,
+                forRange: part.1,
+                atIndex: part.0,
+                existingPart: existingPart
+            )
         }
 
         let builder = S3MultipartUploadCompleteXMLBuilder().addParts(uploadedParts)
@@ -90,10 +113,30 @@ class MultipartUploadOperation: NSObject, RequestPerformer {
         try await perform(finalizeRequest).validate()
     }
 
+    func findMostRecentUncompletedParts() async throws -> S3ListPartsResponse? {
+        let listPendingUploadRequest = AWSRequest.listMultipartUploadsRequest(
+            bucket: bucket,
+            key: key,
+            credentials: self.credentials
+        )
+        let response = try S3ListMultipartUploadResponse.from(response: await perform(listPendingUploadRequest))
+        if let latestUpload = response.mostRecentUpload {
+            let listPartsRequest = AWSRequest.listPartsRequest(
+                bucket: bucket,
+                key: key,
+                uploadId: latestUpload.uploadId,
+                credentials: self.credentials
+            )
+            return try S3ListPartsResponse.from(response: await perform(listPartsRequest).validate())
+        }
+        return nil
+    }
+
     func uploadPart(
         withUploadId uploadId: String,
         forRange range: Range<Int>,
-        atIndex index: Int
+        atIndex index: Int,
+        existingPart: AWSUploadedPart?
     ) async throws -> AWSUploadedPart {
 
         let part = AWSPartData(
@@ -101,6 +144,15 @@ class MultipartUploadOperation: NSObject, RequestPerformer {
             number: index,
             data: try await file[range]
         )
+
+        if let existingPart, existingPart.eTag == "\"\(md5Hash(data: part.data))\"" {
+            // Skipping part as it has already been uploaded with matching ETag/md5
+            self.progress.completedUnitCount += Int64(part.data.count)
+            self.progress.estimateThroughput(fromStartDate: self.startDate)
+            self.progressCallback?(self.progress)
+
+            return existingPart
+        }
 
         let request = try AWSRequest.uploadPartRequest(
             bucket: bucket,

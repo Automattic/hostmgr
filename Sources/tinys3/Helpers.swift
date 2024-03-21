@@ -46,6 +46,12 @@ func sha256Hash(string: String) -> String {
     sha256Hash(data: Data(string.utf8))
 }
 
+func md5Hash(data: Data) -> String {
+    var hasher = Insecure.MD5()
+    hasher.update(data: data)
+    return hasher.finalize().lowercaseHexValue
+}
+
 func formattedTimestamp(from date: Date = Date()) -> String {
     let formatter = DateFormatter()
     formatter.timeZone = TimeZone(abbreviation: "UTC")

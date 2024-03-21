@@ -79,11 +79,17 @@ extension S3Server: ReadableRemoteFileProvider {
 
 extension S3Server: WritableRemoteFileProvider {
 
-    public func uploadFile(at source: URL, to destination: String, progress: @escaping ProgressCallback) async throws {
+    public func uploadFile(
+        at source: URL,
+        to destination: String,
+        allowResume: Bool = true,
+        progress: @escaping ProgressCallback
+    ) async throws {
         try await s3Client.upload(
             objectAtPath: source,
             toBucket: self.bucketName,
             key: destination,
+            allowResume: allowResume,
             progressCallback: progress
         )
     }
