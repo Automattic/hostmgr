@@ -209,7 +209,8 @@ extension AWSRequest {
     static func listMultipartUploadsRequest(
         bucket: String,
         key: String,
-        credentials: AWSCredentials
+        credentials: AWSCredentials,
+        date: Date = Date()
     ) -> AWSRequest {
         AWSRequest(
             verb: .get,
@@ -218,7 +219,8 @@ extension AWSRequest {
                 URLQueryItem(name: "uploads", value: nil),
                 URLQueryItem(name: "prefix", value: String(key.trimmingPrefix("/")))
             ],
-            credentials: credentials
+            credentials: credentials,
+            date: date
         )
     }
 
@@ -226,14 +228,16 @@ extension AWSRequest {
         bucket: String,
         key: String,
         uploadId: String,
-        credentials: AWSCredentials
+        credentials: AWSCredentials,
+        date: Date = Date()
     ) -> AWSRequest {
         AWSRequest(
             verb: .get,
             bucket: bucket,
             path: key,
             query: [URLQueryItem(name: "uploadId", value: uploadId)],
-            credentials: credentials
+            credentials: credentials,
+            date: date
         )
     }
 
