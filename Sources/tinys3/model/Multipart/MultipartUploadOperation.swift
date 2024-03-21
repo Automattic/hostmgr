@@ -48,7 +48,14 @@ class MultipartUploadOperation: NSObject, RequestPerformer {
     private var progressCallback: ProgressCallback?
     private var startDate: Date!
 
-    init(bucket: String, key: String, path: URL, credentials: AWSCredentials, endpoint: S3Endpoint = .default, allowResume: Bool) throws {
+    init(
+        bucket: String,
+        key: String,
+        path: URL,
+        credentials: AWSCredentials,
+        endpoint: S3Endpoint = .default,
+        allowResume: Bool
+    ) throws {
         self.bucket = bucket
         self.key = key
         self.path = path
@@ -79,13 +86,18 @@ class MultipartUploadOperation: NSObject, RequestPerformer {
                 path: path,
                 credentials: self.credentials
             )
-            let createResponse = try S3CreateMultipartUploadResponse.from(response: await perform(createRequest).validate())
+            let createResponse = try S3CreateMultipartUploadResponse.from(response: await perform(createRequest))
             uploadId = createResponse.uploadId
         }
-        
+
         let uploadedParts = try await file.uploadParts.parallelMap(parallelism: 8) { part in
             let existingPart = alreadyUploadedParts.first(where: { $0.number == part.0 })
-            return try await self.uploadPart(withUploadId: uploadId, forRange: part.1, atIndex: part.0, existingPart: existingPart)
+            return try await self.uploadPart(
+                withUploadId: uploadId,
+                forRange: part.1,
+                atIndex: part.0,
+                existingPart: existingPart
+            )
         }
 
         let builder = S3MultipartUploadCompleteXMLBuilder().addParts(uploadedParts)
@@ -100,15 +112,15 @@ class MultipartUploadOperation: NSObject, RequestPerformer {
 
         try await perform(finalizeRequest).validate()
     }
-    
+
     func findMostRecentUncompletedParts() async throws -> S3ListPartsResponse? {
         let listPendingUploadRequest = AWSRequest.listMultipartUploadsRequest(
             bucket: bucket,
             key: key,
             credentials: self.credentials
         )
-        let pendingUploadResponse = try S3ListMultipartUploadResponse.from(response: await perform(listPendingUploadRequest).validate())
-        if let latestUpload = pendingUploadResponse.mostRecentUpload {
+        let response = try S3ListMultipartUploadResponse.from(response: await perform(listPendingUploadRequest))
+        if let latestUpload = response.mostRecentUpload {
             let listPartsRequest = AWSRequest.listPartsRequest(
                 bucket: bucket,
                 key: key,
@@ -138,7 +150,7 @@ class MultipartUploadOperation: NSObject, RequestPerformer {
             self.progress.completedUnitCount += Int64(part.data.count)
             self.progress.estimateThroughput(fromStartDate: self.startDate)
             self.progressCallback?(self.progress)
-            
+
             return existingPart
         }
 

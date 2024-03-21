@@ -18,7 +18,7 @@ struct VMPublishCommand: AsyncParsableCommand {
         help: "The name of the image you would like to publish"
     )
     var name: String
-  
+
     @Flag(help: "Do not attempt to resume previous uncompleted uploads")
     var noResume = false
 

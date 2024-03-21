@@ -20,11 +20,11 @@ struct S3ListMultipartUploadResponse {
         guard let root = doc.rootElement(), root.name == "ListMultipartUploadsResult" else {
             throw InvalidDataError()
         }
-        
+
         guard let bucketNode = root.elements(forName: "Bucket").first, let bucketName = bucketNode.stringValue else {
             throw InvalidDataError()
         }
-        
+
         let uploads = try root.elements(forName: "Upload").map {
             guard
                 let key = $0.elements(forName: "Key").first?.stringValue,
@@ -36,10 +36,10 @@ struct S3ListMultipartUploadResponse {
             }
             return S3MultipartUpload(key: key, uploadId: uploadId, initiatedDate: initiatedDate)
         }
-        
+
         return S3ListMultipartUploadResponse(bucket: bucketName, uploads: uploads)
     }
-    
+
     var mostRecentUpload: S3MultipartUpload? {
         self.uploads.max { $0.initiatedDate < $1.initiatedDate }
     }

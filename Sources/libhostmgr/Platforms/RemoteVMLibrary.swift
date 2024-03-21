@@ -91,7 +91,11 @@ public struct RemoteVMLibrary {
     /// Make a local image available for others to use (by publishing it to S3)
     ///
     /// This method is the preferred way to deploy a VM image
-    public func publish(vmNamed name: String, allowResume: Bool, progressCallback: @escaping ProgressCallback) async throws {
+    public func publish(
+        vmNamed name: String,
+        allowResume: Bool,
+        progressCallback: @escaping ProgressCallback
+    ) async throws {
         try await S3Server.vmImages.uploadFile(
             at: Paths.toArchivedVM(named: name),
             to: "images/" + Paths.toArchivedVM(named: name).lastPathComponent,

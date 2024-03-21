@@ -173,7 +173,7 @@ extension AWSRequest {
             URLQueryItem(name: "prefix", value: prefix)
         ], credentials: credentials)
     }
-    
+
     static func headRequest(
         bucket: String,
         key: String,
@@ -205,7 +205,7 @@ extension AWSRequest {
             endpoint: endpoint
         )
     }
-  
+
     static func listMultipartUploadsRequest(
         bucket: String,
         key: String,
@@ -216,12 +216,12 @@ extension AWSRequest {
             bucket: bucket,
             query: [
                 URLQueryItem(name: "uploads", value: nil),
-                URLQueryItem(name: "prefix", value: String(key.trimmingPrefix("/"))),
+                URLQueryItem(name: "prefix", value: String(key.trimmingPrefix("/")))
             ],
             credentials: credentials
         )
     }
-    
+
     static func listPartsRequest(
         bucket: String,
         key: String,

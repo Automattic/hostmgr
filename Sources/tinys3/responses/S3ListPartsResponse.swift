@@ -22,7 +22,7 @@ struct S3ListPartsResponse {
         guard let root = doc.rootElement(), root.name == "ListPartsResult" else {
             throw InvalidDataError()
         }
-        
+
         guard let bucketName = root.elements(forName: "Bucket").first?.stringValue else {
             throw InvalidDataError()
         }
@@ -32,7 +32,7 @@ struct S3ListPartsResponse {
         guard let uploadId = root.elements(forName: "UploadId").first?.stringValue else {
             throw InvalidDataError()
         }
-        
+
         let parts = try root.elements(forName: "Part").map {
             guard
                 let partString = $0.elements(forName: "PartNumber").first?.stringValue,
@@ -43,7 +43,7 @@ struct S3ListPartsResponse {
             }
             return MultipartUploadOperation.AWSUploadedPart(number: partNum, eTag: eTag)
         }
-        
+
         return S3ListPartsResponse(
             bucket: bucketName,
             key: objectKey,
