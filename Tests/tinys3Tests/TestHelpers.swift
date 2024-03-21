@@ -1,11 +1,13 @@
 import XCTest
 import Foundation
 import Crypto
-import tinys3
+@testable import tinys3
 
 let testBucketName = "my-test-bucket"
 let testObjectKey = "/my/path/to/stuff.txt"
 let testPrefix = "my/path/"
+// swiftlint:disable:next line_length
+let testUploadId = "q4sTIuOL6NEI9mEHjfORyTfaMSvkA3ebJhiwuTi4xfPhqtM8yasXIjBM8tuGhq9TpdfrNi7uhdHBWWeadoRo3iJ770lPeC8Px1w0stBEXMAZN2jZYrJDqSAWR3DkUJj9"
 
 extension AWSCredentials {
     /// Valid, but deleted credentials – created only for use with this project, then destroyed immediately.
@@ -57,5 +59,11 @@ struct R {
         static var multiple: String { get throws { try R.string("aws-credentials-file-multiple") } }
         static var withoutRegion: String { get throws { try R.string("aws-credentials-file-no-region")}}
         static var single: String { get throws { try R.string("aws-credentials-file-single") } }
+    }
+}
+
+extension AWSResponse {
+    static func fixture(_ name: String) throws -> AWSResponse {
+        try AWSResponse(response: HTTPURLResponse(), data: R.xmlData(name))
     }
 }

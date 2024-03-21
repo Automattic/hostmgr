@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <InitiateMultipartUploadResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
     <Bucket>a8c-macos-ci-images</Bucket>
-    <Key>images-v2/xcode-14.2.vmtemplate.aar</Key>
+    <Key>images/xcode-14.2.vmtemplate.aar</Key>
     <UploadId>vGhrpGPlS1rLpmLJ1itwiskYn5qXjgRTw.BlpzsHRh5d3d8FUjfG_0dvGG_HyWdVldVBhVtjJrAYSuEjiLDxVmwzfC3xIP18jTqx.6mpN07DWj.Mg3B31LXFdb2jIEMO</UploadId>
 </InitiateMultipartUploadResult>

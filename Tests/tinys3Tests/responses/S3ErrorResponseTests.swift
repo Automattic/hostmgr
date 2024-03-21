@@ -1,12 +1,13 @@
 import XCTest
 @testable import tinys3
 
-final class S3ErrorResponseParserTests: XCTestCase {
+final class S3ErrorResponseTests: XCTestCase {
 
     private var redirectError: S3ErrorResponse!
 
     override func setUpWithError() throws {
-        self.redirectError = try S3ErrorResponseParser(data: R.xmlData("ErrorDataRedirect")).parse()
+        let awsResponse = try AWSResponse.fixture("ErrorDataRedirect")
+        self.redirectError = try S3ErrorResponse.from(response: awsResponse)
     }
 
     func testThatCodeCanBeParsed() throws {
@@ -42,14 +43,12 @@ final class S3ErrorResponseParserTests: XCTestCase {
     }
 
     func testThatInvalidResponseThrows() throws {
-        let invalidData = try R.xmlData("ListBucketData")
-        let invalidParser = S3ErrorResponseParser(data: invalidData)
-        XCTAssertThrowsError(try invalidParser.parse())
+        let invalidData = try AWSResponse.fixture("ListBucketData")
+        XCTAssertThrowsError(try S3ErrorResponse.from(response: invalidData))
     }
 
     func testThatEmptyResponseThrows() throws {
-        let emptyData = try R.xmlData("EmptyXML")
-        let invalidParser = S3ErrorResponseParser(data: emptyData)
-        XCTAssertThrowsError(try invalidParser.parse())
+        let emptyData = try AWSResponse.fixture("EmptyXML")
+        XCTAssertThrowsError(try S3ErrorResponse.from(response: emptyData))
     }
 }
