@@ -59,5 +59,5 @@ public struct LocalVMImage: Equatable {
 public enum VMImageState: String, CaseIterable {
     case packaged = "📦 Packaged"
     case ready = "💾 Ready"
-    case running = "▶️ Running"
+    case running = "🟢 Running"
 }
