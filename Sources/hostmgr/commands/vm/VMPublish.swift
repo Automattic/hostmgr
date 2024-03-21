@@ -25,7 +25,7 @@ struct VMPublishCommand: AsyncParsableCommand {
     let vmLibrary = RemoteVMLibrary()
 
     func run() async throws {
-        let progress = try Console.startImageUpload(Paths.toVMTemplate(named: name))
+        let progress = try Console.startImageUpload(Paths.toArchivedVM(named: name))
         try await vmLibrary.publish(vmNamed: name, allowResume: !noResume, progressCallback: progress.update)
         progress.succeed()
     }
