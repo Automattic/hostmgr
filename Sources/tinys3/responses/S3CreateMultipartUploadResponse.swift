@@ -12,22 +12,12 @@ struct S3CreateMultipartUploadResponse {
 
     static func from(response: AWSResponse) throws -> S3CreateMultipartUploadResponse {
         let doc = try XMLDocument(data: response.data)
-        guard let root = doc.rootElement(), root.name == "InitiateMultipartUploadResult" else {
-            throw InvalidDataError()
-        }
-
-        guard
-            let bucket = root.elements(forName: "Bucket").first?.stringValue,
-            let key = root.elements(forName: "Key").first?.stringValue,
-            let uploadId = root.elements(forName: "UploadId").first?.stringValue
-        else {
-            throw InvalidDataError()
-        }
+        let root = try doc.rootElement(expectedName: "InitiateMultipartUploadResult")
 
         return S3CreateMultipartUploadResponse(
-            bucket: bucket,
-            key: key,
-            uploadId: uploadId
+            bucket: try root.value(forElementName: "Bucket"),
+            key: try root.value(forElementName: "Key"),
+            uploadId: try root.value(forElementName: "UploadId")
         )
     }
 }

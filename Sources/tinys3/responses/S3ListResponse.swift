@@ -15,45 +15,28 @@ public struct S3ListResponse {
 
     static func from(response: AWSResponse) throws -> S3ListResponse {
         let doc = try XMLDocument(data: response.data)
-        guard let root = doc.rootElement(), root.name == "ListBucketResult" else {
-            throw InvalidDataError()
-        }
+        let root = try doc.rootElement(expectedName: "ListBucketResult")
 
-        guard
-            let bucketName = root.elements(forName: "Name").first?.stringValue,
-            let maxKeys = root.elements(forName: "MaxKeys").first?.stringValue.flatMap({ Int($0) }),
-            let isTruncated = root.elements(forName: "IsTruncated").first?.stringValue.flatMap({ Bool($0) })
-        else {
-            throw InvalidDataError()
-        }
-
-        let prefix = root.elements(forName: "Prefix").first?.stringValue
-        let marker = root.elements(forName: "Marker").first?.stringValue
+        let bucketName = try root.value(forElementName: "Name")
+        let prefix = try? root.value(forElementName: "Prefix")
+        let marker = try? root.value(forElementName: "Marker")
+        let maxKeys = try root.value(forElementName: "MaxKeys", transform: Int.init)
+        let isTruncated = try root.value(forElementName: "IsTruncated", transform: Bool.init)
 
         let objects = try root.elements(forName: "Contents").map { node in
-            guard
-                let key = node.elements(forName: "Key").first?.stringValue,
-                let size = node.elements(forName: "Size").first?.stringValue.flatMap({ Int($0) }),
-                let eTag = node.elements(forName: "ETag").first?.stringValue,
-                let lastModified = node.elements(forName: "LastModified").first?.stringValue.flatMap(parseISO8601String),
-                let storageClass = node.elements(forName: "StorageClass").first?.stringValue
-            else {
-                throw InvalidDataError()
-            }
-
-            return S3Object(
-                key: key,
-                size: size,
-                eTag: eTag,
-                lastModifiedAt: lastModified,
-                storageClass: storageClass
+            S3Object(
+                key: try node.value(forElementName: "Key"),
+                size: try node.value(forElementName: "Size", transform: Int.init),
+                eTag: try node.value(forElementName: "ETag"),
+                lastModifiedAt: try node.value(forElementName: "LastModified", transform: parseISO8601String),
+                storageClass: try node.value(forElementName: "StorageClass")
             )
         }
 
         return S3ListResponse(
             bucketName: bucketName,
-            prefix: prefix?.isEmpty == true ? nil : prefix,
-            marker: marker?.isEmpty == true ? nil : marker,
+            prefix: prefix?.nilIfEmpty,
+            marker: marker?.nilIfEmpty,
             maxKeys: maxKeys,
             isTruncated: isTruncated,
             objects: objects

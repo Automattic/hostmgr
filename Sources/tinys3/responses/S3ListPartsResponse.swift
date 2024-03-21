@@ -19,32 +19,18 @@ struct S3ListPartsResponse {
 
     static func from(response: AWSResponse) throws -> S3ListPartsResponse {
         let doc = try XMLDocument(data: response.data)
-        guard let root = doc.rootElement(), root.name == "ListPartsResult" else {
-            throw InvalidDataError()
-        }
-
-        guard
-            let bucketName = root.elements(forName: "Bucket").first?.stringValue,
-            let objectKey = root.elements(forName: "Key").first?.stringValue,
-            let uploadId = root.elements(forName: "UploadId").first?.stringValue
-        else {
-            throw InvalidDataError()
-        }
+        let root = try doc.rootElement(expectedName: "ListPartsResult")
 
         let parts = try root.elements(forName: "Part").map {
-            guard
-                let partNumber = $0.elements(forName: "PartNumber").first?.stringValue.flatMap({ Int($0) }),
-                let eTag = $0.elements(forName: "ETag").first?.stringValue
-            else {
-                throw InvalidDataError()
-            }
+            let partNumber = try $0.value(forElementName: "PartNumber", transform: Int.init)
+            let eTag = try $0.value(forElementName: "ETag")
             return MultipartUploadOperation.AWSUploadedPart(number: partNumber, eTag: eTag)
         }
 
         return S3ListPartsResponse(
-            bucket: bucketName,
-            key: objectKey,
-            uploadId: uploadId,
+            bucket: try root.value(forElementName: "Bucket"),
+            key: try root.value(forElementName: "Key"),
+            uploadId: try root.value(forElementName: "UploadId"),
             parts: parts
         )
     }

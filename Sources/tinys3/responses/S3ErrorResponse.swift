@@ -16,30 +16,17 @@ struct S3ErrorResponse: Error {
 
     static func from(response: AWSResponse) throws -> S3ErrorResponse {
         let doc = try XMLDocument(data: response.data)
+        let root = try doc.rootElement(expectedName: "Error")
 
-        guard let root = doc.rootElement(), root.name == "Error" else {
-            throw InvalidDataError()
+        let extra = ["Endpoint", "Bucket", "Key"].reduce(into: [:]) { dict, key in
+            dict[key] = try? root.value(forElementName: key)
         }
-
-        guard
-            let code = root.elements(forName: "Code").first?.stringValue,
-            let message = root.elements(forName: "Message").first?.stringValue,
-            let requestId = root.elements(forName: "RequestId").first?.stringValue,
-            let hostId = root.elements(forName: "HostId").first?.stringValue
-        else {
-            throw InvalidDataError()
-        }
-
-        var extra = [String: String]()
-        extra["Endpoint"] = root.elements(forName: "Endpoint").first?.stringValue
-        extra["Bucket"] = root.elements(forName: "Bucket").first?.stringValue
-        extra["Key"] = root.elements(forName: "Key").first?.stringValue
 
         return S3ErrorResponse(
-            code: code,
-            message: message,
-            requestId: requestId,
-            hostId: hostId,
+            code: try root.value(forElementName: "Code"),
+            message: try root.value(forElementName: "Message"),
+            requestId: try root.value(forElementName: "RequestId"),
+            hostId: try root.value(forElementName: "HostId"),
             extra: extra
         )
     }

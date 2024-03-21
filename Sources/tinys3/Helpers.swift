@@ -1,7 +1,39 @@
 import Foundation
 import Crypto
 
-struct InvalidDataError: Error {}
+enum InvalidXMLResponseError: Error {
+    case invalidRootNode(expected: String, got: String?)
+    case missingElement(String)
+    case unexpectedValue(String, inElement: String)
+}
+
+extension XMLDocument {
+    func rootElement(expectedName: String) throws -> XMLElement {
+        let root = self.rootElement()
+        guard let root, root.name == expectedName else {
+            throw InvalidXMLResponseError.invalidRootNode(expected: expectedName, got: root?.name)
+        }
+        return root
+    }
+}
+
+extension XMLElement {
+    func value<T>(forElementName name: String, transform: (String) -> T? = { $0 }) throws -> T {
+        guard let text = self.elements(forName: name).first?.stringValue else {
+            throw InvalidXMLResponseError.missingElement(name)
+        }
+        guard let value = transform(text) else {
+            throw InvalidXMLResponseError.unexpectedValue(text, inElement: name)
+        }
+        return value
+    }
+}
+
+extension String {
+    var nilIfEmpty: String? {
+        self.isEmpty ? nil : self
+    }
+}
 
 func sha256Hash(fileAt url: URL) throws -> String {
     var hasher = SHA256()
