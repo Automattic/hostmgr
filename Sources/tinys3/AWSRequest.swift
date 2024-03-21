@@ -77,7 +77,103 @@ struct AWSRequest {
     public var headers: HttpHeaders {
         HttpHeaders().adding(request.allHTTPHeaderFields!)
     }
+}
 
+// MARK: Canonical Requeat
+extension AWSRequest {
+    var canonicalUri: String {
+        request.url!.path
+    }
+
+    var escapedCanonicalUri: String {
+        var allowedCharacters = CharacterSet.urlPathAllowed
+        allowedCharacters.remove("$")
+
+        return canonicalUri.addingPercentEncoding(withAllowedCharacters: allowedCharacters)!
+    }
+
+    var canonicalQueryString: String {
+        queryItems
+            .sorted { $0.name < $1.name }
+            .asEscapedQueryString
+    }
+
+    var canonicalHeaders: HttpHeaders {
+        HttpHeaders([
+            .host: request.url!.host!
+        ]).adding(request.allHTTPHeaderFields ?? [:])
+    }
+
+    var canonicalHeaderString: String {
+        canonicalHeaders
+            .toHttpHeaderFields
+            .sorted { $0.key < $1.key }
+            .map { $0.key.lowercased() + ":" + $0.value.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .joined(separator: "\n")
+    }
+
+    var signedHeaderString: String {
+        canonicalHeaders
+            .toHttpHeaderFields
+            .sorted { $0.key < $1.key }
+            .map { $0.key.lowercased() }
+            .joined(separator: ";")
+    }
+
+    var canonicalRequest: String {
+        [
+            request.httpMethod,
+            escapedCanonicalUri,
+            canonicalQueryString,
+            canonicalHeaderString,
+            "",
+            signedHeaderString,
+            request.allHTTPHeaderFields?["x-amz-content-sha256"]
+        ].compactMap { $0 }.joined(separator: "\n")
+    }
+}
+
+// MARK: String to Sign
+extension AWSRequest {
+    var stringToSign: String {
+        [
+            "AWS4-HMAC-SHA256",
+            formattedTimestamp(from: self.date),
+            self.scope.description,
+            sha256Hash(string: canonicalRequest)
+        ].joined(separator: "\n")
+    }
+}
+
+// MARK: Signature
+extension AWSRequest {
+    var signature: String {
+        signer.sign(string: stringToSign)
+    }
+
+    var authorizationHeaderValue: String {
+        "AWS4-HMAC-SHA256 " + [
+            "Credential=\(credentials.accessKeyId)/\(scope.description)",
+            "SignedHeaders=\(signedHeaderString)",
+            "Signature=\(signature)"
+        ].joined(separator: ",")
+    }
+
+    var urlRequest: URLRequest {
+        var request = self.request
+        request.addValue(authorizationHeaderValue, forHTTPHeaderField: "Authorization")
+        return request
+    }
+}
+
+// MARK: Convenience Initializers
+extension AWSRequest {
+    static func listRequest(bucket: String, `prefix`: String = "", credentials: AWSCredentials) -> AWSRequest {
+        AWSRequest(verb: .get, bucket: bucket, query: [
+            URLQueryItem(name: "prefix", value: prefix)
+        ], credentials: credentials)
+    }
+    
     static func headRequest(
         bucket: String,
         key: String,
@@ -199,101 +295,5 @@ struct AWSRequest {
                 "Content-Type": "application/xml"
             ]
         )
-    }
-}
-
-// MARK: Canonical Requeat
-extension AWSRequest {
-    var canonicalUri: String {
-        request.url!.path
-    }
-
-    var escapedCanonicalUri: String {
-        var allowedCharacters = CharacterSet.urlPathAllowed
-        allowedCharacters.remove("$")
-
-        return canonicalUri.addingPercentEncoding(withAllowedCharacters: allowedCharacters)!
-    }
-
-    var canonicalQueryString: String {
-        queryItems
-            .sorted { $0.name < $1.name }
-            .asEscapedQueryString
-    }
-
-    var canonicalHeaders: HttpHeaders {
-        HttpHeaders([
-            .host: request.url!.host!
-        ]).adding(request.allHTTPHeaderFields ?? [:])
-    }
-
-    var canonicalHeaderString: String {
-        canonicalHeaders
-            .toHttpHeaderFields
-            .sorted { $0.key < $1.key }
-            .map { $0.key.lowercased() + ":" + $0.value.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .joined(separator: "\n")
-    }
-
-    var signedHeaderString: String {
-        canonicalHeaders
-            .toHttpHeaderFields
-            .sorted { $0.key < $1.key }
-            .map { $0.key.lowercased() }
-            .joined(separator: ";")
-    }
-
-    var canonicalRequest: String {
-        [
-            request.httpMethod,
-            escapedCanonicalUri,
-            canonicalQueryString,
-            canonicalHeaderString,
-            "",
-            signedHeaderString,
-            request.allHTTPHeaderFields?["x-amz-content-sha256"]
-        ].compactMap { $0 }.joined(separator: "\n")
-    }
-}
-
-// MARK: String to Sign
-extension AWSRequest {
-    var stringToSign: String {
-        [
-            "AWS4-HMAC-SHA256",
-            formattedTimestamp(from: self.date),
-            self.scope.description,
-            sha256Hash(string: canonicalRequest)
-        ].joined(separator: "\n")
-    }
-}
-
-// MARK: Signature
-extension AWSRequest {
-    var signature: String {
-        signer.sign(string: stringToSign)
-    }
-
-    var authorizationHeaderValue: String {
-        "AWS4-HMAC-SHA256 " + [
-            "Credential=\(credentials.accessKeyId)/\(scope.description)",
-            "SignedHeaders=\(signedHeaderString)",
-            "Signature=\(signature)"
-        ].joined(separator: ",")
-    }
-
-    var urlRequest: URLRequest {
-        var request = self.request
-        request.addValue(authorizationHeaderValue, forHTTPHeaderField: "Authorization")
-        return request
-    }
-}
-
-// MARK: Convenience Initializers
-extension AWSRequest {
-    static func listRequest(bucket: String, `prefix`: String = "", credentials: AWSCredentials) -> AWSRequest {
-        AWSRequest(verb: .get, bucket: bucket, query: [
-            URLQueryItem(name: "prefix", value: prefix)
-        ], credentials: credentials)
     }
 }

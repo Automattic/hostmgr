@@ -11,6 +11,7 @@ struct S3ListPartsResponse {
         let uploadId: String
         let initiatedDate: Date
     }
+
     let bucket: String
     let key: String
     let uploadId: String

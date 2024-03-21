@@ -11,6 +11,7 @@ struct S3ListMultipartUploadResponse {
         let uploadId: String
         let initiatedDate: Date
     }
+
     let bucket: String
     let uploads: [S3MultipartUpload]
 
