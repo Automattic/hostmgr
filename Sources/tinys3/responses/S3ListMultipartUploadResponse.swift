@@ -29,8 +29,7 @@ struct S3ListMultipartUploadResponse {
             guard
                 let key = $0.elements(forName: "Key").first?.stringValue,
                 let uploadId = $0.elements(forName: "UploadId").first?.stringValue,
-                let initiatedString = $0.elements(forName: "Initiated").first?.stringValue,
-                let initiatedDate = parseISO8601String(initiatedString)
+                let initiatedDate = $0.elements(forName: "Initiated").first?.stringValue.flatMap(parseISO8601String)
             else {
                 throw InvalidDataError()
             }

@@ -3,25 +3,6 @@ import Crypto
 
 struct InvalidDataError: Error {}
 
-struct XMLDataValidator {
-
-    var expectedRootElementName: String
-    var wasTriggered: Bool = false
-
-    mutating func validate(elementName: String, failureHandler: (Error) -> Void) {
-        guard !wasTriggered else {
-            return
-        }
-
-        self.wasTriggered = true
-
-        guard elementName == expectedRootElementName else {
-            failureHandler(InvalidDataError())
-            return
-        }
-    }
-}
-
 func sha256Hash(fileAt url: URL) throws -> String {
     var hasher = SHA256()
 
