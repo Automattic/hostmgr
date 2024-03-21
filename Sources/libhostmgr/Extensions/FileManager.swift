@@ -45,7 +45,7 @@ extension FileManager {
     }
 
     func fileSize(of url: URL) throws -> Int {
-        guard let size = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize else {
+        guard let size = try url.resourceValues(forKeys: [.totalFileSizeKey]).totalFileSize else {
             throw CocoaError(.fileReadUnknown)
         }
 
@@ -55,14 +55,14 @@ extension FileManager {
     /// returns total allocated size of a the directory including its subFolders or not
     func directorySize(of url: URL) throws -> Int {
         guard
-            let enumerator = enumerator(at: url, includingPropertiesForKeys: [.totalFileAllocatedSizeKey]),
+            let enumerator = enumerator(at: url, includingPropertiesForKeys: [.totalFileSizeKey]),
             let urls = enumerator.allObjects as? [URL]
         else {
             return 0
         }
 
         let sizes = try urls
-            .compactMap { try $0.resourceValues(forKeys: [.totalFileAllocatedSizeKey]).totalFileAllocatedSize }
+            .compactMap { try $0.resourceValues(forKeys: [.totalFileSizeKey]).totalFileSize }
 
         return sizes.reduce(0, +)
      }

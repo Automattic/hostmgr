@@ -9,7 +9,6 @@ public enum ProcessorArchitecture: String {
 }
 
 extension ProcessInfo {
-
     /// How many cores are in this machine?
     ///
     /// On Apple Silicon, this returns the number of Performance Cores + Efficiency Cores
@@ -40,7 +39,6 @@ extension Sequence {
 }
 
 extension String {
-
     public func slugify() -> String {
         self.components(separatedBy: .alphanumerics.inverted).joined(separator: "-")
     }

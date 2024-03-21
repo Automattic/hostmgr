@@ -1,6 +1,7 @@
 import Foundation
 import ArgumentParser
 import libhostmgr
+import Network
 
 struct VMStartCommand: AsyncParsableCommand {
 
@@ -49,6 +50,7 @@ struct VMStartCommand: AsyncParsableCommand {
                 waitForNetworking: !skipNetworkChecks
             )
 
+            Console.success("Starting VM with handle: \(self.handle)")
             try await vmManager.startVM(configuration: configuration)
 
             if skipNetworkChecks {
@@ -56,14 +58,15 @@ struct VMStartCommand: AsyncParsableCommand {
                 return
             }
 
-            if waitForever {
-                let timeout = Duration.seconds(1_000_000_000) // Doesn't crash like .greatestFiniteMagnitude
-                try await vmManager.waitForVMStartup(for: configuration, timeout: timeout)
+            let timeout: Duration = if waitForever {
+                .seconds(1_000_000_000) // Doesn't crash like .greatestFiniteMagnitude
             } else {
-                try await vmManager.waitForVMStartup(for: configuration, timeout: .seconds(30))
+                .seconds(30)
             }
+            let ipAddress = try await vmManager.waitForVMStartup(for: configuration, timeout: timeout)
 
             Console.success("Booted \(name) in \(Format.elapsedTime(between: startTime, and: .now))")
+            Console.success("VM SSH IP Address: \(ipAddress)")
         } catch let error as HostmgrError {
             Console.crash(error)
         }

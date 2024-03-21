@@ -37,7 +37,7 @@ struct VMListCommand: AsyncParsableCommand {
         var data = Console.Table()
 
         if self.location.includesLocal {
-            data.append(contentsOf: try await vmManager.list(sortedBy: .name).map(self.format))
+            data.append(contentsOf: try await vmManager.list(sortedBy: .state).map(self.format))
         }
 
         if self.location.includesRemote {
@@ -46,26 +46,25 @@ struct VMListCommand: AsyncParsableCommand {
 
         Console.printTable(
             data: data,
-            columnTitles: ["Location", "Filename", "State", "Architecture", "Size"]
+            columnTitles: ["Location", "Filename", "State", "Size"],
+            columnAlignments: [.left, .left, .left, .right]
         )
     }
 
     private func format(localVM: LocalVMImage) throws -> Console.TableRow {
         return [
-            "Local",
+            "💻 Local",
             localVM.name,
             localVM.state.rawValue,
-            "", // localVM.architecture.rawValue,
             Format.fileBytes(try localVM.fileSize)
         ]
     }
 
     private func format(remoteVM: RemoteVMImage) throws -> Console.TableRow {
         return [
-            "Remote",
+            "🌐 Remote",
             remoteVM.name,
-            "Packaged",
-            "",
+            VMImageState.packaged.rawValue,
             Format.fileBytes(remoteVM.size)
         ]
     }

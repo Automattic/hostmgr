@@ -80,7 +80,9 @@ public struct Console: Consolable {
     @discardableResult public func printTable(
         data: Table,
         columnTitles: [String] = [],
-        columnSeparator: String = "  "
+        titleRowSeparator: Character? = "-",
+        columnSeparator: String = " | ",
+        columnAlignments: [TableColumnAlignment] = []
     ) -> Self {
 
         if data.isEmpty {
@@ -89,12 +91,21 @@ public struct Console: Consolable {
         }
 
         // Prepend the Column Titles, if present
-        let table = columnTitles.isEmpty ? data : [columnTitles] + data
+        var table = columnTitles.isEmpty ? data : [columnTitles] + data
 
         let columnCount = columnCounts(for: table)
 
+        if !columnTitles.isEmpty, let titleRowSeparator {
+            let headerSeparatorRow = columnCount.map { String(repeating: titleRowSeparator, count: $0) }
+            table.insert(headerSeparatorRow, at: 1)
+        }
+
         for row in table {
-            let string = zip(row, columnCount).map(self.padString).joined(separator: columnSeparator)
+            let string = zip(row, columnCount.indices).map { text, colIdx in
+                let colWidth = columnCount[colIdx]
+                let alignment = columnAlignments.indices ~= colIdx ? columnAlignments[colIdx] : .left
+                return self.padString(text, toLength: colWidth, align: alignment)
+            }.joined(separator: columnSeparator)
             self.terminal.print(string)
         }
 
@@ -305,8 +316,16 @@ extension Console {
         return Console().printList(list, title: title)
     }
 
-    @discardableResult public static func printTable(data: TableConvertable, columnTitles: [String] = []) -> Self {
-        return Console().printTable(data: data.asTable(), columnTitles: columnTitles)
+    @discardableResult public static func printTable(
+        data: TableConvertable,
+        columnTitles: [String] = [],
+        columnAlignments: [TableColumnAlignment] = []
+    ) -> Self {
+        return Console().printTable(
+            data: data.asTable(),
+            columnTitles: columnTitles,
+            columnAlignments: columnAlignments
+        )
     }
 
     public static func crash(_ error: HostmgrError) -> Never {
@@ -328,9 +347,13 @@ extension Console {
 
     public typealias TableRow = [String]
     public typealias Table = [TableRow]
+    public enum TableColumnAlignment {
+        case left
+        case right
+    }
 
     func columnCounts(for table: Table) -> [Int] {
-        transpose(matrix: table).map { $0.map(\.count).max() ?? 0 }
+        transpose(matrix: table).map { $0.map(\.monospaceWidth).max() ?? 0 }
     }
 
     func transpose(matrix: Table) -> Table {
@@ -349,8 +372,9 @@ extension Console {
         return newTable
     }
 
-    func padString(_ string: String, toLength length: Int) -> String {
-        string.padding(toLength: length, withPad: " ", startingAt: 0)
+    func padString(_ string: String, toLength length: Int, align: TableColumnAlignment) -> String {
+        let leftPad = align == .right ? String(repeating: " ", count: max(length - string.count, 0)) : ""
+        return "\(leftPad)\(string)".padding(toLength: length, withPad: " ", startingAt: 0)
     }
 }
 
