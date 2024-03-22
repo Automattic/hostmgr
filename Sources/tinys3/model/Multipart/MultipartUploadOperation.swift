@@ -145,6 +145,9 @@ class MultipartUploadOperation: NSObject, RequestPerformer {
             data: try await file[range]
         )
 
+        // Each part's ETag is the md5 of said part, wrapped in quotes.
+        // Note that, as per HTTP spec, the quote literals are fully part of the ETag value
+        // https://www.rfc-editor.org/rfc/rfc2616#section-3.11
         if let existingPart, existingPart.eTag == "\"\(md5Hash(data: part.data))\"" {
             // Skipping part as it has already been uploaded with matching ETag/md5
             self.progress.completedUnitCount += Int64(part.data.count)

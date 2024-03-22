@@ -16,7 +16,7 @@ public struct S3HeadResponse {
         guard
             let contentLengthString = response.value(forHTTPHeaderField: .contentLength),
             let contentLength = Int(contentLengthString),
-            let eTag = response.value(forHTTPHeaderField: .eTag)?.replacingOccurrences(of: "\"", with: ""),
+            let eTag = response.value(forHTTPHeaderField: .eTag),
             let lastModifiedString = response.value(forHTTPHeaderField: .lastModified),
             let lastModifiedAt = modificationDateParser.date(from: lastModifiedString)
         else {
