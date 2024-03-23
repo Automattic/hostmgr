@@ -94,7 +94,7 @@ extension AWSRequest {
 
     var canonicalQueryString: String {
         queryItems
-            .sorted { $0.name < $1.name }
+            .sorted()
             .asEscapedQueryString
     }
 
