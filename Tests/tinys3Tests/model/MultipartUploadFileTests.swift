@@ -48,13 +48,25 @@ final class MultipartUploadFileTests: XCTestCase {
     }
 
     func testThatPartSizeCalculatorReturnsAppropriateSizes() {
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 4094), 4094)                     //    4kb
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 4_094_000), 4_094_000)           //    4mb
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 40_094_000), 5_000_000)          //   40mb
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 400_094_000), 8_001_880)         //  400mb
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 4_000_094_000), 80_001_880)      //    4gb
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 40_000_094_000), 800_001_880)    //   40gb
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 400_000_094_000), 4_900_000_000) //  400gb
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 400_000_094_000), 4_900_000_000) //    4tb
+        // swiftlint:disable colon comma
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn:   4.KB),   4    .KB) //   4KB
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn:   4.MB),   4    .MB) //   4MB
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn:  40.MB),   5    .MB) //  40MB
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 400.MB),   5    .MB) // 400MB
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 800.MB),   5    .MB) // 800MB
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn:   4.GB),   8.192.MB) //   4GB
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn:  40.GB),  81.92 .MB) //  40GB (*)
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 400.GB), 819.2  .MB) // 400GB
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 800.GB),   1.6  .GB) // 800GB
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn:   4.TB),   5    .GB) //   4TB
+        // (*) 40GB is the approximate size of `xcode-*.vmtemplate.aar` files
+        // swiftlint:enable colon comma
     }
+}
+
+private extension Double {
+    var KB: Int { Int(self * 1024) }
+    var MB: Int { Int(self * 1024 * 1024) }
+    var GB: Int { Int(self * 1024 * 1024 * 1024) }
+    var TB: Int { Int(self * 1024 * 1024 * 1024 * 1024) }
 }
