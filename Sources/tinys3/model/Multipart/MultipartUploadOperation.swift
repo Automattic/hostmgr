@@ -165,30 +165,15 @@ class MultipartUploadOperation: NSObject, RequestPerformer {
             endpoint: self.endpoint
         )
 
-        if #available(macOS 12.0, *) {
-            let response = try await upload(request).validate()
+        let response = try await upload(request).validate()
 
-            guard let eTag = response.value(forHTTPHeaderField: .eTag) else {
-                throw CocoaError(.propertyListReadUnknownVersion)
-            }
-
-            return AWSUploadedPart(number: part.number, eTag: eTag)
-        } else {
-            let response = try await perform(request).validate()
-
-            self.progress.completedUnitCount += Int64(part.data.count)
-            self.progress.estimateThroughput(fromStartDate: self.startDate)
-            self.progressCallback?(self.progress)
-
-            guard let eTag = response.value(forHTTPHeaderField: .eTag) else {
-                throw CocoaError(.propertyListReadUnknownVersion)
-            }
-
-            return AWSUploadedPart(number: part.number, eTag: eTag)
+        guard let eTag = response.value(forHTTPHeaderField: .eTag) else {
+            throw CocoaError(.propertyListReadUnknownVersion)
         }
+
+        return AWSUploadedPart(number: part.number, eTag: eTag)
     }
 
-    @available(macOS 12.0, *)
     func upload(_ request: AWSRequest) async throws -> AWSResponse {
         var urlRequest = request.urlRequest
         urlRequest.timeoutInterval = 3600
