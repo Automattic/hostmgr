@@ -3,7 +3,8 @@ import Crypto
 
 enum InvalidXMLResponseError: Error {
     case invalidRootNode(expected: String, got: String?)
-    case missingElement(String)
+    case missingElement(named: String)
+    case multipleElements(named: String, found: [XMLElement])
     case unexpectedValue(String, inElement: String)
 }
 
@@ -19,8 +20,12 @@ extension XMLDocument {
 
 extension XMLElement {
     func value<T>(forElementName name: String, transform: (String) -> T? = { $0 }) throws -> T {
-        guard let text = self.elements(forName: name).first?.stringValue else {
-            throw InvalidXMLResponseError.missingElement(name)
+        let nodes = self.elements(forName: name)
+        guard nodes.count <= 1 else {
+            throw InvalidXMLResponseError.multipleElements(named: name, found: nodes)
+        }
+        guard let text = nodes.first?.stringValue else {
+            throw InvalidXMLResponseError.missingElement(named: name)
         }
         guard let value = transform(text) else {
             throw InvalidXMLResponseError.unexpectedValue(text, inElement: name)
