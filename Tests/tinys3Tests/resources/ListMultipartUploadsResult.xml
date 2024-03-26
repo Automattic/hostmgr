@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ListMultipartUploadsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+    <Bucket>my-test-bucket</Bucket>
+    <KeyMarker></KeyMarker>
+    <UploadIdMarker></UploadIdMarker>
+    <NextKeyMarker></NextKeyMarker>
+    <NextUploadIdMarker></NextUploadIdMarker>
+    <Prefix>images/xcode-15.3-v3.vmtemplate.aar</Prefix>
+    <MaxUploads>1000</MaxUploads>
+    <IsTruncated>false</IsTruncated>
+    <Upload>
+        <Key>images/xcode-15.3-v3.vmtemplate.aar</Key>
+        <UploadId>X2j2QvTjRhdwf6xT0p7bdR3ew91</UploadId>
+        <Initiator>
+            <ID>arn:aws:iam::235354921143:user/olivier.halligon@automattic.com</ID>
+            <DisplayName>olivier.halligon@automattic.com</DisplayName>
+        </Initiator>
+        <Owner>
+            <ID>9f32247b4d1a3e6d26a522b3f96ff0b2b9bfead58b542b355058c9c283c304da</ID>
+        </Owner>
+        <StorageClass>STANDARD</StorageClass>
+        <Initiated>2024-03-21T15:11:14.000Z</Initiated>
+    </Upload>
+    <Upload>
+        <Key>images/xcode-15.3-v3.vmtemplate.aar</Key>
+        <UploadId>q4sTIuOL6NEI9mEHjfORyTfaMSvkA3ebJhiwuTi4xfPhqtM8yasXIjBM8tuGhq9TpdfrNi7uhdHBWWeadoRo3iJ770lPeC8Px1w0stBEXMAZN2jZYrJDqSAWR3DkUJj9</UploadId>
+        <Initiator>
+            <ID>arn:aws:iam::235354921143:user/olivier.halligon@automattic.com</ID>
+            <DisplayName>olivier.halligon@automattic.com</DisplayName>
+        </Initiator>
+        <Owner>
+            <ID>9f32247b4d1a3e6d26a522b3f96ff0b2b9bfead58b542b355058c9c283c304da</ID>
+        </Owner>
+        <StorageClass>STANDARD</StorageClass>
+        <Initiated>2024-03-21T17:18:27.000Z</Initiated>
+    </Upload>
+</ListMultipartUploadsResult>

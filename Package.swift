@@ -118,6 +118,8 @@ let package = Package(
                 .copy("resources/ListBucketData.xml"),
                 .copy("resources/ListBucketDataEmpty.xml"),
                 .copy("resources/ListBucketDataInvalid.xml"),
+                .copy("resources/ListMultipartUploadsResult.xml"),
+                .copy("resources/ListPartsResponseResult.xml"),
             ]
         ),
     ]

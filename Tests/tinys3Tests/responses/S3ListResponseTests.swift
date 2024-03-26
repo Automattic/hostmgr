@@ -1,14 +1,14 @@
 import XCTest
 @testable import tinys3
 
-final class S3ListResponseParserTests: XCTestCase {
+final class S3ListResponseTests: XCTestCase {
 
     private var validList: S3ListResponse!
     private var emptyList: S3ListResponse!
 
     override func setUpWithError() throws {
-        self.validList = try S3ListResponseParser(data: R.xmlData("ListBucketData")).parse()
-        self.emptyList = try S3ListResponseParser(data: R.xmlData("ListBucketDataEmpty")).parse()
+        self.validList = try S3ListResponse.from(response: .fixture("ListBucketData"))
+        self.emptyList = try S3ListResponse.from(response: .fixture("ListBucketDataEmpty"))
     }
 
     func testThatBucketNameCanBeParsed() throws {
@@ -42,14 +42,12 @@ final class S3ListResponseParserTests: XCTestCase {
     }
 
     func testThatInvalidResponseThrows() throws {
-        let invalidBucketData = try R.xmlData("ListBucketDataInvalid")
-        let invalidParser = S3ListResponseParser(data: invalidBucketData)
-        XCTAssertThrowsError(try invalidParser.parse())
+        let invalidBucketData = try AWSResponse.fixture("ListBucketDataInvalid")
+        XCTAssertThrowsError(try S3ListResponse.from(response: invalidBucketData))
     }
 
     func testThatEmptyResponseThrows() throws {
-        let invalidData = try R.xmlData("EmptyXML")
-        let invalidParser = S3ListResponseParser(data: invalidData)
-        XCTAssertThrowsError(try invalidParser.parse())
+        let invalidData = try AWSResponse.fixture("EmptyXML")
+        XCTAssertThrowsError(try S3ListResponse.from(response: invalidData))
     }
 }
