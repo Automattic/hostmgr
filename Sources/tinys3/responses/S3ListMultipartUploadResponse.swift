@@ -17,27 +17,20 @@ struct S3ListMultipartUploadResponse {
 
     static func from(response: AWSResponse) throws -> S3ListMultipartUploadResponse {
         let doc = try XMLDocument(data: response.data)
-        guard let root = doc.rootElement(), root.name == "ListMultipartUploadsResult" else {
-            throw InvalidDataError()
-        }
-
-        guard let bucketNode = root.elements(forName: "Bucket").first, let bucketName = bucketNode.stringValue else {
-            throw InvalidDataError()
-        }
+        let root = try doc.rootElement(expectedName: "ListMultipartUploadsResult")
 
         let uploads = try root.elements(forName: "Upload").map {
-            guard
-                let key = $0.elements(forName: "Key").first?.stringValue,
-                let uploadId = $0.elements(forName: "UploadId").first?.stringValue,
-                let initiatedString = $0.elements(forName: "Initiated").first?.stringValue,
-                let initiatedDate = parseISO8601String(initiatedString)
-            else {
-                throw InvalidDataError()
-            }
-            return S3MultipartUpload(key: key, uploadId: uploadId, initiatedDate: initiatedDate)
+            S3MultipartUpload(
+                key: try $0.value(forElementName: "Key"),
+                uploadId: try $0.value(forElementName: "UploadId"),
+                initiatedDate: try $0.value(forElementName: "Initiated", transform: parseISO8601String)
+            )
         }
 
-        return S3ListMultipartUploadResponse(bucket: bucketName, uploads: uploads)
+        return S3ListMultipartUploadResponse(
+            bucket: try root.value(forElementName: "Bucket"),
+            uploads: uploads
+        )
     }
 
     var mostRecentUpload: S3MultipartUpload? {

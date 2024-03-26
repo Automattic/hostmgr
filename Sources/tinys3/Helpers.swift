@@ -1,24 +1,42 @@
 import Foundation
 import Crypto
 
-struct InvalidDataError: Error {}
+enum InvalidXMLResponseError: Error {
+    case invalidRootNode(expected: String, got: String?)
+    case missingElement(named: String)
+    case multipleElements(named: String, found: [XMLElement])
+    case unexpectedValue(String, inElement: String)
+}
 
-struct XMLDataValidator {
-
-    var expectedRootElementName: String
-    var wasTriggered: Bool = false
-
-    mutating func validate(elementName: String, failureHandler: (Error) -> Void) {
-        guard !wasTriggered else {
-            return
+extension XMLDocument {
+    func rootElement(expectedName: String) throws -> XMLElement {
+        let root = self.rootElement()
+        guard let root, root.name == expectedName else {
+            throw InvalidXMLResponseError.invalidRootNode(expected: expectedName, got: root?.name)
         }
+        return root
+    }
+}
 
-        self.wasTriggered = true
-
-        guard elementName == expectedRootElementName else {
-            failureHandler(InvalidDataError())
-            return
+extension XMLElement {
+    func value<T>(forElementName name: String, transform: (String) -> T? = { $0 }) throws -> T {
+        let nodes = self.elements(forName: name)
+        guard nodes.count <= 1 else {
+            throw InvalidXMLResponseError.multipleElements(named: name, found: nodes)
         }
+        guard let text = nodes.first?.stringValue else {
+            throw InvalidXMLResponseError.missingElement(named: name)
+        }
+        guard let value = transform(text) else {
+            throw InvalidXMLResponseError.unexpectedValue(text, inElement: name)
+        }
+        return value
+    }
+}
+
+extension String {
+    var nilIfEmpty: String? {
+        self.isEmpty ? nil : self
     }
 }
 
