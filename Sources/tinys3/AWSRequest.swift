@@ -261,8 +261,9 @@ extension AWSRequest {
         key: String,
         part: MultipartUploadOperation.AWSPartData,
         credentials: AWSCredentials,
-        endpoint: S3Endpoint = .default
-    ) throws -> AWSRequest {
+        endpoint: S3Endpoint = .default,
+        date: Date = Date()
+    ) -> AWSRequest {
         AWSRequest(
             verb: .put,
             bucket: bucket,
@@ -274,6 +275,7 @@ extension AWSRequest {
             content: part.data,
             contentSignature: part.sha256Hash,
             credentials: credentials,
+            date: date,
             endpoint: endpoint
         )
     }

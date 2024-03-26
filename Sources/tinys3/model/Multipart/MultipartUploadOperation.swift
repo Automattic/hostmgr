@@ -157,7 +157,7 @@ class MultipartUploadOperation: NSObject, RequestPerformer {
             return existingPart
         }
 
-        let request = try AWSRequest.uploadPartRequest(
+        let request = AWSRequest.uploadPartRequest(
             bucket: bucket,
             key: key,
             part: part,
