@@ -165,30 +165,15 @@ class MultipartUploadOperation: NSObject, RequestPerformer {
             endpoint: self.endpoint
         )
 
-        if #available(macOS 12.0, *) {
-            let response = try await upload(request).validate()
+        let response = try await upload(request).validate()
 
-            guard let eTag = response.value(forHTTPHeaderField: .eTag) else {
-                throw CocoaError(.propertyListReadUnknownVersion)
-            }
-
-            return AWSUploadedPart(number: part.number, eTag: eTag)
-        } else {
-            let response = try await perform(request).validate()
-
-            self.progress.completedUnitCount += Int64(part.data.count)
-            self.progress.estimateThroughput(fromStartDate: self.startDate)
-            self.progressCallback?(self.progress)
-
-            guard let eTag = response.value(forHTTPHeaderField: .eTag) else {
-                throw CocoaError(.propertyListReadUnknownVersion)
-            }
-
-            return AWSUploadedPart(number: part.number, eTag: eTag)
+        guard let eTag = response.value(forHTTPHeaderField: .eTag) else {
+            throw CocoaError(.propertyListReadUnknownVersion)
         }
+
+        return AWSUploadedPart(number: part.number, eTag: eTag)
     }
 
-    @available(macOS 12.0, *)
     func upload(_ request: AWSRequest) async throws -> AWSResponse {
         var urlRequest = request.urlRequest
         urlRequest.timeoutInterval = 3600
@@ -209,51 +194,5 @@ extension MultipartUploadOperation: URLSessionTaskDelegate {
         self.progress.completedUnitCount += bytesSent
         self.progress.estimateThroughput(fromStartDate: self.startDate)
         self.progressCallback?(self.progress)
-    }
-}
-
-extension Collection {
-    func parallelMap<T>(parallelism: Int, _ transform: @escaping (Element) async throws -> T) async throws -> [T] {
-
-        let elementCount = self.count
-
-        if elementCount == 0 {
-            return []
-        }
-
-        return try await withThrowingTaskGroup(of: (Int, T).self) { group in
-            var result = [T?](repeatElement(nil, count: elementCount))
-
-            var index = self.startIndex
-            var submitted = 0
-
-            func submitNext() async throws {
-                if index == self.endIndex { return }
-
-                group.addTask { [submitted, index] in
-                    let value = try await transform(self[index])
-                    return (submitted, value)
-                }
-
-                submitted += 1
-                formIndex(after: &index)
-            }
-
-            // submit first initial tasks
-            for _ in 0..<parallelism {
-                try await submitNext()
-            }
-
-            // as each task completes, submit a new task until we run out of work
-            while let (index, taskResult) = try await group.next() {
-                result[index] = taskResult
-
-                try Task.checkCancellation()
-                try await submitNext()
-            }
-
-            assert(result.count == elementCount)
-            return Array(result.compactMap { $0 })
-        }
     }
 }
