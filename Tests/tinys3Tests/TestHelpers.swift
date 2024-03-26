@@ -18,6 +18,56 @@ extension AWSCredentials {
     )
 }
 
+extension AWSRequest {
+    // Use this to generate the expected values for Tests conforming to RequestTest protocol
+    func printDebugSigningRubyCode() {
+        let headers = (self.request.allHTTPHeaderFields ?? [:]).map { "'\($0.key)' => '\($0.value)'" }
+        let urlString: String = {
+            // self.absoluteString does not escape `/` in its query items, but `Aws::Sigv4::Signer` requires those to be
+            guard
+                let comps = self.request.url.flatMap({ URLComponents(string: $0.absoluteString) }),
+                let fixedUrl = comps.string
+            else {
+                return self.request.url?.absoluteString ?? ""
+            }
+            guard let range = comps.rangeOfQuery else { return fixedUrl }
+            return fixedUrl.replacingOccurrences(of: "/", with: "%2F", range: range)
+        }()
+        let body = self.request.httpBody.flatMap { String(data: $0, encoding: .utf8) }
+
+        let code = """
+        # Paste and run the following code to a Ruby interpreter (e.g. `irb`)
+        # to check the expected values for `RequestTest` test methods
+
+        require 'aws-sigv4'
+        signer = Aws::Sigv4::Signer.new(
+            service: 's3',
+            region: '\(self.credentials.region)',
+            access_key_id: '\(self.credentials.accessKeyId)',
+            secret_access_key: '\(self.credentials.secretKey)'
+        )
+        signature = signer.sign_request(
+            http_method: '\(self.request.httpMethod ?? "GET")',
+            url: '\(urlString)',
+            headers: {
+                \(headers.joined(separator: ",\n        "))
+            },
+            body: \(body.map { "<<-BODY\n\($0)\nBODY" } ?? "nil")
+        )
+
+        puts "-- testThatCanonicalHeaderStringIsCorrect",
+            signature.headers.reject { _1 == 'authorization' }.sort.map { "#{_1}:#{_2}" }.join("\\n")
+        puts "-- testThatCanonicalRequestIsValid",
+            signature.canonical_request
+        puts "-- testThatStringToSignIsValid",
+            signature.string_to_sign
+        puts "-- testThatAuthorizationHeaderValueIsCorrect",
+            signature.headers['authorization'].gsub(', ', ',')
+        """
+        print(code)
+    }
+}
+
 extension Date {
     static var testDefault: Date {
         Date(timeIntervalSince1970: 1369353600)
