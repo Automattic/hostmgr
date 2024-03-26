@@ -106,6 +106,9 @@ let package = Package(
                 .product(name: "Crypto", package: "swift-crypto"),
             ],
             resources: [
+                .copy("resources/aws-config-file-multiple.txt"),
+                .copy("resources/aws-config-file-no-region.txt"),
+                .copy("resources/aws-config-file-single.txt"),
                 .copy("resources/aws-credentials-file-multiple.txt"),
                 .copy("resources/aws-credentials-file-no-region.txt"),
                 .copy("resources/aws-credentials-file-single.txt"),
