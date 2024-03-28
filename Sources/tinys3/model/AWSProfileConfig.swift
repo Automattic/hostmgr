@@ -1,6 +1,6 @@
 import Foundation
 
-/// Represents a list of key-value pairs representing AWS configuration for a given (single) profile
+/// A list of key-value pairs representing AWS configuration values for a given (single) profile
 struct AWSProfileConfig {
     let values: [String: String]
 
@@ -68,19 +68,15 @@ extension AWSProfileConfig {
             if line == "[default]" {
                 return "default" // Even in config files, default profile is [default] not [profile default]
             }
-            // swiftlint:disable:next force_try
-            let re: Regex<(Substring, Substring)> = try! Regex(
-                isCredentialsFile ? #"\[(\w+)\]"# : #"\[profile (\w+)\]"#
-            )
-            let match = try? re.wholeMatch(in: line)?.output.1
+            let regex = isCredentialsFile ? /\[(\w+)\]/ : /\[profile (\w+)\]/
+            let match = try? regex.wholeMatch(in: line)?.output.1
             return match.map(String.init)
         }
 
         func parseKeyValuePair(line: String) -> (String, String)? {
-            // swiftlint:disable:next force_try large_tuple
-            let re: Regex<(Substring, Substring, Substring)> = try! Regex(#"(\w+)\s*=\s*(.+)"#)
-            let match = try? re.wholeMatch(in: line)?.output
-            return match.flatMap { (String($0.1), String($0.2)) }
+            let regex = /(\w+)\s*=\s*(.+)/
+            let match = try? regex.wholeMatch(in: line)?.output
+            return match.map { (String($0.1), String($0.2)) }
         }
 
         func storePendingSection() {

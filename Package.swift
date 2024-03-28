@@ -5,6 +5,7 @@ import PackageDescription
 
 let sharedSettings: [SwiftSetting] = [
 //    .enableExperimentalFeature("StrictConcurrency")
+    .enableUpcomingFeature("BareSlashRegexLiterals")
 ]
 
 let package = Package(
@@ -97,7 +98,8 @@ let package = Package(
             name: "tinys3",
             dependencies: [
                 .product(name: "Crypto", package: "swift-crypto"),
-            ]
+            ],
+            swiftSettings: sharedSettings
         ),
         .testTarget(
             name: "tinys3Tests",
