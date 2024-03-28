@@ -1,0 +1,19 @@
+[default]
+region = us-east-1
+
+[sso-session my-sso]
+sso_region = us-east-1
+sso_start_url = https://my-sso-portal.awsapps.com/start
+sso_registration_scopes = sso:account:access
+
+[services my-services]
+dynamodb =
+  endpoint_url = http://localhost:8000
+
+[profile invalid]
+aws_access_key_id
+aws_secret_access_key=
+
+[profile minio]
+region = us-east-1 # Comment on this line!
+some_invalid_key=foo

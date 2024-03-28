@@ -5,6 +5,7 @@ import PackageDescription
 
 let sharedSettings: [SwiftSetting] = [
 //    .enableExperimentalFeature("StrictConcurrency")
+    .enableUpcomingFeature("BareSlashRegexLiterals")
 ]
 
 let package = Package(
@@ -97,7 +98,8 @@ let package = Package(
             name: "tinys3",
             dependencies: [
                 .product(name: "Crypto", package: "swift-crypto"),
-            ]
+            ],
+            swiftSettings: sharedSettings
         ),
         .testTarget(
             name: "tinys3Tests",
@@ -106,6 +108,9 @@ let package = Package(
                 .product(name: "Crypto", package: "swift-crypto"),
             ],
             resources: [
+                .copy("resources/aws-config-file-multiple.txt"),
+                .copy("resources/aws-config-file-no-region.txt"),
+                .copy("resources/aws-config-file-single.txt"),
                 .copy("resources/aws-credentials-file-multiple.txt"),
                 .copy("resources/aws-credentials-file-no-region.txt"),
                 .copy("resources/aws-credentials-file-single.txt"),

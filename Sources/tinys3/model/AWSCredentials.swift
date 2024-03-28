@@ -1,36 +1,67 @@
 import Foundation
 
 public struct AWSCredentials: Equatable {
-
     let accessKeyId: String
     let secretKey: String
     let region: String
+
+    enum Error: Swift.Error, LocalizedError {
+        case noProfileNamed(name: String)
+        case missingRequiredKey(name: String)
+
+        var errorDescription: String? {
+            let msgSuffix = "in neither ~/.aws/config nor ~/.aws/credentials file"
+            switch self {
+            case .noProfileNamed(let name):
+                return "No profile named `\(name)` \(msgSuffix)"
+            case .missingRequiredKey(let name):
+                return "Coundn't find key \(name) for requested profile \(msgSuffix)"
+            }
+        }
+    }
 
     public init(accessKeyId: String, secretKey: String, region: String) {
         self.accessKeyId = accessKeyId
         self.secretKey = secretKey
         self.region = region
     }
+}
 
+extension AWSCredentials {
+    /// Build `AWSCredentials` from the `~/.aws/config` and `~/.aws/credentials` user config files
+    /// - Parameter profile: The name of the profile to get the credentials of
+    /// - Returns: Credentials from combining the values from the user config files
     public static func fromUserConfiguration(profile: AWSProfile = .default) throws -> AWSCredentials {
-        let url = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".aws")
-            .appendingPathComponent("credentials")
+        let configs: [AWSProfileConfig] = [
+            // Note: values in ~/.aws/config takes precedence over values in `~/.aws/credentials`
+            try? AWSProfileConfig.profilesFromConfigUserFile(),
+            try? AWSProfileConfig.profilesFromCredentialsUserFile()
+        ].compactMap({ $0?[profile.name] })
 
-        return try from(url: url, profile: profile)
-    }
-
-    public static func configurationFileAt(_ url: URL, containsProfileNamed name: String) throws -> Bool {
-        let credentialsFile = try AWSCredentialsFileParser(path: url).parse()
-        return credentialsFile[name] != nil
-    }
-
-    public static func from(url: URL, profile: AWSProfile = .default) throws -> AWSCredentials {
-        let credentialsFile = try AWSCredentialsFileParser(path: url).parse()
-        guard let profile = credentialsFile[profile.name] else {
-            throw AWSCredentialsError.noProfileNamed(name: profile.name)
+        if configs.isEmpty {
+            throw Error.noProfileNamed(name: profile.name)
         }
-        return profile
+
+        return try AWSCredentials.from(configs: configs)
+    }
+
+    /// Build `AWSCredentials` from a list of `AWSProfileConfig`, each representing a parsed profile from user config
+    /// - Parameter configs: The list of profile configurations to search the credentials in.
+    ///                      First ones take precedence over next ones
+    /// - Returns: Credentials from combining the values from the provided profile configs
+    static func from(configs: [AWSProfileConfig]) throws -> AWSCredentials {
+        func value(key: AWSProfileConfig.Key) throws -> String {
+            guard let value = configs.lazy.compactMap({ $0[key] }).first else {
+                throw Error.missingRequiredKey(name: key.rawValue)
+            }
+            return value
+        }
+
+        return AWSCredentials(
+            accessKeyId: try value(key: .accessKeyId),
+            secretKey: try value(key: .secretKey),
+            region: try value(key: .region)
+        )
     }
 }
 
