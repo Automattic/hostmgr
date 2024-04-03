@@ -74,8 +74,8 @@ struct AWSProfileConfigFileParser {
                 return "default" // Even in config files, default profile is [default] not [profile default]
             }
             let regex = switch fileType {
-                case .credentials: /\[(\w+)\]/
-                case .config: /\[profile (\w+)\]/
+            case .credentials: /\[(\w+)\]/
+            case .config: /\[profile (\w+)\]/
             }
             let match = try? regex.wholeMatch(in: line)?.output.1
             return match.map(String.init)

@@ -105,16 +105,30 @@ struct R {
         let errorDescription: String
     }
 
-    struct AWSCredentialsFile {
-        static var multiple: String { get throws { try R.string("aws-credentials-file-multiple") } }
-        static var withoutRegion: String { get throws { try R.string("aws-credentials-file-no-region") } }
-        static var single: String { get throws { try R.string("aws-credentials-file-single") } }
+    enum AWSCredentialsFixture: String {
+        case multiple = "aws-credentials-file-multiple"
+        case withoutRegion = "aws-credentials-file-no-region"
+        case single = "aws-credentials-file-single"
+
+        var string: String { get throws { try R.string(self.rawValue) } }
+        var profiles: [String: AWSProfileConfig] {
+            get throws {
+                try AWSProfileConfigFileParser.profiles(from: self.string, fileType: .credentials)
+            }
+        }
     }
 
-    struct AWSUserConfigFile {
-        static var multiple: String { get throws { try R.string("aws-config-file-multiple") } }
-        static var withoutRegion: String { get throws { try R.string("aws-config-file-no-region") } }
-        static var single: String { get throws { try R.string("aws-config-file-single") } }
+    enum AWSUserConfigFixture: String {
+        case multiple = "aws-config-file-multiple"
+        case withoutRegion = "aws-config-file-no-region"
+        case single = "aws-config-file-single"
+
+        var string: String { get throws { try R.string(self.rawValue) } }
+        var profiles: [String: AWSProfileConfig] {
+            get throws {
+                try AWSProfileConfigFileParser.profiles(from: self.string, fileType: .config)
+            }
+        }
     }
 }
 

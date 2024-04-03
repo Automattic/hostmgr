@@ -4,10 +4,7 @@ import XCTest
 final class AWSCredentialsTests: XCTestCase {
 
     func testThatSingleFileContainsValidCredentials() throws {
-        let profiles = try AWSProfileConfigFileParser.profiles(
-            from: R.AWSCredentialsFile.single,
-            fileType: .credentials
-        )
+        let profiles = try R.AWSCredentialsFixture.single.profiles
         let defaultConfig = try XCTUnwrap(profiles["default"])
         XCTAssertEqual(
             try AWSCredentials.from(configs: [defaultConfig]),
@@ -16,10 +13,7 @@ final class AWSCredentialsTests: XCTestCase {
     }
 
     func testThatMultipleFileContainsValidDefaultCredentials() throws {
-        let profiles = try AWSProfileConfigFileParser.profiles(
-            from: R.AWSCredentialsFile.multiple,
-            fileType: .credentials
-        )
+        let profiles = try R.AWSCredentialsFixture.multiple.profiles
         let defaultConfig = try XCTUnwrap(profiles["default"])
         XCTAssertEqual(
             try AWSCredentials.from(configs: [defaultConfig]),
@@ -28,10 +22,7 @@ final class AWSCredentialsTests: XCTestCase {
     }
 
     func testThatMultipleFileContainsValidMinioCredentials() throws {
-        let profiles = try AWSProfileConfigFileParser.profiles(
-            from: R.AWSCredentialsFile.multiple,
-            fileType: .credentials
-        )
+        let profiles = try R.AWSCredentialsFixture.multiple.profiles
         let config = try XCTUnwrap(profiles["minio"])
         XCTAssertEqual(
             try AWSCredentials.from(configs: [config]),
@@ -40,10 +31,7 @@ final class AWSCredentialsTests: XCTestCase {
     }
 
     func testThatFileWithoutRegionThrows() throws {
-        let profiles = try AWSProfileConfigFileParser.profiles(
-            from: R.AWSCredentialsFile.withoutRegion,
-            fileType: .credentials
-        )
+        let profiles = try R.AWSCredentialsFixture.withoutRegion.profiles
         let defaultConfig = try XCTUnwrap(profiles["default"])
         XCTAssertThrowsError(
             try AWSCredentials.from(configs: [defaultConfig])
@@ -51,16 +39,10 @@ final class AWSCredentialsTests: XCTestCase {
     }
 
     func testThatCombinedProfilesContainsValidCredentials() throws {
-        let credsProfiles = try AWSProfileConfigFileParser.profiles(
-            from: R.AWSCredentialsFile.withoutRegion,
-            fileType: .credentials
-        )
+        let credsProfiles = try R.AWSCredentialsFixture.withoutRegion.profiles
         let defaultFromCreds = try XCTUnwrap(credsProfiles["default"])
 
-        let confProfiles = try AWSProfileConfigFileParser.profiles(
-            from: R.AWSUserConfigFile.single,
-            fileType: .config
-        )
+        let confProfiles = try R.AWSUserConfigFixture.single.profiles
         let defaultFromConfig = try XCTUnwrap(confProfiles["default"])
 
         let creds = try AWSCredentials.from(configs: [defaultFromConfig, defaultFromCreds])
@@ -71,16 +53,10 @@ final class AWSCredentialsTests: XCTestCase {
     }
 
     func testThatValuesFromFirstConfigsTakePrecedence() throws {
-        let credsProfiles = try AWSProfileConfigFileParser.profiles(
-            from: R.AWSCredentialsFile.single,
-            fileType: .credentials
-        )
+        let credsProfiles = try R.AWSCredentialsFixture.single.profiles
         let defaultFromCreds = try XCTUnwrap(credsProfiles["default"])
 
-        let confProfiles = try AWSProfileConfigFileParser.profiles(
-            from: R.AWSUserConfigFile.single,
-            fileType: .config
-        )
+        let confProfiles = try R.AWSUserConfigFixture.single.profiles
         let defaultFromConfig = try XCTUnwrap(confProfiles["default"])
 
         let creds = try AWSCredentials.from(configs: [defaultFromConfig, defaultFromCreds])

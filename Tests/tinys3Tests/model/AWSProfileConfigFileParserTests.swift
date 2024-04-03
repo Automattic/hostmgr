@@ -6,7 +6,7 @@ final class AWSProfileConfigFileParserTests: XCTestCase {
     // MARK: Test Parsing Credential Files
 
     func testThatSingleCredsFileContainsDefaultProfile() throws {
-        let profiles = try AWSProfileConfigFileParser.profiles(from: try R.AWSCredentialsFile.single, fileType: .credentials)
+        let profiles = try R.AWSCredentialsFixture.single.profiles
         let defaultProfile = try XCTUnwrap(profiles["default"])
         XCTAssertEqual(defaultProfile.values.count, 4)
         XCTAssertEqual(defaultProfile["aws_access_key_id"], "AKIAIOSFODNN7EXAMPLE")
@@ -16,7 +16,7 @@ final class AWSProfileConfigFileParserTests: XCTestCase {
     }
 
     func testThatMultipleCredsFileContainsOtherCredentials() throws {
-        let profiles = try AWSProfileConfigFileParser.profiles(from: try R.AWSCredentialsFile.multiple, fileType: .credentials)
+        let profiles = try R.AWSCredentialsFixture.multiple.profiles
         let minioProfile = try XCTUnwrap(profiles["minio"])
         XCTAssertEqual(minioProfile.values.count, 4)
         XCTAssertEqual(minioProfile["aws_access_key_id"], "minioadmin")
@@ -26,18 +26,18 @@ final class AWSProfileConfigFileParserTests: XCTestCase {
     }
 
     func testThatNonExistantCredsProfileIsNil() throws {
-        let profiles = try AWSProfileConfigFileParser.profiles(from: try R.AWSCredentialsFile.single, fileType: .credentials)
+        let profiles = try R.AWSCredentialsFixture.single.profiles
         XCTAssertNil(profiles["invalid"])
     }
 
     func testThatNonProfileSectionsAreNotParsedAsProfile() throws {
-        let profiles = try AWSProfileConfigFileParser.profiles(from: try R.AWSCredentialsFile.multiple, fileType: .credentials)
+        let profiles = try R.AWSCredentialsFixture.multiple.profiles
         XCTAssertEqual(profiles.count, 3)
         XCTAssertEqual(profiles.keys.sorted(), ["default", "invalid", "minio"])
     }
 
     func testThatCredsProfileWithInvalidKeysIsEmpty() throws {
-        let profiles = try AWSProfileConfigFileParser.profiles(from: try R.AWSCredentialsFile.multiple, fileType: .credentials)
+        let profiles = try R.AWSCredentialsFixture.multiple.profiles
         let profile = try XCTUnwrap(profiles["invalid"])
         XCTAssertTrue(profile.values.isEmpty)
     }
@@ -45,7 +45,7 @@ final class AWSProfileConfigFileParserTests: XCTestCase {
     // MARK: Test Parsing Config Files
 
     func testThatSingleConfigFileContainsDefaultProfile() throws {
-        let profiles = try AWSProfileConfigFileParser.profiles(from: try R.AWSUserConfigFile.single, fileType: .config)
+        let profiles = try R.AWSUserConfigFixture.single.profiles
         let defaultProfile = try XCTUnwrap(profiles["default"])
         XCTAssertEqual(defaultProfile.values.count, 2)
         XCTAssertEqual(defaultProfile["region"], "us-east-2")
@@ -53,7 +53,7 @@ final class AWSProfileConfigFileParserTests: XCTestCase {
     }
 
     func testThatMultipleConfigFileContainsOtherCredentials() throws {
-        let profiles = try AWSProfileConfigFileParser.profiles(from: try R.AWSUserConfigFile.multiple, fileType: .config)
+        let profiles = try R.AWSUserConfigFixture.multiple.profiles
         let minioProfile = try XCTUnwrap(profiles["minio"])
         XCTAssertEqual(minioProfile.values.count, 2)
         XCTAssertEqual(minioProfile["region"], "us-east-1")
@@ -61,12 +61,12 @@ final class AWSProfileConfigFileParserTests: XCTestCase {
     }
 
     func testThatNonExistantConfigProfileIsNil() throws {
-        let profiles = try AWSProfileConfigFileParser.profiles(from: try R.AWSUserConfigFile.single, fileType: .config)
+        let profiles = try R.AWSUserConfigFixture.single.profiles
         XCTAssertNil(profiles["invalid"])
     }
 
     func testThatConfigProfileWithInvalidKeysIsEmpty() throws {
-        let profiles = try AWSProfileConfigFileParser.profiles(from: try R.AWSUserConfigFile.multiple, fileType: .config)
+        let profiles = try R.AWSUserConfigFixture.multiple.profiles
         let profile = try XCTUnwrap(profiles["invalid"])
         XCTAssertTrue(profile.values.isEmpty)
     }
