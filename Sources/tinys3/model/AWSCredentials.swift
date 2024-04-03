@@ -34,8 +34,8 @@ extension AWSCredentials {
     public static func fromUserConfiguration(profile: AWSProfile = .default) throws -> AWSCredentials {
         let configs: [AWSProfileConfig] = [
             // Note: values in ~/.aws/config takes precedence over values in `~/.aws/credentials`
-            try? AWSProfileConfig.profilesFromConfigUserFile(),
-            try? AWSProfileConfig.profilesFromCredentialsUserFile()
+            try? AWSProfileConfigFileParser.profilesFromConfigUserFile(),
+            try? AWSProfileConfigFileParser.profilesFromCredentialsUserFile()
         ].compactMap({ $0?[profile.name] })
 
         if configs.isEmpty {

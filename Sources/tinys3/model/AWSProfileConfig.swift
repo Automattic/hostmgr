@@ -19,14 +19,10 @@ struct AWSProfileConfig {
     }
 }
 
-extension AWSProfileConfig {
-    /// Parses the `~/.aws/credentials` file for profiles and their associated configuration values
-    /// - Returns: A dictionary containing an `AWSProfileConfig` for each profile name found
-    static func profilesFromCredentialsUserFile() throws -> [String: AWSProfileConfig] {
-        let url = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".aws")
-            .appendingPathComponent("credentials")
-        return try profiles(from: url, isCredentialsFile: true)
+struct AWSProfileConfigFileParser {
+    enum FileType {
+        case config
+        case credentials
     }
 
     /// Parses the `~/.aws/config` file for profiles and their associated configuration values
@@ -35,7 +31,16 @@ extension AWSProfileConfig {
         let url = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent(".aws")
             .appendingPathComponent("config")
-        return try profiles(from: url, isCredentialsFile: false)
+        return try profiles(from: url, fileType: .config)
+    }
+
+    /// Parses the `~/.aws/credentials` file for profiles and their associated configuration values
+    /// - Returns: A dictionary containing an `AWSProfileConfig` for each profile name found
+    static func profilesFromCredentialsUserFile() throws -> [String: AWSProfileConfig] {
+        let url = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".aws")
+            .appendingPathComponent("credentials")
+        return try profiles(from: url, fileType: .credentials)
     }
 
     /// Parses the profiles and their associated configuration values from a given file
@@ -43,8 +48,8 @@ extension AWSProfileConfig {
     ///   - path: The URL of the file to parse
     ///   - isCredentialsFile: Indicates if the file to parse is a credentials file (true) or a config file (false)
     /// - Returns: A dictionary containing an `AWSProfileConfig` for each profile name found
-    static func profiles(from path: URL, isCredentialsFile: Bool) throws -> [String: AWSProfileConfig] {
-        try profiles(from: String(contentsOf: path), isCredentialsFile: isCredentialsFile)
+    static func profiles(from path: URL, fileType: FileType) throws -> [String: AWSProfileConfig] {
+        try profiles(from: String(contentsOf: path), fileType: fileType)
     }
 
     /// Parses the profiles and their associated configuration values from a given string
@@ -55,7 +60,7 @@ extension AWSProfileConfig {
     ///   - string: The content of the file to parse
     ///   - isCredentialsFile: Indicates if the file to parse is a credentials file (true) or a config file (false)
     /// - Returns: A dictionary containing an `AWSProfileConfig` for each profile name found
-    static func profiles(from string: String, isCredentialsFile: Bool) throws -> [String: AWSProfileConfig] {
+    static func profiles(from string: String, fileType: FileType) throws -> [String: AWSProfileConfig] {
         var currentProfileName: String?
         var currentKeyValuePairs: [String: String] = [:]
         var profiles = [String: [String: String]]()
@@ -68,7 +73,10 @@ extension AWSProfileConfig {
             if line == "[default]" {
                 return "default" // Even in config files, default profile is [default] not [profile default]
             }
-            let regex = isCredentialsFile ? /\[(\w+)\]/ : /\[profile (\w+)\]/
+            let regex = switch fileType {
+                case .credentials: /\[(\w+)\]/
+                case .config: /\[profile (\w+)\]/
+            }
             let match = try? regex.wholeMatch(in: line)?.output.1
             return match.map(String.init)
         }
