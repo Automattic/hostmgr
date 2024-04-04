@@ -28,7 +28,7 @@ struct AWSProfileConfigFileParser {
     /// Parses the profiles and their associated configuration values from a given file
     /// - Parameters:
     ///   - path: The URL of the file to parse
-    ///   - isCredentialsFile: Indicates if the file to parse is a credentials file (true) or a config file (false)
+    ///   - fileType: Indicates if the file to parse is a credentials file (.credentials) or a config file (.config)
     /// - Returns: A dictionary containing an `AWSProfileConfig` for each profile name found
     static func profiles(from path: URL, fileType: FileType) throws -> [AWSProfile: AWSProfileConfig] {
         try profiles(from: String(contentsOf: path), fileType: fileType)
@@ -40,7 +40,7 @@ struct AWSProfileConfigFileParser {
     ///
     /// - Parameters:
     ///   - string: The content of the file to parse
-    ///   - isCredentialsFile: Indicates if the file to parse is a credentials file (true) or a config file (false)
+    ///   - fileType: Indicates if the file to parse is a credentials file (.credentials) or a config file (.config)
     /// - Returns: A dictionary containing an `AWSProfileConfig` for each profile name found
     static func profiles(from string: String, fileType: FileType) throws -> [AWSProfile: AWSProfileConfig] {
         var currentProfileName: String?
