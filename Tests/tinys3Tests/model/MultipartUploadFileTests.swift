@@ -48,25 +48,31 @@ final class MultipartUploadFileTests: XCTestCase {
     }
 
     func testThatPartSizeCalculatorReturnsAppropriateSizes() {
-        // swiftlint:disable colon comma
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn:   4.KB),   4    .KB) //   4KB
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn:   4.MB),   4    .MB) //   4MB
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn:  40.MB),   5    .MB) //  40MB
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 400.MB),   5    .MB) // 400MB
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 800.MB),   5    .MB) // 800MB
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn:   4.GB),   8.192.MB) //   4GB
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn:  40.GB),  81.92 .MB) //  40GB (*)
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 400.GB), 819.2  .MB) // 400GB
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 800.GB),   1.6  .GB) // 800GB
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn:   4.TB),   5    .GB) //   4TB
-        // (*) 40GB is the approximate size of `xcode-*.vmtemplate.aar` files
-        // swiftlint:enable colon comma
-    }
-}
+        // swiftlint:disable:next identifier_name
+        func 💾(_ value: Double, _ unit: UnitInformationStorage) -> Int {
+            let bits = unit.converter.baseUnitValue(fromValue: value)
+            let bytes = UnitInformationStorage.bytes.converter.value(fromBaseUnitValue: bits)
+            return Int(bytes)
+        }
 
-private extension Double {
-    var KB: Int { Int(self * 1024) }
-    var MB: Int { Int(self * 1024 * 1024) }
-    var GB: Int { Int(self * 1024 * 1024 * 1024) }
-    var TB: Int { Int(self * 1024 * 1024 * 1024 * 1024) }
+        // Files which are smaller than the minimum part size (5MB) will have a single part,
+        // whose size will thus just be the size of the whole file
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 💾(4, .kibibytes)), 💾(4, .kibibytes))       //   4KB
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 💾(4, .mebibytes)), 💾(4, .mebibytes))       //   4MB
+
+        // Files bigger than the minimum part size (5MB) should have multiple parts,
+        // with each part (except last) being within 5MB...5GB
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 💾(40, .mebibytes)), 💾(5, .mebibytes))      //  40MB
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 💾(400, .mebibytes)), 💾(5, .mebibytes))     // 400MB
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 💾(800, .mebibytes)), 💾(5, .mebibytes))     // 800MB
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 💾(4, .gibibytes)), 💾(8.192, .mebibytes))   //   4GB
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 💾(40, .gibibytes)), 💾(81.92, .mebibytes))  //  40GB (*)
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 💾(400, .gibibytes)), 💾(819.2, .mebibytes)) // 400GB
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 💾(800, .gibibytes)), 💾(1.6, .gibibytes))   // 800GB
+
+        // Files even bigger than that should not have their individual parts be higher than the max part size (5GB)
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 💾(4, .tebibytes)), 💾(5, .gibibytes))       //   4TB
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 💾(8, .tebibytes)), 💾(5, .gibibytes))       //   8TB
+        // (*) 40GB is the approximate size of `xcode-*.vmtemplate.aar` files
+    }
 }
