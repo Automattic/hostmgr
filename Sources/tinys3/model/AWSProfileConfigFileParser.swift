@@ -53,7 +53,8 @@ struct AWSProfileConfigFileParser {
 
         func parseProfileHeader(line: String) -> String? {
             if line == "[default]" {
-                return AWSProfile.default.name // Even in config files, default profile is [default] not [profile default]
+                // Even in config files, default profile is [default] not [profile default]
+                return AWSProfile.default.name
             }
             let regex = switch fileType {
             case .credentials: /\[(\w+)\]/
