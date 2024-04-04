@@ -7,7 +7,7 @@ final class AWSProfileConfigFileParserTests: XCTestCase {
 
     func testThatSingleCredsFileContainsDefaultProfile() throws {
         let profiles = try R.AWSCredentialsFixture.single.profiles
-        let defaultProfile = try XCTUnwrap(profiles["default"])
+        let defaultProfile = try XCTUnwrap(profiles[.default])
         XCTAssertEqual(defaultProfile.values.count, 4)
         XCTAssertEqual(defaultProfile["aws_access_key_id"], "AKIAIOSFODNN7EXAMPLE")
         XCTAssertEqual(defaultProfile["aws_secret_access_key"], "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
@@ -33,7 +33,7 @@ final class AWSProfileConfigFileParserTests: XCTestCase {
     func testThatNonProfileSectionsAreNotParsedAsProfile() throws {
         let profiles = try R.AWSCredentialsFixture.multiple.profiles
         XCTAssertEqual(profiles.count, 3)
-        XCTAssertEqual(profiles.keys.sorted(), ["default", "invalid", "minio"])
+        XCTAssertEqual(profiles.keys.map(\.name).sorted(), ["default", "invalid", "minio"])
     }
 
     func testThatCredsProfileWithInvalidKeysIsEmpty() throws {
@@ -46,7 +46,7 @@ final class AWSProfileConfigFileParserTests: XCTestCase {
 
     func testThatSingleConfigFileContainsDefaultProfile() throws {
         let profiles = try R.AWSUserConfigFixture.single.profiles
-        let defaultProfile = try XCTUnwrap(profiles["default"])
+        let defaultProfile = try XCTUnwrap(profiles[.default])
         XCTAssertEqual(defaultProfile.values.count, 2)
         XCTAssertEqual(defaultProfile["region"], "us-east-2")
         XCTAssertEqual(defaultProfile["output"], "yaml")

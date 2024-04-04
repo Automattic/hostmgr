@@ -111,7 +111,7 @@ struct R {
         case single = "aws-credentials-file-single"
 
         var string: String { get throws { try R.string(self.rawValue) } }
-        var profiles: [String: AWSProfileConfig] {
+        var profiles: [AWSProfile: AWSProfileConfig] {
             get throws {
                 try AWSProfileConfigFileParser.profiles(from: self.string, fileType: .credentials)
             }
@@ -124,7 +124,7 @@ struct R {
         case single = "aws-config-file-single"
 
         var string: String { get throws { try R.string(self.rawValue) } }
-        var profiles: [String: AWSProfileConfig] {
+        var profiles: [AWSProfile: AWSProfileConfig] {
             get throws {
                 try AWSProfileConfigFileParser.profiles(from: self.string, fileType: .config)
             }

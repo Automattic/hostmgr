@@ -36,7 +36,7 @@ extension AWSCredentials {
             // Note: values in ~/.aws/config takes precedence over values in `~/.aws/credentials`
             try? AWSProfileConfigFileParser.profilesFromConfigUserFile(),
             try? AWSProfileConfigFileParser.profilesFromCredentialsUserFile()
-        ].compactMap({ $0?[profile.name] })
+        ].compactMap({ $0?[profile] })
 
         if configs.isEmpty {
             throw Error.noProfileNamed(name: profile.name)
@@ -63,14 +63,4 @@ extension AWSCredentials {
             region: try value(key: .region)
         )
     }
-}
-
-public struct AWSProfile {
-    let name: String
-
-    public static func custom(name: String) -> AWSProfile {
-        return AWSProfile(name: name)
-    }
-
-    public static let `default` = AWSProfile(name: "default")
 }

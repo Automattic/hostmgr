@@ -1,24 +1,6 @@
 import Foundation
 
-/// A list of key-value pairs representing AWS configuration values for a given (single) profile
-struct AWSProfileConfig {
-    let values: [String: String]
-
-    enum Key: String {
-        case accessKeyId = "aws_access_key_id"
-        case secretKey   = "aws_secret_access_key"
-        case region      = "region"
-    }
-
-    subscript(key: String) -> String? {
-        return self.values[key]
-    }
-
-    subscript(key: Key) -> String? {
-        return self[key.rawValue]
-    }
-}
-
+/// Parser for ~/.aws/config and ~/.aws/credentials files
 struct AWSProfileConfigFileParser {
     enum FileType {
         case config
@@ -27,7 +9,7 @@ struct AWSProfileConfigFileParser {
 
     /// Parses the `~/.aws/config` file for profiles and their associated configuration values
     /// - Returns: A dictionary containing an `AWSProfileConfig` for each profile name found
-    static func profilesFromConfigUserFile() throws -> [String: AWSProfileConfig] {
+    static func profilesFromConfigUserFile() throws -> [AWSProfile: AWSProfileConfig] {
         let url = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent(".aws")
             .appendingPathComponent("config")
@@ -36,7 +18,7 @@ struct AWSProfileConfigFileParser {
 
     /// Parses the `~/.aws/credentials` file for profiles and their associated configuration values
     /// - Returns: A dictionary containing an `AWSProfileConfig` for each profile name found
-    static func profilesFromCredentialsUserFile() throws -> [String: AWSProfileConfig] {
+    static func profilesFromCredentialsUserFile() throws -> [AWSProfile: AWSProfileConfig] {
         let url = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent(".aws")
             .appendingPathComponent("credentials")
@@ -48,7 +30,7 @@ struct AWSProfileConfigFileParser {
     ///   - path: The URL of the file to parse
     ///   - isCredentialsFile: Indicates if the file to parse is a credentials file (true) or a config file (false)
     /// - Returns: A dictionary containing an `AWSProfileConfig` for each profile name found
-    static func profiles(from path: URL, fileType: FileType) throws -> [String: AWSProfileConfig] {
+    static func profiles(from path: URL, fileType: FileType) throws -> [AWSProfile: AWSProfileConfig] {
         try profiles(from: String(contentsOf: path), fileType: fileType)
     }
 
@@ -60,10 +42,10 @@ struct AWSProfileConfigFileParser {
     ///   - string: The content of the file to parse
     ///   - isCredentialsFile: Indicates if the file to parse is a credentials file (true) or a config file (false)
     /// - Returns: A dictionary containing an `AWSProfileConfig` for each profile name found
-    static func profiles(from string: String, fileType: FileType) throws -> [String: AWSProfileConfig] {
+    static func profiles(from string: String, fileType: FileType) throws -> [AWSProfile: AWSProfileConfig] {
         var currentProfileName: String?
         var currentKeyValuePairs: [String: String] = [:]
-        var profiles = [String: [String: String]]()
+        var profiles = [AWSProfile: [String: String]]()
 
         func isSectionHeader(line: String) -> Bool {
             line.first == "[" && line.last == "]"
@@ -71,7 +53,7 @@ struct AWSProfileConfigFileParser {
 
         func parseProfileHeader(line: String) -> String? {
             if line == "[default]" {
-                return "default" // Even in config files, default profile is [default] not [profile default]
+                return AWSProfile.default.name // Even in config files, default profile is [default] not [profile default]
             }
             let regex = switch fileType {
             case .credentials: /\[(\w+)\]/
@@ -89,7 +71,7 @@ struct AWSProfileConfigFileParser {
 
         func storePendingSection() {
             if let key = currentProfileName {
-                profiles[key] = currentKeyValuePairs
+                profiles[AWSProfile(name: key)] = currentKeyValuePairs
                 currentKeyValuePairs.removeAll()
                 currentProfileName = nil
             }
