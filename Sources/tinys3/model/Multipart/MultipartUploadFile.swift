@@ -14,19 +14,8 @@ actor MultipartUploadFile {
     }
 
     var parts: [Range<Int>] {
-        var rangeStart = 0
-        var rangeEnd = -1
-
-        var parts = [Range<Int>]()
-
-        while rangeEnd < fileSize {
-            rangeStart = (parts.last?.upperBound ?? 0)
-            rangeEnd = rangeStart + partSize
-
-            parts.append(rangeStart..<min(rangeEnd, fileSize))
-        }
-
-        return parts
+        stride(from: 0, to: fileSize, by: partSize)
+            .map { start in start ..< min(start + partSize, fileSize) }
     }
 
     var uploadParts: [(Int, Range<Int>)] {
