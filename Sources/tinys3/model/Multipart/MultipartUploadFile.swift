@@ -20,10 +20,10 @@ actor MultipartUploadFile {
         var parts = [Range<Int>]()
 
         while rangeEnd < fileSize {
-            rangeStart = (parts.last?.upperBound ?? -1) + 1
+            rangeStart = (parts.last?.upperBound ?? 0)
             rangeEnd = rangeStart + partSize
 
-            parts.append(rangeStart..<rangeEnd)
+            parts.append(rangeStart..<min(rangeEnd, fileSize))
         }
 
         return parts
@@ -38,7 +38,7 @@ actor MultipartUploadFile {
             try handle.seek(toOffset: UInt64(range.lowerBound))
 
             if #available(macOS 10.15.4, *) {
-                guard let data = try handle.read(upToCount: range.count + 1) else {
+                guard let data = try handle.read(upToCount: range.count) else {
                     throw CocoaError(.fileReadUnknown)
                 }
 
