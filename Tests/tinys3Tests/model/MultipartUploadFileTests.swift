@@ -33,6 +33,37 @@ final class MultipartUploadFileTests: XCTestCase {
         }
     }
 
+    func testThatRangesAreNotSkippingBytes() async throws {
+        // Note: keep those values small to keep tests fast, as the `Set` constructed in this test contains as many
+        // elements (= byte indices) as the number of bytes in those fileSizes, so Set operations could end up
+        // quite long if the test were using .mebibytes fileSizes or bitter, instead of .kibibytes or smaller.
+        let partSize = 💾(5, .kibibytes)
+        let fileSizesKB: [Double: [Range<Double>]] = [
+            4: [0..<4],
+            8: [0..<5, 5..<8],
+            16: [0..<5, 5..<10, 10..<15, 15..<16],
+            30: [0..<5, 5..<10, 10..<15, 15..<20, 20..<25, 25..<30] // An entire multiple of the partSize
+        ]
+        for (fileSizeKB, rangesKB) in fileSizesKB {
+            let fileSize = 💾(fileSizeKB, .kibibytes)
+            let ranges = rangesKB.map { 💾($0.lowerBound, .kibibytes) ..< 💾($0.upperBound, .kibibytes) }
+
+            let parts = try await MultipartUploadFile(path: path, partSize: partSize, fileSize: fileSize).parts
+            XCTAssertEqual(parts, ranges)
+            let leftovers = parts.reduce(into: Set(0..<fileSize)) { $0.subtract($1) }
+            XCTAssertEqual(leftovers, [], "Some bytes were skipped and not consumed")
+        }
+    }
+
+    func testThatEachPartIsTheCorrectSize() async throws {
+        let partSize = await file.partSize
+        // Note: the last part is allowed to be smaller, as it's rare that fileSize is an *exact* multiple of partSize
+        for part in parts.dropLast() {
+            let data = try await file[part]
+            XCTAssertEqual(data.count, partSize)
+        }
+    }
+
     func testThatCopyingFileResultsInCorrectHash() async throws {
         let fileHash = try sha256Hash(fileAt: path)
         let tempFile = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -48,17 +79,12 @@ final class MultipartUploadFileTests: XCTestCase {
     }
 
     func testThatPartSizeCalculatorReturnsAppropriateSizes() {
-        // swiftlint:disable:next identifier_name
-        func 💾(_ value: Double, _ unit: UnitInformationStorage) -> Int {
-            let bits = unit.converter.baseUnitValue(fromValue: value)
-            let bytes = UnitInformationStorage.bytes.converter.value(fromBaseUnitValue: bits)
-            return Int(bytes)
-        }
-
-        // Files which are smaller than the minimum part size (5MB) will have a single part,
-        // whose size will thus just be the size of the whole file
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 💾(4, .kibibytes)), 💾(4, .kibibytes))       //   4KB
-        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 💾(4, .mebibytes)), 💾(4, .mebibytes))       //   4MB
+        // For file which are smaller than the minimum part size (5MB), the result of `calculate` will be the
+        // minimum part size (5MB), even though that return value will not really be used when slicing the data
+        // to be sent, as `calculate` only returns the size of parts other than the last one (which is the remainder),
+        // and files smaller than 5MB will only have a single part (which is also the last) anyway.
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 💾(4, .kibibytes)), 💾(5, .mebibytes))       //   4KB
+        XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 💾(4, .mebibytes)), 💾(5, .mebibytes))       //   4MB
 
         // Files bigger than the minimum part size (5MB) should have multiple parts,
         // with each part (except last) being within 5MB...5GB
@@ -75,4 +101,11 @@ final class MultipartUploadFileTests: XCTestCase {
         XCTAssertEqual(PartSizeCalculator.calculate(basedOn: 💾(8, .tebibytes)), 💾(5, .gibibytes))       //   8TB
         // (*) 40GB is the approximate size of `xcode-*.vmtemplate.aar` files
     }
+}
+
+// swiftlint:disable:next identifier_name
+private func 💾(_ value: Double, _ unit: UnitInformationStorage) -> Int {
+    let bits = unit.converter.baseUnitValue(fromValue: value)
+    let bytes = UnitInformationStorage.bytes.converter.value(fromBaseUnitValue: bits)
+    return Int(bytes)
 }

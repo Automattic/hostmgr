@@ -5,13 +5,12 @@ actor MultipartUploadFile {
     let fileSize: Int
     let partSize: Int
 
-    init(path: URL, partSize: Int? = nil) throws {
+    init(path: URL, partSize: Int? = nil, fileSize: Int? = nil) throws {
         self.handle = try FileHandle(forReadingFrom: path)
 
-        let fileSize = try FileManager.default.fileSize(of: path)
-
-        self.fileSize = fileSize
-        self.partSize = PartSizeCalculator.calculate(basedOn: fileSize)
+        let fileSizeUsed = try fileSize ?? FileManager.default.fileSize(of: path)
+        self.fileSize = fileSizeUsed
+        self.partSize = partSize ?? PartSizeCalculator.calculate(basedOn: fileSizeUsed)
     }
 
     var parts: [Range<Int>] {
