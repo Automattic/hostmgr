@@ -5,29 +5,17 @@ actor MultipartUploadFile {
     let fileSize: Int
     let partSize: Int
 
-    init(path: URL, partSize: Int? = nil) throws {
+    init(path: URL, partSize: Int? = nil, fileSize: Int? = nil) throws {
         self.handle = try FileHandle(forReadingFrom: path)
 
-        let fileSize = try FileManager.default.fileSize(of: path)
-
-        self.fileSize = fileSize
-        self.partSize = PartSizeCalculator.calculate(basedOn: fileSize)
+        let fileSizeUsed = try fileSize ?? FileManager.default.fileSize(of: path)
+        self.fileSize = fileSizeUsed
+        self.partSize = partSize ?? PartSizeCalculator.calculate(basedOn: fileSizeUsed)
     }
 
     var parts: [Range<Int>] {
-        var rangeStart = 0
-        var rangeEnd = -1
-
-        var parts = [Range<Int>]()
-
-        while rangeEnd < fileSize {
-            rangeStart = (parts.last?.upperBound ?? -1) + 1
-            rangeEnd = rangeStart + partSize
-
-            parts.append(rangeStart..<rangeEnd)
-        }
-
-        return parts
+        stride(from: 0, to: fileSize, by: partSize)
+            .map { start in start ..< min(start + partSize, fileSize) }
     }
 
     var uploadParts: [(Int, Range<Int>)] {
@@ -39,7 +27,7 @@ actor MultipartUploadFile {
             try handle.seek(toOffset: UInt64(range.lowerBound))
 
             if #available(macOS 10.15.4, *) {
-                guard let data = try handle.read(upToCount: range.count + 1) else {
+                guard let data = try handle.read(upToCount: range.count) else {
                     throw CocoaError(.fileReadUnknown)
                 }
 

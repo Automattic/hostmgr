@@ -7,23 +7,23 @@ enum PartSizeCalculator {
     static let typicalNumberOfParts = 500
 
     static func calculate(basedOn fileSize: Int) -> Int {
-        max(min(fileSize, minPartSize), min(fileSize / typicalNumberOfParts, maxPartSize))
+        max(minPartSize, min(fileSize / typicalNumberOfParts, maxPartSize))
     }
 }
 
-/*
-     ^
-     |       N = typicalNumberOfParts
-     |
- 5GB |                                    _______________________
-     |                               ____/
-     |                          ____/     '
-     |                     ____/          '
-     |                ____/               '
- 5MB |   ------------'                    '
-     |  /            '                    '
-     | /             '                    '
-     |/ '            '                    '
-     +--+------------+--------------------+----------------------------->
-       5MB         5MB*N                5GB*N
+/* Part Size
+       ^
+       |       N = typicalNumberOfParts
+       |
+   5GB |                                     _______________________
+       |                                ____/
+       |                           ____/     '
+       |                      ____/          '
+       |                 ____/               '
+   5MB |----------------'                    '
+       |                '                    '
+       |                '                    '
+       |                '                    '
+       +----------------+--------------------+----------------------------->
+                      5MB*N                5GB*N                     File Size
  */
