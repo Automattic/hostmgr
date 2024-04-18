@@ -45,7 +45,7 @@ lane :upload_release do |_options|
     tag_name: tag,
     description: Digest::SHA256.file(ZIP_FILE_PATH).to_s,
     upload_assets: [ZIP_FILE_PATH] + ARTIFACT_PATHS,
-    is_prerelease: true
+    is_prerelease: false
   )
 end
 
