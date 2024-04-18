@@ -48,7 +48,7 @@ steps:
     command: |
       install_gems
       bundle exec fastlane set_up_signing
-      make build
+      make build verify-signing
     env: *common_env
     plugins: *common_plugins
     agents:
