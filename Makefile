@@ -19,6 +19,11 @@ build:
 	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API (886NX39KP6)" .build/artifacts/release/hostmgr --force --verbose
 	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "Apple Development: Created via API (886NX39KP6)" .build/artifacts/release/hostmgr-helper --force --verbose
 
+verify-signing: build
+	@echo "--- Checking Code Signing"
+	codesign --verify --strict .build/artifacts/release/hostmgr
+	codesign --verify --strict .build/artifacts/release/hostmgr-helper
+
 install: build
 	cp .build/artifacts/release/hostmgr /opt/ci/bin/hostmgr
 	cp .build/artifacts/release/hostmgr-helper /opt/ci/bin/hostmgr-helper
