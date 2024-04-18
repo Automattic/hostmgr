@@ -21,7 +21,7 @@ steps:
     plugins: *common_plugins
     agents:
       queue: "mac"
-      hostname: "MV-MKE-ARM64-022"
+      hostname: "MV-MKE-ARM64-023"
 
   #################
   # Lint
@@ -54,7 +54,7 @@ steps:
     plugins: *common_plugins
     agents:
       queue: "mac"
-      hostname: "MV-MKE-ARM64-022"
+      hostname: "MV-MKE-ARM64-024"
 
   #################
   # Publish the Binary (if we're building a tag)
