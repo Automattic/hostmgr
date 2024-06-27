@@ -50,7 +50,16 @@ struct GitMirrorPublishCommand: AsyncParsableCommand {
         }
 
         let progress = Console.startProgress("Uploading mirror to \(gitMirror.remoteFilename)", type: .upload)
-        try await server.uploadFile(at: gitMirror.archivePath, to: gitMirror.remoteFilename, progress: progress.update)
+        try await server.uploadFile(
+            at: gitMirror.archivePath,
+            to: gitMirror.remoteFilename,
+            // See https://github.com/Automattic/hostmgr/issues/102
+            // For the case of git mirrors, since those are published by Buildkite jobs during `post-checkout`,
+            // there isn't much sense in allowing resume for them anyway—as even if they fail on a given job,
+            // that job won't re-run the `publish-git-mirror` command again on failure.
+            allowResume: false,
+            progress: progress.update
+        )
 
         Console.success("Upload complete")
     }
