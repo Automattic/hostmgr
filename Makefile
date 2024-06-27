@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := lint
 
 RELEASE_VERSION = $(shell .build/release/hostmgr --version)
-SWIFTLINT_VERSION = 0.53.0
+SWIFTLINT_VERSION=$(shell awk '/^swiftlint_version:/ {print $$2}' .swiftlint.yml)
 RUBY_VERSION = $(shell cat .ruby-version)
 
 clean:

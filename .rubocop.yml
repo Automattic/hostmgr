@@ -13,5 +13,8 @@ AllCops:
   NewCops: enable
   Include:
     - 'fastlane/Fastfile'
-  TargetRubyVersion: 2.7.4
+  TargetRubyVersion: 3.2.2
   SuggestExtensions: false
+
+Style/HashSyntax:
+  EnforcedShorthandSyntax: never
