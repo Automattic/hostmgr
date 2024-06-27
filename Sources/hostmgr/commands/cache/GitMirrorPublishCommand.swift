@@ -50,7 +50,12 @@ struct GitMirrorPublishCommand: AsyncParsableCommand {
         }
 
         let progress = Console.startProgress("Uploading mirror to \(gitMirror.remoteFilename)", type: .upload)
-        try await server.uploadFile(at: gitMirror.archivePath, to: gitMirror.remoteFilename, allowResume: false, progress: progress.update)
+        try await server.uploadFile(
+            at: gitMirror.archivePath,
+            to: gitMirror.remoteFilename,
+            allowResume: false,
+            progress: progress.update
+        )
 
         Console.success("Upload complete")
     }
