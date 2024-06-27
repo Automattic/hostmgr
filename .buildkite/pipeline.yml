@@ -26,19 +26,14 @@ steps:
   # Lint
   #################
   - label: "🧪 Lint Swift"
-    command: |
-      make lint-swift
-    plugins: *common_plugins
+    command: swiftlint
     agents:
-      queue: default
+      queue: "linter"
 
   - label: "🧪 Lint Ruby"
-    command: |
-      make lint-ruby
-    env: *common_env
-    plugins: *common_plugins
+    command: rubocop
     agents:
-      queue: default
+      queue: "linter"
 
   #################
   # Validate Release Build

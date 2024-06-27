@@ -11,7 +11,7 @@ extension RequestPerformer {
     }
 
     func perform(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
-        return try await withCheckedThrowingContinuation { continuation -> Void in
+        return try await withCheckedThrowingContinuation { continuation in
             let task = self.urlSession.dataTask(with: request) { data, response, networkError in
                 if let error = networkError {
                     continuation.resume(throwing: error)
