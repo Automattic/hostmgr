@@ -1,7 +1,7 @@
 import Foundation
 import ArgumentParser
 
-struct RunCommand: ParsableCommand {
+struct GenerateCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "generate",
         abstract: "Data processing tasks",
