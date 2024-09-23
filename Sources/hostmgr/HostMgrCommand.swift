@@ -15,7 +15,7 @@ struct Hostmgr: AsyncParsableCommand {
             SyncCommand.self,
             InitCommand.self,
             InstallCommand.self,
-            RunCommand.self,
+            GenerateCommand.self,
             SetCommand.self,
             BenchmarkCommand.self,
             ConfigCommand.self,
