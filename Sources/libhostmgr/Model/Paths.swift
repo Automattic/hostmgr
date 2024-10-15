@@ -44,6 +44,10 @@ public extension Paths {
         storageRoot.appendingPathComponent("git-mirrors", isDirectory: true)
     }()
 
+    static let botUserSshKeyDirectory: URL = {
+        storageRoot.appendingPathComponent("bot-user-ssh-key", isDirectory: true)
+    }()
+
     static let restoreImageDirectory: URL = {
         storageRoot.appendingPathComponent("restore-images", isDirectory: true)
     }()
