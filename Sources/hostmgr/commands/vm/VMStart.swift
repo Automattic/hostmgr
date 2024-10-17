@@ -81,8 +81,8 @@ struct VMStartCommand: AsyncParsableCommand {
                 paths.append(LaunchConfiguration.SharedPath(source: Paths.gitMirrorStorageDirectory, readOnly: true))
             }
 
-            if try FileManager.default.directoryExists(at: Paths.botUserSshKeyDirectory) {
-                paths.append(LaunchConfiguration.SharedPath(source: Paths.botUserSshKeyDirectory, readOnly: true))
+            if try FileManager.default.directoryExists(at: Paths.commonCredentialsDirectory) {
+                paths.append(LaunchConfiguration.SharedPath(source: Paths.commonCredentialsDirectory, readOnly: true))
             }
 
             return paths
