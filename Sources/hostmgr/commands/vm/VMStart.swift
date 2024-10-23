@@ -19,6 +19,9 @@ struct VMStartCommand: AsyncParsableCommand {
     @Flag(help: "Mount the system git mirrors directory into the virtual machine on startup?")
     var withGitMirrors: Bool = false
 
+    @Flag(help: "Mount the directory with shared credentials into the virtual machine on startup?")
+    var withCommonCredentials: Bool = false
+
     @Flag(help: "Wait indefinitely for the SSH server to become available (useful when provisioning a new image")
     var waitForever: Bool = false
 
@@ -33,6 +36,7 @@ struct VMStartCommand: AsyncParsableCommand {
         case name
         case handle
         case withGitMirrors
+        case withCommonCredentials
         case waitForever
         case persistent
         case skipNetworkChecks
@@ -79,12 +83,16 @@ struct VMStartCommand: AsyncParsableCommand {
         get throws {
             var paths: [LaunchConfiguration.SharedPath] = []
 
-            if self.withGitMirrors && try FileManager.default.directoryExists(at: Paths.gitMirrorStorageDirectory) {
-                paths.append(LaunchConfiguration.SharedPath(source: Paths.gitMirrorStorageDirectory, readOnly: true))
+            if self.withGitMirrors {
+                if try FileManager.default.directoryExists(at: Paths.gitMirrorStorageDirectory) {
+                    paths.append(LaunchConfiguration.SharedPath(source: Paths.gitMirrorStorageDirectory, readOnly: true))
+                }
             }
 
-            if try FileManager.default.directoryExists(at: Paths.commonCredentialsDirectory) {
-                paths.append(LaunchConfiguration.SharedPath(source: Paths.commonCredentialsDirectory, readOnly: true))
+            if self.withCommonCredentials {
+                if try FileManager.default.directoryExists(at: Paths.commonCredentialsDirectory) {
+                    paths.append(LaunchConfiguration.SharedPath(source: Paths.commonCredentialsDirectory, readOnly: true))
+                }
             }
 
             return paths
