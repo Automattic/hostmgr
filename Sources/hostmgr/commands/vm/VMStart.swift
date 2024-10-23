@@ -19,6 +19,9 @@ struct VMStartCommand: AsyncParsableCommand {
     @Flag(help: "Mount the system git mirrors directory into the virtual machine on startup?")
     var withGitMirrors: Bool = false
 
+    @Flag(help: "Mount the directory with shared credentials into the virtual machine on startup?")
+    var withCommonCredentials: Bool = false
+
     @Flag(help: "Wait indefinitely for the SSH server to become available (useful when provisioning a new image")
     var waitForever: Bool = false
 
@@ -33,6 +36,7 @@ struct VMStartCommand: AsyncParsableCommand {
         case name
         case handle
         case withGitMirrors
+        case withCommonCredentials
         case waitForever
         case persistent
         case skipNetworkChecks
@@ -72,19 +76,30 @@ struct VMStartCommand: AsyncParsableCommand {
         }
     }
 
+    // Those paths are auto-mounted in the VM in the `/Volumes/My Shared Files/` path
+    // See https://developer.apple.com/documentation/virtualization/vzvirtiofilesystemdeviceconfiguration
+    // See Sources/libhostmgr/VM/LaunchConfiguration.swift#L69-L82
     var sharedPaths: [LaunchConfiguration.SharedPath] {
         get throws {
-            guard try FileManager.default.directoryExists(at: Paths.gitMirrorStorageDirectory) else {
-                return []
+            var paths: [LaunchConfiguration.SharedPath] = []
+
+            if self.withGitMirrors {
+                if try FileManager.default.directoryExists(at: Paths.gitMirrorStorageDirectory) {
+                    paths.append(
+                        LaunchConfiguration.SharedPath(source: Paths.gitMirrorStorageDirectory, readOnly: true)
+                    )
+                }
             }
 
-            guard self.withGitMirrors == true else {
-                return []
+            if self.withCommonCredentials {
+                if try FileManager.default.directoryExists(at: Paths.commonCredentialsDirectory) {
+                    paths.append(
+                        LaunchConfiguration.SharedPath(source: Paths.commonCredentialsDirectory, readOnly: true)
+                    )
+                }
             }
 
-            return [
-                LaunchConfiguration.SharedPath(source: Paths.gitMirrorStorageDirectory, readOnly: true)
-            ]
+            return paths
         }
     }
 }

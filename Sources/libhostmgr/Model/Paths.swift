@@ -44,6 +44,10 @@ public extension Paths {
         storageRoot.appendingPathComponent("git-mirrors", isDirectory: true)
     }()
 
+    static let commonCredentialsDirectory: URL = {
+        storageRoot.appendingPathComponent("common-credentials", isDirectory: true)
+    }()
+
     static let restoreImageDirectory: URL = {
         storageRoot.appendingPathComponent("restore-images", isDirectory: true)
     }()
