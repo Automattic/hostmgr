@@ -72,12 +72,14 @@ struct VMStartCommand: AsyncParsableCommand {
         }
     }
 
+    // Those paths are auto-mounted in the VM in the `/Volumes/My Shared Files/` path
+    // See https://developer.apple.com/documentation/virtualization/vzvirtiofilesystemdeviceconfiguration
+    // See Sources/libhostmgr/VM/LaunchConfiguration.swift#L69-L82
     var sharedPaths: [LaunchConfiguration.SharedPath] {
         get throws {
             var paths: [LaunchConfiguration.SharedPath] = []
 
-            if try FileManager.default.directoryExists(at: Paths.gitMirrorStorageDirectory)
-                && self.withGitMirrors == true {
+            if self.withGitMirrors && try FileManager.default.directoryExists(at: Paths.gitMirrorStorageDirectory) {
                 paths.append(LaunchConfiguration.SharedPath(source: Paths.gitMirrorStorageDirectory, readOnly: true))
             }
 
