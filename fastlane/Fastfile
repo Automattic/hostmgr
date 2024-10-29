@@ -26,12 +26,12 @@ def get_required_env(key)
   ENV.fetch(key)
 end
 
-before_all do |_lane|
+before_all do
   setup_ci # Fixes weird Keychain bugs
 end
 
 desc 'Upload the Release Build products to Github under a new release'
-lane :upload_release do |_options|
+lane :upload_release do
   UI.user_error!('No build products are present – did you run `make build-release`?') if ARTIFACT_PATHS.empty?
 
   create_release_zip
@@ -50,7 +50,7 @@ lane :upload_release do |_options|
 end
 
 desc 'Download the development signing certificates to this machine'
-lane :set_up_signing do |_options|
+lane :set_up_signing do
   sync_code_signing(
     platform: 'macos',
     app_identifier: APPLE_BUNDLE_IDENTIFIER,
