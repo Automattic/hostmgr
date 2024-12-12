@@ -27,11 +27,11 @@ A macOS menu bar application that:
 - Enables VNC connections to VMs
 - Displays VM status and controls
 - Facilitates initial VM setup through graphical interface
-  - We use it to [create new OS templates for VMs](https://github.com/Automattic/buildkite-ci/blob/trunk/src/agents/macos-vms/README.md), to go through the macOS setup wizard via the GUI when configuring the template VM.
+  - We use it to [create new OS templates for VMs](https://github.com/Automattic/buildkite-ci/blob/trunk/src/agents/macos-vms/README.md) _(Automattic internal link)_, to go through the macOS setup wizard via the GUI when configuring the template VM.
 
 ## Installation
 
-Those tools are installed in our macOS CI hosts when those are deployed, using the [Ansible playbook](https://github.com/Automattic/buildkite-ci/blob/trunk/src/agents/macos-hosts/tasks/install-hostmgr.yml)
+Those tools are installed in our macOS CI hosts when those are deployed, using the [Ansible playbook](https://github.com/Automattic/buildkite-ci/blob/trunk/src/agents/macos-hosts/tasks/install-hostmgr.yml) _(Automattic internal link)_
 
 When you need to install those tools on your local machine—typically to create new OS templates or Xcode VMs—follow the below instructions:
 
@@ -45,7 +45,7 @@ _(We can potentially automate this step, but for now this is still manual)_
    - Either by right-clicking the executable in the Finder, selecting "Open" in the context menu, and click "Open" button.
    - Or by running `xattr -d com.apple.quarantine /opt/ci/bin/hostmgr /opt/ci/bin/hostmgr-helper`.
 1. Add `/opt/ci/bin` to your PATH so that the VM tools will be able to use `hostmgr` and `hostmgr-helper`
-1. Create a config file in `/opt/ci/hostmgr.json`. You can copy [the file we use to provision our macOS CI hosts](https://github.com/Automattic/buildkite-ci/blob/trunk/src/agents/macos-hosts/resources/hostmgr.json) directly there.
+1. Create a config file in `/opt/ci/hostmgr.json`. You can copy [the file we use to provision our macOS CI hosts](https://github.com/Automattic/buildkite-ci/blob/trunk/src/agents/macos-hosts/resources/hostmgr.json) _(Automattic internal link)_ directly there.
 1. Open a Terminal and run `hostmgr-helper` to launch the "hostmgr-helper" macOS app, which needs to be running during building VM images.
 
 ## Release
