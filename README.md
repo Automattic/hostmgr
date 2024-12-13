@@ -4,9 +4,15 @@ A suite of tools for managing macOS virtual machines using Apple's Virtualizatio
 
 ## Overview
 
-`hostmgr` is an internal tool developed by Automattic to manage macOS VMs for CI/CD purposes. It facilitates managing multiple combinations of macOS versions, Xcode installations and tooling using a single physical machine.
+`hostmgr` is an internal tool developed by Automattic to manage macOS VMs for CI/CD purposes.
+It facilitates managing multiple combinations of macOS versions, Xcode installations and tooling on a single physical machine (typically a CI host).
 
-While primarily designed for Automattic's specific CI infrastructure, the codebase can serve as a practical reference implementation in Swift of:
+> [!IMPORTANT]
+> This tool is designed for Automattic's specific CI infrastructure, and as such have some assumptions about our CI infra and tools hardcoded into its implementation (e.g. our use of S3 to store VM templates, our use of Buildkite for our CI/CD…)
+>
+> As such, while developed in the open, this tool is not really intended to be used by other as-is, and we don't plan to address issues related to the use of this tool outside of the context of Automattic's CI infrastructure.
+
+That being said, feel free to open PRs to suggest improvements or fix issues, or just use the codebase as an inspiration and practical reference for a Swift implementation of:
 
 - Working with Apple's Virtualization framework
 - Managing macOS VMs and their lifecycle programmatically
