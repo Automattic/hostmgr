@@ -66,7 +66,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
             Logger.helper.error("Attempting Cleanup of \(launchConfiguration.handle)")
 
             try? await VMManager.removeVM(name: launchConfiguration.handle)
-            self.status = .empty
+            self.status = .crashed(error)
             throw error
         }
     }
