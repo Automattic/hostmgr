@@ -25,10 +25,8 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         case crashed(Error)
     }
 
-    typealias VirtualMachine = (instance: VZVirtualMachine, config: LaunchConfiguration)
-
     @Published
-    var virtualMachine: VirtualMachine?
+    var virtualMachine: ManagedVirtualMachine?
 
     @Published @MainActor
     var status: Status = .empty
@@ -48,7 +46,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         do {
             let virtualMachine = try await launchConfiguration.setupVirtualMachine()
             virtualMachine.delegate = self
-            self.virtualMachine = (virtualMachine, launchConfiguration)
+            self.virtualMachine = ManagedVirtualMachine(machine: virtualMachine, config: launchConfiguration)
 
             try await virtualMachine.start()
 
@@ -79,7 +77,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         default:
             break
         }
-        try await virtualMachine?.instance.stop()
+        try await virtualMachine?.machine.stop()
         await resetSlot()
     }
 
