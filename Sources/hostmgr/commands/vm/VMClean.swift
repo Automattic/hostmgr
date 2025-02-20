@@ -25,7 +25,7 @@ struct VMCleanCommand: AsyncParsableCommand {
         Console.info("Removing VMs not used since \(Format.date(cutoff, style: .short))")
 
         for image in unusedImages {
-            try await vmManager.removeVM(name: image.vmName)
+            try await VMManager.removeVM(name: image.vmName)
             Console.success("Removed \(image.vmName)")
         }
 

@@ -44,11 +44,11 @@ extension VMHost: HostmgrServerDelegate {
     func stop(handle: String) async throws {
         Logger.helper.log("Received stop request for \(handle)")
 
-        if self.primaryVMSlot.isRunningVM(withHandle: handle) {
+        if self.primaryVMSlot.isConfiguredForHandle(handle) {
             try await primaryVMSlot.stopVirtualMachine()
         }
 
-        if self.secondaryVMSlot.isRunningVM(withHandle: handle) {
+        if self.secondaryVMSlot.isConfiguredForHandle(handle) {
             try await secondaryVMSlot.stopVirtualMachine()
         }
     }
