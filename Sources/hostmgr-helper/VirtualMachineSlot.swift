@@ -74,7 +74,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
     @MainActor
     func stopVirtualMachine() async throws {
         switch status {
-        case .starting(_), .running(_, _):
+        case .starting, .running:
             self.status = .stopping
         default:
             break
