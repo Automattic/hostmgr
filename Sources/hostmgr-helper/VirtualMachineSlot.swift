@@ -95,6 +95,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         }
 
         if let error {
+            Logger.helper.error("Resetting slot with crashed state: \(error)")
             self.status = .crashed(error)
         } else {
             self.status = .empty
