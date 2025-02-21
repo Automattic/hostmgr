@@ -38,7 +38,7 @@ public struct VMManager {
 
     /// Delete a local VM
     ///
-    public static func removeVM(name: String) async throws {
+    public func removeVM(name: String) async throws {
         try FileManager.default.removeItemIfExists(at: Paths.toAppleSiliconVM(named: name))
         try FileManager.default.removeItemIfExists(at: Paths.toArchivedVM(named: name))
         try FileManager.default.removeItemIfExists(at: Paths.toVMTemplate(named: name))
