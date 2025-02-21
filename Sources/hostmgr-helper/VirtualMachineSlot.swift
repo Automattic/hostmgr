@@ -25,6 +25,11 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         case crashed(Error)
     }
 
+    struct ManagedVirtualMachine {
+        let machine: VZVirtualMachine
+        let config: LaunchConfiguration
+    }
+
     @Published
     var virtualMachine: ManagedVirtualMachine?
 
