@@ -68,7 +68,11 @@ class VirtualMachineSlot: NSObject, ObservableObject {
             Logger.helper.error("Error launching VM: \(error.localizedDescription)")
             Logger.helper.error("Attempting Cleanup of \(launchConfiguration.handle)")
 
-            try? await VMManager.removeVM(name: launchConfiguration.handle)
+            do {
+                try await VMManager.removeVM(name: launchConfiguration.handle)
+            } catch {
+                Logger.helper.error("Failed to remove VM file: \(error)")
+            }
             self.status = .crashed(error)
             throw error
         }
@@ -93,7 +97,11 @@ class VirtualMachineSlot: NSObject, ObservableObject {
     @MainActor
     func resetSlot(withError error: Error? = nil) async {
         if let managedVirtualMachine {
-            try? await VMManager.removeVM(name: managedVirtualMachine.config.handle)
+            do {
+                try await VMManager.removeVM(name: managedVirtualMachine.config.handle)
+            } catch {
+                Logger.helper.error("Failed to remove VM file: \(error)")
+            }
             self.managedVirtualMachine = nil
         }
 
