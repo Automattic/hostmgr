@@ -31,7 +31,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
     }
 
     @Published
-    var virtualMachine: ManagedVirtualMachine?
+    var managedVirtualMachine: ManagedVirtualMachine?
 
     @Published @MainActor
     var status: Status = .empty
@@ -51,7 +51,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         do {
             let virtualMachine = try await launchConfiguration.setupVirtualMachine()
             virtualMachine.delegate = self
-            self.virtualMachine = ManagedVirtualMachine(machine: virtualMachine, config: launchConfiguration)
+            self.managedVirtualMachine = ManagedVirtualMachine(machine: virtualMachine, config: launchConfiguration)
 
             try await virtualMachine.start()
 
@@ -82,7 +82,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         default:
             break
         }
-        try await virtualMachine?.machine.stop()
+        try await managedVirtualMachine?.machine.stop()
         await resetSlot()
     }
 
@@ -92,9 +92,9 @@ class VirtualMachineSlot: NSObject, ObservableObject {
     /// - Parameter error: Error supplied if the VM crashed
     @MainActor
     func resetSlot(withError error: Error? = nil) async {
-        if let virtualMachine {
-            try? await VMManager.removeVM(name: virtualMachine.config.handle)
-            self.virtualMachine = nil
+        if let managedVirtualMachine {
+            try? await VMManager.removeVM(name: managedVirtualMachine.config.handle)
+            self.managedVirtualMachine = nil
         }
 
         if let error {
@@ -107,7 +107,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
 
     @MainActor
     func isConfiguredForHandle(_ handle: String) -> Bool {
-        guard let configHandle = virtualMachine?.config.handle else {
+        guard let configHandle = managedVirtualMachine?.config.handle else {
             return false
         }
         Logger.helper.debug(
