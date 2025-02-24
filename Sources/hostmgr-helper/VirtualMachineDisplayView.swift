@@ -4,7 +4,7 @@ import Virtualization
 struct VirtualMachineDisplayView: NSViewRepresentable {
     typealias NSViewType = VZVirtualMachineView
 
-    let virtualMachine: VZVirtualMachine
+    let virtualMachine: VZVirtualMachine?
 
     func makeNSView(context: Context) -> VZVirtualMachineView {
         let view = VZVirtualMachineView()

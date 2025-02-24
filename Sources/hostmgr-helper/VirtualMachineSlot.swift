@@ -6,7 +6,7 @@ import Network
 import libhostmgr
 
 @MainActor
-class VirtualMachineSlot: NSObject, ObservableObject, VZVirtualMachineDelegate {
+class VirtualMachineSlot: NSObject, ObservableObject {
 
     enum Role: String, Codable {
         case primary
@@ -25,10 +25,15 @@ class VirtualMachineSlot: NSObject, ObservableObject, VZVirtualMachineDelegate {
         case crashed(Error)
     }
 
+    struct ManagedVirtualMachine {
+        let machine: VZVirtualMachine
+        let config: LaunchConfiguration
+    }
+
     private let vmManager = VMManager()
 
     @Published
-    var virtualMachine: VZVirtualMachine?
+    var managedVirtualMachine: ManagedVirtualMachine?
 
     @Published @MainActor
     var status: Status = .empty
@@ -48,8 +53,8 @@ class VirtualMachineSlot: NSObject, ObservableObject, VZVirtualMachineDelegate {
         do {
             let virtualMachine = try await launchConfiguration.setupVirtualMachine()
             virtualMachine.delegate = self
+            self.managedVirtualMachine = ManagedVirtualMachine(machine: virtualMachine, config: launchConfiguration)
 
-            self.virtualMachine = virtualMachine
             try await virtualMachine.start()
 
             if launchConfiguration.waitForNetworking {
@@ -63,8 +68,12 @@ class VirtualMachineSlot: NSObject, ObservableObject, VZVirtualMachineDelegate {
         } catch {
             Logger.helper.error("Error launching VM: \(error.localizedDescription)")
             Logger.helper.error("Attempting Cleanup of \(launchConfiguration.handle)")
-            try await vmManager.removeVM(name: launchConfiguration.handle)
 
+            do {
+                try await vmManager.removeVM(name: launchConfiguration.handle)
+            } catch {
+                Logger.helper.error("Failed to remove VM file: \(error)")
+            }
             self.status = .crashed(error)
             throw error
         }
@@ -72,43 +81,48 @@ class VirtualMachineSlot: NSObject, ObservableObject, VZVirtualMachineDelegate {
 
     @MainActor
     func stopVirtualMachine() async throws {
-        self.status = .stopping
-        try await virtualMachine?.stop()
-        self.status = .empty
+        switch status {
+        case .starting, .running:
+            self.status = .stopping
+        default:
+            break
+        }
+        try await managedVirtualMachine?.machine.stop()
+        await resetSlot()
     }
 
-    /// Handle a VM that was stopped from outside this object (for instance – by being shut down internally)
+    /// Resets the slot to a stopped status
     ///
     /// No need to do anything except some internal bookkeeping
-    ///
+    /// - Parameter error: Error supplied if the VM crashed
     @MainActor
-    func flush() async throws {
-        self.virtualMachine = nil
-        self.status = .empty
-    }
+    func resetSlot(withError error: Error? = nil) async {
+        if let managedVirtualMachine {
+            do {
+                try await vmManager.removeVM(name: managedVirtualMachine.config.handle)
+            } catch {
+                Logger.helper.error("Failed to remove VM file: \(error)")
+            }
+            self.managedVirtualMachine = nil
+        }
 
-    @MainActor
-    func isRunningVM(withHandle handle: String) -> Bool {
-        switch self.status {
-        case .empty:
-            return false
-        case .starting(let launchConfiguration):
-            return launchConfiguration.handle == handle
-        case .running(let launchConfiguration, _):
-            Logger.helper.debug(
-                "Comparing \(launchConfiguration.handle) and \(handle)"
-            )
-            return launchConfiguration.handle == handle
-        case .stopping:
-            return false
-        case .crashed:
-            return false
+        if let error {
+            Logger.helper.error("Resetting slot with crashed state: \(error)")
+            self.status = .crashed(error)
+        } else {
+            self.status = .empty
         }
     }
 
     @MainActor
-    func isRunning(virtualMachine: VZVirtualMachine) -> Bool {
-        self.virtualMachine == virtualMachine
+    func isConfiguredForHandle(_ handle: String) -> Bool {
+        guard let configHandle = managedVirtualMachine?.config.handle else {
+            return false
+        }
+        Logger.helper.debug(
+            "Comparing \(configHandle) and \(handle)"
+        )
+        return configHandle == handle
     }
 
     @MainActor
@@ -118,28 +132,33 @@ class VirtualMachineSlot: NSObject, ObservableObject, VZVirtualMachineDelegate {
         default: return false
         }
     }
+}
 
-//    /// Called when a VM is stopped gracefully
-//    func guestDidStop(_ virtualMachine: VZVirtualMachine) {
-//        Logger.helper.log("Virtual Machine Stopped")
-//
-//        assert(Thread.isMainThread)
-//
-////        self.status = .empty
-////        self.virtualMachine = nil
-//    }
-//
-//    func virtualMachine(_ virtualMachine: VZVirtualMachine, didStopWithError error: Error) {
-//        assert(Thread.isMainThread)
-////        self.status = .crashed(error)
-//    }
-//
-//    func virtualMachine(
-//        _ virtualMachine: VZVirtualMachine,
-//        networkDevice: VZNetworkDevice,
-//        attachmentWasDisconnectedWithError error: Error
-//    ) {
-//        debugPrint("Network attachment was disconnected")
-//        Logger.helper.log("Network attachment was disconnected: \(error.localizedDescription)")
-//    }
+// MARK: VZVirtualMachineDelegate conformance
+extension VirtualMachineSlot: VZVirtualMachineDelegate {
+    /// Called when a VM is stopped gracefully
+    nonisolated func guestDidStop(_ virtualMachine: VZVirtualMachine) {
+        Logger.helper.log("Virtual Machine Stopped")
+        Task {
+            await resetSlot()
+        }
+    }
+
+    nonisolated func virtualMachine(_ virtualMachine: VZVirtualMachine, didStopWithError error: Error) {
+        Logger.helper.error("Virtual Machine Crashed: \(error.localizedDescription)")
+        Task {
+            await resetSlot(withError: error)
+        }
+    }
+
+    nonisolated func virtualMachine(
+        _ virtualMachine: VZVirtualMachine,
+        networkDevice: VZNetworkDevice,
+        attachmentWasDisconnectedWithError error: Error
+    ) {
+        Logger.helper.error("Network attachment was disconnected: \(error.localizedDescription)")
+        Task {
+            try await stopVirtualMachine()
+        }
+    }
 }
