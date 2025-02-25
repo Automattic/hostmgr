@@ -87,7 +87,13 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         default:
             break
         }
-        try await managedVirtualMachine?.machine.stop()
+        if let machine = managedVirtualMachine?.machine, machine.canStop {
+            do {
+                try await machine.stop()
+            } catch {
+                Logger.helper.error("Failed to stop VM: \(error)")
+            }
+        }
         await resetSlot()
     }
 
