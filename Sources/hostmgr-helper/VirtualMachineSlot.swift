@@ -74,6 +74,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
             } catch {
                 Logger.helper.error("Failed to remove VM file: \(error)")
             }
+            self.managedVirtualMachine = nil
             self.status = .crashed(error)
             throw error
         }
