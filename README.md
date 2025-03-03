@@ -24,7 +24,7 @@ The suite consists of two main components:
 A command-line tool that provides capabilities for:
 - Creating, packaging, and publishing VMs to S3
 - Managing VM lifecycle (start, stop, list)
-- Preparing 
+- Preparing
 - Integration with CI systems (specifically Buildkite in our case)
 
 ### `hostmgr-helper`
