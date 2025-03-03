@@ -5,7 +5,7 @@ import libhostmgr
 struct VMListCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "list",
-        abstract: "List VM images that exist on disk on the local machine"
+        abstract: "List VM images with information about location, filename, packaging state, and size."
     )
 
     enum Location: String, CaseIterable {
