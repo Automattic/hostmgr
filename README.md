@@ -43,7 +43,7 @@ When you need to install those tools on your local machine—typically to create
 
 _(We can potentially automate this step, but for now this is still manual)_
 
-1. Run `sudo mkdir -p /opt/ci/ && sudo chown <your-mac-user-name> /opt/ci`.
+1. Run `sudo mkdir -p /opt/ci/ && sudo chown $(whoami) /opt/ci`.
 1. Create a few directories: `mkdir -p /opt/ci/bin /opt/ci/vm-images /opt/ci/working-vm-images`.
 1. Download `hostmgr` and `hostmgr-helper` from [the latest release](https://github.com/automattic/hostmgr/releases) and move them to `/opt/ci/bin`.
 1. Give the downloaded binaries executable permission: `chmod u+x /opt/ci/bin/hostmgr /opt/ci/bin/hostmgr-helper`.
