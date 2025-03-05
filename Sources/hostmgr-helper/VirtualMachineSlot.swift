@@ -19,7 +19,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
 
     enum Status: Sendable {
         case empty
-        case starting(Task<Void, Error>, ManagedVirtualMachine)
+        case starting(ManagedVirtualMachine, Task<Void, Error>)
         case running(ManagedVirtualMachine)
         case stopping(ManagedVirtualMachine)
         case crashed(Error)
@@ -51,7 +51,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         do {
             let mvm = ManagedVirtualMachine(config: launchConfiguration)
             let startTask = mvm.start()
-            self.status = .starting(startTask, mvm)
+            self.status = .starting(mvm, startTask)
 
             try await startTask.value
             if startTask.isCancelled {
@@ -68,7 +68,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
     @MainActor
     func stop(withError error: Error? = nil) async throws {
         switch status {
-        case .starting(let task, let mvm):
+        case .starting(let mvm, let task):
             status = .stopping(mvm)
             task.cancel()
             await mvm.stop()
@@ -92,7 +92,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
     @MainActor
     func isConfiguredForHandle(_ handle: String) -> Bool {
         switch status {
-        case .starting(_, let mvm), .running(let mvm), .stopping(let mvm):
+        case .starting(let mvm, _), .running(let mvm), .stopping(let mvm):
             Logger.helper.debug(
                 "Comparing \(mvm.handle) and \(handle)"
             )

@@ -8,7 +8,7 @@ struct VMListItem: View {
     var body: some View {
         switch slot.status {
         case .empty: EmptyVMListItem(slot: slot)
-        case .starting(_, let mvm):
+        case .starting(let mvm, _):
             PendingVMListItem(
                 launchConfiguration: mvm.config,
                 slot: slot
