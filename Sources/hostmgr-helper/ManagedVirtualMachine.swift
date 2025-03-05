@@ -52,15 +52,34 @@ class ManagedVirtualMachine {
             machine.delegate = nil
             if machine.canStop {
                 do {
-                    Logger.helper.debug("Attempting to stop VM \(handle).")
-                    /// Note: It's suspected that this call may hang under certain conditions.
-                    try await machine.stop()
+                    Logger.helper.debug("Attempting to stop VM \(handle)")
+                    try await stopVMWithTimeout(machine, timeout: .seconds(15))
                 } catch {
                     Logger.helper.error("Failed to stop VM \(handle): \(error)")
                 }
             }
         }
         await cleanUp()
+    }
+
+    /// Adds a timeout to stopping VMs because it's suspected that VZVirtualMachines can get into a state
+    /// where the call to `stop()` hangs.
+    private func stopVMWithTimeout(_ vm: VZVirtualMachine, timeout: Duration) async throws {
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask { @MainActor in
+                try await vm.stop()
+                Logger.helper.debug("Successfully stopped VM")
+            }
+            group.addTask {
+                try await Task.sleep(for: timeout)
+                Logger.helper.error("Timeout reached when trying to stop VM")
+            }
+
+            /// Wait for the first task to complete
+            try await group.next()
+            /// Cancel the other task
+            group.cancelAll()
+        }
     }
 
     private func cleanUp() async {
