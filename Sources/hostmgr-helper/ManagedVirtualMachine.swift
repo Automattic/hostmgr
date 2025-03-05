@@ -66,8 +66,8 @@ class ManagedVirtualMachine {
     }
 
     private func cleanUp() async {
-        machine = nil
         Logger.helper.log("Attempting cleanup of VM \(handle)")
+        machine = nil
         do {
             try await vmManager.removeVM(name: handle)
         } catch {
