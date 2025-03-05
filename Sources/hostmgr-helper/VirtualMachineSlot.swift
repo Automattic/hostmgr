@@ -81,7 +81,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
     }
 
     @MainActor
-    func stopVirtualMachine() async throws {
+    func stop(withError error: Error? = nil) async throws {
         switch status {
         case .starting, .running:
             self.status = .stopping
@@ -147,14 +147,14 @@ extension VirtualMachineSlot: VZVirtualMachineDelegate {
     nonisolated func guestDidStop(_ virtualMachine: VZVirtualMachine) {
         Logger.helper.log("Virtual Machine Stopped")
         Task {
-            await resetSlot()
+            try? await stop()
         }
     }
 
     nonisolated func virtualMachine(_ virtualMachine: VZVirtualMachine, didStopWithError error: Error) {
         Logger.helper.error("Virtual Machine Crashed: \(error.localizedDescription)")
         Task {
-            await resetSlot(withError: error)
+            try? await stop(withError: error)
         }
     }
 
@@ -165,7 +165,7 @@ extension VirtualMachineSlot: VZVirtualMachineDelegate {
     ) {
         Logger.helper.error("Network attachment was disconnected: \(error.localizedDescription)")
         Task {
-            try await stopVirtualMachine()
+            try? await stop()
         }
     }
 }
