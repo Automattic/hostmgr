@@ -23,7 +23,7 @@ class ManagedVirtualMachine {
     func start() -> Task<Void, Error> {
         Task {
             do {
-                Logger.helper.log("Start task started for \(handle).")
+                Logger.helper.log("Start task started for VM \(handle).")
                 let newMachine = try await config.setupVirtualMachine()
                 self.machine = newMachine
                 try await newMachine.start()
@@ -31,12 +31,12 @@ class ManagedVirtualMachine {
                 if config.waitForNetworking {
                     self.ip = try await vmManager.ipAddress(forVmWithName: handle)
                     Logger.helper.log(
-                        "Startup of \(handle) complete – IP Address: \(ip.debugDescription)"
+                        "Startup of VM \(handle) complete – IP Address: \(ip.debugDescription)"
                     )
                 } else {
                     self.ip = .any
                     Logger.helper.log(
-                        "Startup of \(handle) in progress – skipped waiting for IP address per launch configuration"
+                        "Startup of VM \(handle) in progress – skipped waiting for IP address per launch configuration"
                     )
                 }
             } catch {
@@ -48,7 +48,7 @@ class ManagedVirtualMachine {
     }
 
     func stop() async {
-        Logger.helper.log("Stop called for \(handle).")
+        Logger.helper.log("Stop called for VM \(handle).")
         if let machine {
             /// Don't send events to delegate anymore
             machine.delegate = nil
@@ -66,12 +66,12 @@ class ManagedVirtualMachine {
     }
 
     private func cleanUp() async {
-        Logger.helper.log("Attempting cleanup of \(handle)")
         machine = nil
+        Logger.helper.log("Attempting cleanup of VM \(handle)")
         do {
             try await vmManager.removeVM(name: handle)
         } catch {
-            Logger.helper.error("Failed to remove VM file for \(handle): \(error)")
+            Logger.helper.error("Failed to remove files for VM \(handle): \(error)")
         }
     }
 }
