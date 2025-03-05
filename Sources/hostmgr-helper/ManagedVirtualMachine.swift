@@ -41,7 +41,7 @@ class ManagedVirtualMachine {
                 }
             } catch {
                 Logger.helper.error("Startup of \(handle) failed: \(error)")
-                await cleanUp()
+                await stop()
                 throw error
             }
         }
