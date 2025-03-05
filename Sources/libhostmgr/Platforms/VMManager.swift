@@ -14,6 +14,11 @@ public struct VMManager {
         self.console = console ?? Console()
     }
 
+    enum Errors: Error {
+        // trying to establish an SSH connection timed out
+        case sshConnectionTimeout
+    }
+
     /// Start a VM
     ///
     public func startVM(configuration: LaunchConfiguration) async throws {
@@ -221,7 +226,7 @@ extension VMManager {
                 case .failed(let error):
                     continuation.resume(throwing: error)
                 case .cancelled:
-                    continuation.resume(throwing: CocoaError(.serviceRequestTimedOut))
+                    continuation.resume(throwing: Errors.sshConnectionTimeout)
                 default:
                     break
                 }
