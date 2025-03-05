@@ -1,5 +1,5 @@
 import Foundation
-@preconcurrency import Virtualization
+import Virtualization
 import OSLog
 import Network
 import libhostmgr
