@@ -50,7 +50,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
 
         do {
             let mvm = ManagedVirtualMachine(config: launchConfiguration)
-            let startTask = mvm.start()
+            let startTask = Task { try await mvm.start() }
             self.status = .starting(mvm, startTask)
 
             try await startTask.value

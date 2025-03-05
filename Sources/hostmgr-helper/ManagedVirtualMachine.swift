@@ -20,30 +20,28 @@ class ManagedVirtualMachine {
         self.config = config
     }
 
-    func start() -> Task<Void, Error> {
-        Task {
-            do {
-                Logger.helper.log("Start task started for VM \(handle).")
-                let newMachine = try await config.setupVirtualMachine()
-                self.machine = newMachine
-                try await newMachine.start()
+    func start() async throws {
+        Logger.helper.log("Start called for VM \(handle).")
+        do {
+            let newMachine = try await config.setupVirtualMachine()
+            self.machine = newMachine
+            try await newMachine.start()
 
-                if config.waitForNetworking {
-                    self.ip = try await vmManager.ipAddress(forVmWithName: handle)
-                    Logger.helper.log(
-                        "Startup of VM \(handle) complete – IP Address: \(ip.debugDescription)"
-                    )
-                } else {
-                    self.ip = .any
-                    Logger.helper.log(
-                        "Startup of VM \(handle) in progress – skipped waiting for IP address per launch configuration"
-                    )
-                }
-            } catch {
-                Logger.helper.error("Startup of \(handle) failed: \(error)")
-                await stop()
-                throw error
+            if config.waitForNetworking {
+                self.ip = try await vmManager.ipAddress(forVmWithName: handle)
+                Logger.helper.log(
+                    "Startup of VM \(handle) complete – IP Address: \(ip.debugDescription)"
+                )
+            } else {
+                self.ip = .any
+                Logger.helper.log(
+                    "Startup of VM \(handle) in progress – skipped waiting for IP address per launch configuration"
+                )
             }
+        } catch {
+            Logger.helper.error("Startup of \(handle) failed: \(error)")
+            await stop()
+            throw error
         }
     }
 
