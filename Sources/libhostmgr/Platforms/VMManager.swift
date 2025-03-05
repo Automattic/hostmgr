@@ -15,7 +15,7 @@ public struct VMManager {
     }
 
     enum Errors: Error {
-        // trying to establish an SSH connection timed out
+        /// Trying to establish an SSH connection timed out
         case sshConnectionTimeout
     }
 
