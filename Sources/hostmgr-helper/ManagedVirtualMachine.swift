@@ -30,9 +30,13 @@ class ManagedVirtualMachine {
 
                 if config.waitForNetworking {
                     self.ip = try await vmManager.ipAddress(forVmWithName: handle)
-                    Logger.helper.log("Startup of \(handle) complete – IP Address: \(ip.debugDescription)")
+                    Logger.helper.log(
+                        "Startup of \(handle) complete – IP Address: \(ip.debugDescription)"
+                    )
                 } else {
-                    Logger.helper.log("Startup of \(handle) in progress – skipped waiting for IP address per launch configuration")
+                    Logger.helper.log(
+                        "Startup of \(handle) in progress – skipped waiting for IP address per launch configuration"
+                    )
                     self.ip = .any
                 }
             } catch {
