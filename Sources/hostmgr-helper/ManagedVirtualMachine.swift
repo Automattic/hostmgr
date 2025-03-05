@@ -34,12 +34,13 @@ class ManagedVirtualMachine {
                         "Startup of \(handle) complete – IP Address: \(ip.debugDescription)"
                     )
                 } else {
+                    self.ip = .any
                     Logger.helper.log(
                         "Startup of \(handle) in progress – skipped waiting for IP address per launch configuration"
                     )
-                    self.ip = .any
                 }
             } catch {
+                Logger.helper.error("Startup of \(handle) failed: \(error)")
                 await cleanUp()
                 throw error
             }

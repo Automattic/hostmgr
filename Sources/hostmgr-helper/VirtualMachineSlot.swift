@@ -55,6 +55,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
 
             try await startTask.value
             if startTask.isCancelled {
+                Logger.helper.debug("Start task was cancelled for \(mvm.handle)")
                 throw Errors.vmStartCancelled
             }
             mvm.machine?.delegate = self
@@ -76,15 +77,21 @@ class VirtualMachineSlot: NSObject, ObservableObject {
             status = .stopping(mvm)
             await mvm.stop()
         case .stopping, .empty, .crashed:
-            Logger.helper.debug("\(self.role.displayName) slot was asked to stop with \(status) status.")
+            Logger.helper.debug(
+                "\(self.role.displayName) slot was asked to stop with \(status) status."
+            )
             return
         }
 
         if let error {
-            Logger.helper.error("Resetting \(self.role) slot with crashed state: \(error)")
+            Logger.helper.error(
+                "Resetting \(self.role) slot with crashed state: \(error)"
+            )
             self.status = .crashed(error)
         } else {
-            Logger.helper.debug("Setting \(self.role) slot to empty state.")
+            Logger.helper.debug(
+                "Setting \(self.role) slot to empty state."
+            )
             self.status = .empty
         }
     }
@@ -98,7 +105,9 @@ class VirtualMachineSlot: NSObject, ObservableObject {
             )
             return mvm.handle == handle
         case .empty, .crashed:
-            Logger.helper.debug("\(self.role) slot had no handle configured")
+            Logger.helper.debug(
+                "\(self.role) slot had no handle configured"
+            )
             return false
         }
     }
@@ -106,9 +115,15 @@ class VirtualMachineSlot: NSObject, ObservableObject {
     @MainActor
     var isAvailable: Bool {
         switch self.status {
-        case .starting, .running, .stopping:
+        case .starting(let mvm, _), .running(let mvm), .stopping(let mvm):
+            Logger.helper.debug(
+                "\(role.displayName) slot is not available. \(mvm.handle) has status \(self.status)"
+            )
             return false
         case .empty, .crashed:
+            Logger.helper.debug(
+                "\(role.displayName) slot is available."
+            )
             return true
         }
     }
@@ -118,14 +133,14 @@ class VirtualMachineSlot: NSObject, ObservableObject {
 extension VirtualMachineSlot: VZVirtualMachineDelegate {
     /// Called when a VM is stopped gracefully
     nonisolated func guestDidStop(_ virtualMachine: VZVirtualMachine) {
-        Logger.helper.log("Virtual Machine Stopped")
+        Logger.helper.log("Virtual machine stopped")
         Task {
             try? await stop()
         }
     }
 
     nonisolated func virtualMachine(_ virtualMachine: VZVirtualMachine, didStopWithError error: Error) {
-        Logger.helper.error("Virtual Machine Crashed: \(error.localizedDescription)")
+        Logger.helper.error("Virtual machine crashed: \(error.localizedDescription)")
         Task {
             try? await stop(withError: error)
         }
