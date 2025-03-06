@@ -26,9 +26,9 @@ class VirtualMachineSlot: NSObject, ObservableObject {
     }
 
     enum Errors: Error {
-        /// the slot was asked to start a new VM when it wasn't available
+        /// The slot was asked to start a new VM when it wasn't available.
         case invalidStartState
-        /// the VM was stopped while starting
+        /// The VM was stopped while starting.
         case vmStartCancelled
     }
 
