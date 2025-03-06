@@ -20,7 +20,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
     enum Status: Sendable {
         case empty
         case starting(LaunchConfiguration, Task<ManagedVirtualMachine, Error>)
-        case running(ManagedVirtualMachine, IPv4Address)
+        case running(ManagedVirtualMachine)
         case stopping(LaunchConfiguration)
         case crashed(Error)
     }
@@ -72,7 +72,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
 
             newVM.machine.delegate = self
             Logger.helper.log("Setting \(role.displayName) slot to running \(newVM.handle).")
-            self.status = .running(newVM, newVM.ip)
+            self.status = .running(newVM)
         } catch {
             Logger.helper.error("Error launching VM: \(error.localizedDescription)")
             try? await stop(withError: error)
@@ -125,7 +125,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
             self.status = .stopping(config)
             task.cancel()
             await cleanManagedVm(config.handle)
-        case .running(let mvm, _):
+        case .running(let mvm):
             self.status = .stopping(mvm.config)
             await stopManagedVm(mvm)
             await cleanManagedVm(mvm.handle)
@@ -151,7 +151,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
                 "Comparing \(config.handle) and \(handle)"
             )
             return config.handle == handle
-        case .running(let mvm, _):
+        case .running(let mvm):
             Logger.helper.debug(
                 "Comparing \(mvm.handle) and \(handle)"
             )
