@@ -90,7 +90,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
     }
 
     @MainActor
-    func stopVirtualMachine() async throws {
+    func stop() async throws {
         switch status {
         case .starting(_, let task):
             task.cancel()
@@ -177,7 +177,7 @@ extension VirtualMachineSlot: VZVirtualMachineDelegate {
     ) {
         Logger.helper.error("Network attachment was disconnected: \(error.localizedDescription)")
         Task {
-            try await stopVirtualMachine()
+            try await stop()
         }
     }
 }

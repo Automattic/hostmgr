@@ -29,7 +29,7 @@ struct RunningVMListItem: View {
 
     func shutdown() {
         Task {
-            try await slot.stopVirtualMachine()
+            try await slot.stop()
         }
     }
 
