@@ -109,7 +109,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         }
     }
 
-    private func cleanManagedVM(_ handle: String) async {
+    private func cleanManagedVm(_ handle: String) async {
         Logger.helper.log("Cleaning up VM \(handle).")
         do {
             try await vmManager.removeVM(name: handle)
@@ -124,11 +124,11 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         case .starting(let config, let task):
             self.status = .stopping(config)
             task.cancel()
-            await cleanManagedVM(config.handle)
+            await cleanManagedVm(config.handle)
         case .running(let mvm, _):
             self.status = .stopping(mvm.config)
             await stopManagedVm(mvm)
-            await cleanManagedVM(mvm.handle)
+            await cleanManagedVm(mvm.handle)
         default:
             /// For all other states we do nothing.
             Logger.helper.debug("Stop called while state was \(status) - doing nothing.")
@@ -153,9 +153,9 @@ class VirtualMachineSlot: NSObject, ObservableObject {
             return config.handle == handle
         case .running(let mvm, _):
             Logger.helper.debug(
-                "Comparing \(mvm.config.handle) and \(handle)"
+                "Comparing \(mvm.handle) and \(handle)"
             )
-            return mvm.config.handle == handle
+            return mvm.handle == handle
         case .empty, .crashed:
             Logger.helper.debug(
                 "\(self.role) slot had no handle configured."
