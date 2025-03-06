@@ -54,24 +54,23 @@ class VirtualMachineSlot: NSObject, ObservableObject {
     }
 
     func start(launchConfiguration: LaunchConfiguration) async throws {
+        Logger.helper.log("Launch request for \(launchConfiguration.handle).")
+
         guard isAvailable else {
             throw Errors.invalidStartState
         }
 
         do {
-            let startTask = Task {
-                try await createManagedVm(launchConfiguration: launchConfiguration)
-            }
-
+            let startTask = Task { try await createManagedVm(launchConfiguration: launchConfiguration) }
             self.status = .starting(launchConfiguration, startTask)
             let newVM = try await startTask.value
             if startTask.isCancelled {
-                Logger.helper.debug("Start task was cancelled for \(newVM.handle)")
+                Logger.helper.debug("Start task was cancelled for \(newVM.handle).")
                 throw Errors.vmStartCancelled
             }
 
-            newVM.machine.delegate = self
             Logger.helper.log("Setting \(role.displayName) slot to running \(newVM.handle).")
+            newVM.machine.delegate = self
             self.status = .running(newVM)
         } catch {
             Logger.helper.error("Error launching VM: \(error.localizedDescription)")
@@ -88,9 +87,9 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         let ipAddress: IPv4Address
         if launchConfiguration.waitForNetworking {
             ipAddress = try await vmManager.ipAddress(forVmWithName: launchConfiguration.handle)
-            Logger.helper.log("Startup complete – IP Address: \(ipAddress.debugDescription)")
+            Logger.helper.log("Startup complete – IP Address: \(ipAddress.debugDescription).")
         } else {
-            Logger.helper.log("Startup in progress – skipped waiting for IP address per launch configuration")
+            Logger.helper.log("Startup in progress – skipped waiting for IP address per launch configuration.")
             ipAddress = .any
         }
         return ManagedVirtualMachine(machine: virtualMachine, config: launchConfiguration, ip: ipAddress)
@@ -103,6 +102,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         do {
             if mvm.machine.canStop {
                 try await mvm.machine.stop()
+                Logger.helper.log("Stopped VM \(mvm.handle).")
             }
         } catch {
             Logger.helper.error("Failure when stopping VM: \(error)")
@@ -113,13 +113,14 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         Logger.helper.log("Cleaning up VM \(handle).")
         do {
             try await vmManager.removeVM(name: handle)
+            Logger.helper.log("Cleaned up VM \(handle).")
         } catch {
             Logger.helper.error("Failure when removing VM files: \(error)")
         }
     }
 
     func stop(withError error: Error? = nil) async throws {
-        Logger.helper.log("Stopping \(role.displayName) slot.")
+        Logger.helper.log("Stopping \(role.displayName) slot with current status \(status).")
         switch status {
         case .starting(let config, let task):
             self.status = .stopping(config)
@@ -145,26 +146,33 @@ class VirtualMachineSlot: NSObject, ObservableObject {
     }
 
     func isConfiguredForHandle(_ handle: String) -> Bool {
+        let slotHandle: String?
         switch status {
         case .starting(let config, _), .stopping(let config):
-            Logger.helper.debug(
-                "Comparing \(config.handle) and \(handle)"
-            )
-            return config.handle == handle
+            slotHandle = config.handle
         case .running(let mvm):
-            Logger.helper.debug(
-                "Comparing \(mvm.handle) and \(handle)"
-            )
-            return mvm.handle == handle
+            slotHandle = mvm.handle
         case .empty, .crashed:
+            slotHandle = nil
+        }
+
+        guard let slotHandle else {
             Logger.helper.debug(
-                "\(self.role) slot had no handle configured."
+                "\(role.displayName) slot had no handle configured."
             )
             return false
         }
+
+        Logger.helper.debug(
+            "Comparing \(slotHandle) and \(handle)."
+        )
+        return slotHandle == handle
     }
 
     var isAvailable: Bool {
+        Logger.helper.debug(
+            "Slot availability check: \(role.displayName) slot has \(status) status."
+        )
         switch self.status {
         case .empty, .crashed: return true
         default: return false
