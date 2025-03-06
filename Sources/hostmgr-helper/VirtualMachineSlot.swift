@@ -19,7 +19,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
 
     enum Status: Sendable {
         case empty
-        case starting(LaunchConfiguration)
+        case starting(LaunchConfiguration, Task<ManagedVirtualMachine, Error>)
         case running(LaunchConfiguration, IPv4Address)
         case stopping
         case crashed(Error)
@@ -28,6 +28,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
     struct ManagedVirtualMachine {
         let machine: VZVirtualMachine
         let config: LaunchConfiguration
+        let ip: IPv4Address
     }
 
     private let vmManager = VMManager()
@@ -47,24 +48,14 @@ class VirtualMachineSlot: NSObject, ObservableObject {
 
     @MainActor
     func start(launchConfiguration: LaunchConfiguration) async throws {
-
-        self.status = .starting(launchConfiguration)
+        let startTask = createStartTask(launchConfiguration: launchConfiguration)
+        self.status = .starting(launchConfiguration, startTask)
 
         do {
-            let virtualMachine = try await launchConfiguration.setupVirtualMachine()
-            virtualMachine.delegate = self
-            self.managedVirtualMachine = ManagedVirtualMachine(machine: virtualMachine, config: launchConfiguration)
-
-            try await virtualMachine.start()
-
-            if launchConfiguration.waitForNetworking {
-                let ipAddress = try await vmManager.ipAddress(forVmWithName: launchConfiguration.handle)
-                Logger.helper.log("Startup complete – IP Address: \(ipAddress.debugDescription)")
-                self.status = .running(launchConfiguration, ipAddress)
-            } else {
-                Logger.helper.log("Startup in progress – skipped waiting for IP address per launch configuration")
-                self.status = .running(launchConfiguration, .any)
-            }
+            let newVM = try await startTask.value
+            newVM.machine.delegate = self
+            self.managedVirtualMachine = newVM
+            self.status = .running(launchConfiguration, newVM.ip)
         } catch {
             Logger.helper.error("Error launching VM: \(error.localizedDescription)")
             Logger.helper.error("Attempting Cleanup of \(launchConfiguration.handle)")
@@ -81,9 +72,30 @@ class VirtualMachineSlot: NSObject, ObservableObject {
     }
 
     @MainActor
+    private func createStartTask(launchConfiguration: LaunchConfiguration) -> Task<ManagedVirtualMachine, Error> {
+        Task {
+            let virtualMachine = try await launchConfiguration.setupVirtualMachine()
+            try await virtualMachine.start()
+
+            let ipAddress: IPv4Address
+            if launchConfiguration.waitForNetworking {
+                ipAddress = try await vmManager.ipAddress(forVmWithName: launchConfiguration.handle)
+                Logger.helper.log("Startup complete – IP Address: \(ipAddress.debugDescription)")
+            } else {
+                Logger.helper.log("Startup in progress – skipped waiting for IP address per launch configuration")
+                ipAddress = .any
+            }
+            return ManagedVirtualMachine(machine: virtualMachine, config: launchConfiguration, ip: ipAddress)
+        }
+    }
+
+    @MainActor
     func stopVirtualMachine() async throws {
         switch status {
-        case .starting, .running:
+        case .starting(_, let task):
+            task.cancel()
+            self.status = .stopping
+        case .running:
             self.status = .stopping
         default:
             break
