@@ -1,5 +1,5 @@
 import Foundation
-@preconcurrency import Virtualization
+import Virtualization
 import SwiftUI
 import OSLog
 import Network
