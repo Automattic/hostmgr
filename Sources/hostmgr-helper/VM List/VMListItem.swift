@@ -13,9 +13,9 @@ struct VMListItem: View {
                 launchConfiguration: launchConfiguration,
                 slot: slot
             )
-        case .running(let launchConfiguration, let ipAddress):
+        case .running(let mvm, let ipAddress):
             RunningVMListItem(
-                launchConfiguration: launchConfiguration,
+                launchConfiguration: mvm.config,
                 ipAddress: ipAddress,
                 slot: slot
             )
