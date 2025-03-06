@@ -131,7 +131,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
             await stopManagedVm(mvm)
             await cleanManagedVm(mvm.handle)
         default:
-            /// For all other states we do nothing.
+            // For all other states we do nothing.
             Logger.helper.debug("Stop called while state was \(status) - doing nothing.")
             return
         }
