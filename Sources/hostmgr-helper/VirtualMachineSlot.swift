@@ -108,7 +108,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
 
     private func stopManagedVm(_ mvm: ManagedVirtualMachine) async {
         Logger.helper.log("Stopping VM \(mvm.handle).")
-        /// Quit responding to delegate methods
+        // Quit responding to delegate methods
         mvm.machine.delegate = nil
         do {
             if mvm.machine.canStop {
