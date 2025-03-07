@@ -112,6 +112,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         mvm.machine.delegate = nil
         do {
             if mvm.machine.canStop {
+                Logger.helper.debug("VM \(mvm.handle) claims it can be stopped.")
                 try await mvm.machine.stop()
                 Logger.helper.log("Stopped VM \(mvm.handle).")
             }
