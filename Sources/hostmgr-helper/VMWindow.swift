@@ -10,7 +10,7 @@ struct VMWindowContent: View {
     }
 
     var body: some View {
-        switch vmSlot.status {
+        switch vmSlot.state {
         case .empty:  Text("VM not running")
         case .starting: ProgressView()
         case .running(let mvm): VirtualMachineDisplayView(virtualMachine: mvm.machine)

@@ -17,7 +17,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         }
     }
 
-    enum Status: Sendable {
+    enum State: Sendable {
         case empty
         case starting(LaunchConfiguration, Task<ManagedVirtualMachine, Error>)
         case running(ManagedVirtualMachine)
@@ -45,7 +45,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
     private let vmManager = VMManager()
 
     @Published
-    var status: Status = .empty
+    var state: State = .empty
 
     let role: Role
 
@@ -62,7 +62,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
 
         do {
             let startTask = Task { try await createManagedVm(launchConfiguration: launchConfiguration) }
-            self.status = .starting(launchConfiguration, startTask)
+            self.state = .starting(launchConfiguration, startTask)
             let newVM = try await startTask.value
             if startTask.isCancelled {
                 Logger.helper.debug("Start task was cancelled for \(newVM.handle).")
@@ -71,7 +71,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
 
             Logger.helper.log("Setting \(role.displayName) slot to running \(newVM.handle).")
             newVM.machine.delegate = self
-            self.status = .running(newVM)
+            self.state = .running(newVM)
         } catch {
             Logger.helper.error("Error launching VM: \(error.localizedDescription)")
             try? await stop(withError: error)
@@ -120,34 +120,34 @@ class VirtualMachineSlot: NSObject, ObservableObject {
     }
 
     func stop(withError error: Error? = nil) async throws {
-        Logger.helper.log("Stopping \(role.displayName) slot with current status \(status).")
-        switch status {
+        Logger.helper.log("Stopping \(role.displayName) slot with current status \(state).")
+        switch state {
         case .starting(let config, let task):
-            self.status = .stopping(config)
+            self.state = .stopping(config)
             task.cancel()
             await cleanManagedVm(config.handle)
         case .running(let mvm):
-            self.status = .stopping(mvm.config)
+            self.state = .stopping(mvm.config)
             await stopManagedVm(mvm)
             await cleanManagedVm(mvm.handle)
         default:
-            // For all other states we do nothing.
-            Logger.helper.debug("Stop called while state was \(status) - doing nothing.")
+            /// For all other states we do nothing.
+            Logger.helper.debug("Stop called while state was \(state) - doing nothing.")
             return
         }
 
         if let error {
             Logger.helper.error("Resetting slot with crashed state: \(error)")
-            self.status = .crashed(error)
+            self.state = .crashed(error)
         } else {
             Logger.helper.log("Resetting slot to empty state.")
-            self.status = .empty
+            self.state = .empty
         }
     }
 
     func isConfiguredForHandle(_ handle: String) -> Bool {
         let slotHandle: String?
-        switch status {
+        switch state {
         case .starting(let config, _), .stopping(let config):
             slotHandle = config.handle
         case .running(let mvm):
@@ -171,9 +171,9 @@ class VirtualMachineSlot: NSObject, ObservableObject {
 
     var isAvailable: Bool {
         Logger.helper.debug(
-            "Slot availability check: \(role.displayName) slot has \(status) status."
+            "Slot availability check: \(role.displayName) slot has \(state) status."
         )
-        switch self.status {
+        switch self.state {
         case .empty, .crashed: return true
         default: return false
         }
