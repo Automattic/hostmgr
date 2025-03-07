@@ -23,6 +23,17 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         case running(ManagedVirtualMachine)
         case stopping(LaunchConfiguration)
         case crashed(Error)
+
+        var handle: String? {
+            switch self {
+            case .starting(let config, _), .stopping(let config):
+                return config.handle
+            case .running(let mvm):
+                return mvm.handle
+            case .empty, .crashed:
+                return nil
+            }
+        }
     }
 
     enum Errors: Error {
@@ -146,17 +157,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
     }
 
     func isConfiguredForHandle(_ handle: String) -> Bool {
-        let slotHandle: String?
-        switch state {
-        case .starting(let config, _), .stopping(let config):
-            slotHandle = config.handle
-        case .running(let mvm):
-            slotHandle = mvm.handle
-        case .empty, .crashed:
-            slotHandle = nil
-        }
-
-        guard let slotHandle else {
+        guard let slotHandle = state.handle else {
             Logger.helper.debug(
                 "\(role.displayName) slot had no handle configured."
             )
