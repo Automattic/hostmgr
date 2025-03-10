@@ -62,6 +62,11 @@ public struct Configuration: Codable {
     public var hostReservedRAMBytes: UInt64 {
         hostReservedRAM ?? 1024 * 1024 * 2048 // Leave 2GB for the VM host
     }
+
+    // MARK: Various features
+
+    /// Should Sentry report an error if HostmgrError.noVMSlotsAvailable is thrown
+    public var reportNoSlotsErrorToSentry: Bool?
 }
 
 /// Accessor Helpers
