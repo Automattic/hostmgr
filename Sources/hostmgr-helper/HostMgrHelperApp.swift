@@ -56,6 +56,11 @@ struct HostMgrHelperApp: App {
         options.dsn = ProcessInfo.processInfo.environment["SENTRY_DSN"] ?? ""
         options.releaseName = libhostmgr.hostmgrVersion
         options.enableSwizzling = false
+        options.initialScope = { scope in
+            // Add the hostname to all Sentry events
+            scope.setTag(value: ProcessInfo.processInfo.hostName, key: "hostname")
+            return scope
+        }
 
         return options
     }()
