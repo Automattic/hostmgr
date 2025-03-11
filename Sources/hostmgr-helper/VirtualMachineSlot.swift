@@ -229,7 +229,6 @@ extension VirtualMachineSlot: VZVirtualMachineDelegate {
         Logger.helper.log("Virtual Machine Stopped")
         Task {
             try await stopAndClean()
-
         }
     }
 
