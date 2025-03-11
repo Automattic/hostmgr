@@ -27,7 +27,8 @@ public struct VMManager {
     /// 
     public func stopVM(handle: String) async throws {
         try await HostmgrClient.stop(handle: handle)
-        try FileManager.default.removeItemIfExists(at: Paths.toWorkingAppleSiliconVM(named: handle))
+        // If the VM is ephemeral, clean it up.
+        try removeWorkingVM(handle: handle)
     }
 
     /// Immediately terminates all running VMs
@@ -38,11 +39,17 @@ public struct VMManager {
 
     /// Delete a local VM
     ///
-    public func removeVM(name: String) async throws {
+    public func removeVM(name: String) throws {
         try FileManager.default.removeItemIfExists(at: Paths.toAppleSiliconVM(named: name))
         try FileManager.default.removeItemIfExists(at: Paths.toArchivedVM(named: name))
         try FileManager.default.removeItemIfExists(at: Paths.toVMTemplate(named: name))
         try FileManager.default.removeItemIfExists(at: Paths.toWorkingAppleSiliconVM(named: name))
+    }
+
+    /// Delete a working, ephemeral VM.
+    ///
+    public func removeWorkingVM(handle: String) throws {
+        try FileManager.default.removeItemIfExists(at: Paths.toWorkingAppleSiliconVM(named: handle))
     }
 
     /// Unpack a packaged VM
