@@ -44,6 +44,10 @@ public struct VMManager {
         try FileManager.default.removeItemIfExists(at: Paths.toWorkingAppleSiliconVM(named: name))
     }
 
+    public func removeWorkingVM(name: String) async throws {
+        try FileManager.default.removeItemIfExists(at: Paths.toWorkingAppleSiliconVM(named: name))
+    }
+
     /// Unpack a packaged VM
     ///
     /// This method expects that the packaged VM is located in the `vm-images` directory – referencing it by name

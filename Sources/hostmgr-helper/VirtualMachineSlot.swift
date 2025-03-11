@@ -70,7 +70,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
             Logger.helper.error("Attempting Cleanup of \(launchConfiguration.handle)")
 
             do {
-                try await vmManager.removeVM(name: launchConfiguration.handle)
+                try await vmManager.removeWorkingVM(name: launchConfiguration.handle)
             } catch {
                 Logger.helper.error("Failed to remove VM file: \(error)")
             }
@@ -106,7 +106,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
     func resetSlot(withError error: Error? = nil) async {
         if let managedVirtualMachine {
             do {
-                try await vmManager.removeVM(name: managedVirtualMachine.config.handle)
+                try await vmManager.removeWorkingVM(name: managedVirtualMachine.config.handle)
             } catch {
                 Logger.helper.error("Failed to remove VM file: \(error)")
             }
