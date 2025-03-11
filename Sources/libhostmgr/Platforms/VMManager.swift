@@ -27,7 +27,6 @@ public struct VMManager {
     /// 
     public func stopVM(handle: String) async throws {
         try await HostmgrClient.stop(handle: handle)
-        try FileManager.default.removeItemIfExists(at: Paths.toWorkingAppleSiliconVM(named: handle))
     }
 
     /// Immediately terminates all running VMs
