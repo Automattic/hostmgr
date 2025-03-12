@@ -34,6 +34,39 @@ class VirtualMachineSlot: NSObject, ObservableObject {
                 return nil
             }
         }
+
+        mutating func transitionTo(newState: State) {
+            switch (self, newState) {
+            case (.empty, .starting):
+                // Starting a new VM from a clean state.
+                break
+            case (.crashed, .starting):
+                // Starting a new VM from a previously crashed state.
+                break
+            case (.starting, .running):
+                // A VM is now running.
+                break
+            case (.starting, .stopping):
+                // A VM's start failed or was cancelled.
+                break
+            case (.running, .stopping):
+                // A VM that was successfully running is stopping.
+                break
+            case (.stopping, .empty):
+                // The VM cleanly stopped.
+                break
+            case (.stopping, .crashed):
+                // The VM stopped due to an error.
+                break
+            default:
+                // Invalid transition.
+                Logger.helper.error("An invalid state change was called from \(self) to \(newState).")
+                return
+            }
+
+            Logger.helper.info("Slot state transitioned from \(self) to \(newState).")
+            self = newState
+        }
     }
 
     enum Errors: Error {
@@ -81,7 +114,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         do {
             // MARK: Empty / Crashed -> Starting
             let startTask = Task { try await createManagedVm(launchConfiguration: launchConfiguration) }
-            self.state = .starting(launchConfiguration, startTask)
+            self.state.transitionTo(newState: .starting(launchConfiguration, startTask))
             let newVM = try await startTask.value
             // stop() was called while the VM was starting.
             if startTask.isCancelled { throw Errors.vmStartCancelled }
@@ -90,7 +123,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
             Logger.helper.log("Setting \(role.displayName) slot to running \(newVM.handle).")
             newVM.machine.delegate = self
 
-            self.state = .running(newVM)
+            self.state.transitionTo(newState: .running(newVM))
         } catch Errors.vmStartCancelled {
             // We're already transitioning from Starting -> Stopping by an external call.
             Logger.helper.debug("Start task was cancelled for \(launchConfiguration.handle).")
@@ -116,11 +149,11 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         switch state {
         case .starting(let config, let task):
             // MARK: Starting -> Stopping
-            self.state = .stopping(config)
+            self.state.transitionTo(newState: .stopping(config))
             task.cancel()
         case .running(let mvm):
             // MARK: Running -> Stopping
-            self.state = .stopping(mvm.config)
+            self.state.transitionTo(newState: .stopping(mvm.config))
             await stopVm(mvm.machine, handle: mvm.handle)
         default:
             Logger.helper.error("Stop called while state was \(state).")
@@ -130,11 +163,11 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         if let error {
             // MARK: Stopping -> Crashed
             Logger.helper.error("Resetting slot with crashed state: \(error)")
-            self.state = .crashed(error)
+            self.state.transitionTo(newState: .crashed(error))
         } else {
             // MARK: Stopping -> Empty
             Logger.helper.log("Resetting slot to empty state.")
-            self.state = .empty
+            self.state.transitionTo(newState: .empty)
         }
     }
 
