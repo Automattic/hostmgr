@@ -170,10 +170,14 @@ class VirtualMachineSlot: NSObject, ObservableObject {
     /// - Returns: A `ManagedVirtualMachine` containing a running VM.
     private func createManagedVm(launchConfiguration: LaunchConfiguration) async throws -> ManagedVirtualMachine {
         Logger.helper.log("Creating VM \(launchConfiguration.handle).")
-        let virtualMachine = try await launchConfiguration.setupVirtualMachine()
-        try await virtualMachine.start()
+        // Maintain a reference to the new VM for clean up purposes.
+        var newVM: VZVirtualMachine?
 
         do {
+            let virtualMachine = try await launchConfiguration.setupVirtualMachine()
+            newVM = virtualMachine
+            try await virtualMachine.start()
+
             let ipAddress: IPv4Address
             if launchConfiguration.waitForNetworking {
                 ipAddress = try await vmManager.ipAddress(forVmWithName: launchConfiguration.handle)
@@ -186,7 +190,9 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         } catch {
             // Guarantee that the VM is stopped and cleaned before throwing.
             Logger.helper.error("Stopping VM \(launchConfiguration.handle) that was being launched: \(error)")
-            await stopVm(virtualMachine, handle: launchConfiguration.handle)
+            if let newVM {
+                await stopVm(newVM, handle: launchConfiguration.handle)
+            }
             // Note: This cleans ALL types of VMs that failed to start - even persistent
             try? vmManager.removeVM(name: launchConfiguration.handle)
             throw error
