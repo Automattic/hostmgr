@@ -72,62 +72,30 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         }
 
         do {
+            // MARK: Empty / Crashed -> Starting
             let startTask = Task { try await createManagedVm(launchConfiguration: launchConfiguration) }
             self.state = .starting(launchConfiguration, startTask)
             let newVM = try await startTask.value
-            if startTask.isCancelled {
-                Logger.helper.debug("Start task was cancelled for \(newVM.handle).")
-                throw Errors.vmStartCancelled
-            }
+            // stop() was called while the VM was starting.
+            if startTask.isCancelled { throw Errors.vmStartCancelled }
 
+            // MARK: Starting -> Running
             Logger.helper.log("Setting \(role.displayName) slot to running \(newVM.handle).")
             newVM.machine.delegate = self
+
             self.state = .running(newVM)
+        } catch Errors.vmStartCancelled {
+            // We're already transitioning from Starting -> Stopping by an external call.
+            Logger.helper.debug("Start task was cancelled for \(launchConfiguration.handle).")
+            try? await vmManager.removeVM(name: launchConfiguration.handle)
+
+            throw Errors.vmStartCancelled
         } catch {
+            // MARK: Starting -> Stopping
             Logger.helper.error("Error launching VM: \(error.localizedDescription)")
             try? await stop(withError: error)
+
             throw error
-        }
-    }
-
-    private func createManagedVm(launchConfiguration: LaunchConfiguration) async throws -> ManagedVirtualMachine {
-        Logger.helper.log("Creating VM \(launchConfiguration.handle).")
-        let virtualMachine = try await launchConfiguration.setupVirtualMachine()
-        try await virtualMachine.start()
-
-        let ipAddress: IPv4Address
-        if launchConfiguration.waitForNetworking {
-            ipAddress = try await vmManager.ipAddress(forVmWithName: launchConfiguration.handle)
-            Logger.helper.log("Startup complete – IP Address: \(ipAddress.debugDescription).")
-        } else {
-            Logger.helper.log("Startup in progress – skipped waiting for IP address per launch configuration.")
-            ipAddress = .any
-        }
-        return ManagedVirtualMachine(machine: virtualMachine, config: launchConfiguration, ip: ipAddress)
-    }
-
-    private func stopManagedVm(_ mvm: ManagedVirtualMachine) async {
-        Logger.helper.log("Stopping VM \(mvm.handle).")
-        // Quit responding to delegate methods
-        mvm.machine.delegate = nil
-        do {
-            if mvm.machine.canStop {
-                Logger.helper.debug("VM \(mvm.handle) claims it can be stopped.")
-                try await mvm.machine.stop()
-                Logger.helper.log("Stopped VM \(mvm.handle).")
-            }
-        } catch {
-            Logger.helper.error("Failure when stopping VM: \(error)")
-        }
-    }
-
-    private func cleanManagedVm(_ handle: String) async {
-        Logger.helper.log("Cleaning up VM \(handle).")
-        do {
-            try await vmManager.removeVM(name: handle)
-            Logger.helper.log("Cleaned up VM \(handle).")
-        } catch {
-            Logger.helper.error("Failure when removing VM files: \(error)")
         }
     }
 
@@ -135,12 +103,14 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         Logger.helper.log("Stopping \(role.displayName) slot with current status \(state).")
         switch state {
         case .starting(let config, let task):
+            // MARK: Starting -> Stopping
             self.state = .stopping(config)
             task.cancel()
             await cleanManagedVm(config.handle)
         case .running(let mvm):
+            // MARK: Running -> Stopping
             self.state = .stopping(mvm.config)
-            await stopManagedVm(mvm)
+            await stopVm(mvm.machine, handle: mvm.handle)
             await cleanManagedVm(mvm.handle)
         default:
             /// For all other states we do nothing.
@@ -149,9 +119,11 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         }
 
         if let error {
+            // MARK: Stopping -> Crashed
             Logger.helper.error("Resetting slot with crashed state: \(error)")
             self.state = .crashed(error)
         } else {
+            // MARK: Stopping -> Empty
             Logger.helper.log("Resetting slot to empty state.")
             self.state = .empty
         }
@@ -178,6 +150,55 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         switch self.state {
         case .empty, .crashed: return true
         default: return false
+        }
+    }
+
+    private func createManagedVm(launchConfiguration: LaunchConfiguration) async throws -> ManagedVirtualMachine {
+        Logger.helper.log("Creating VM \(launchConfiguration.handle).")
+        let virtualMachine = try await launchConfiguration.setupVirtualMachine()
+        try await virtualMachine.start()
+
+        do {
+            let ipAddress: IPv4Address
+            if launchConfiguration.waitForNetworking {
+                ipAddress = try await vmManager.ipAddress(forVmWithName: launchConfiguration.handle)
+                Logger.helper.log("Startup complete – IP Address: \(ipAddress.debugDescription).")
+            } else {
+                Logger.helper.log("Startup in progress – skipped waiting for IP address per launch configuration.")
+                ipAddress = .any
+            }
+            return ManagedVirtualMachine(machine: virtualMachine, config: launchConfiguration, ip: ipAddress)
+        } catch {
+            // Guarantee that the VM is stopped before throwing.
+            Logger.helper.error("Stopping VM \(launchConfiguration.handle) that was being launched: \(error)")
+            await stopVm(virtualMachine, handle: launchConfiguration.handle)
+            throw error
+        }
+    }
+
+    private func stopVm(_ vm: VZVirtualMachine, handle: String) async {
+        Logger.helper.log("Stopping VM \(handle).")
+        // Quit responding to delegate methods.
+        vm.delegate = nil
+
+        if vm.canStop {
+            Logger.helper.debug("VM \(handle) claims it can be stopped.")
+            do {
+                try await vm.stop()
+                Logger.helper.log("Stopped VM \(handle).")
+            } catch {
+                Logger.helper.error("Failure when stopping VM: \(error)")
+            }
+        }
+    }
+
+    private func cleanManagedVm(_ handle: String) async {
+        Logger.helper.log("Cleaning up VM \(handle).")
+        do {
+            try await vmManager.removeVM(name: handle)
+            Logger.helper.log("Cleaned up VM \(handle).")
+        } catch {
+            Logger.helper.error("Failure when removing VM files: \(error)")
         }
     }
 }
