@@ -6,17 +6,17 @@ struct VMListItem: View {
     var slot: VirtualMachineSlot
 
     var body: some View {
-        switch slot.status {
+        switch slot.state {
         case .empty: EmptyVMListItem(slot: slot)
-        case .starting(let launchConfiguration):
+        case .starting(let launchConfiguration, _):
             PendingVMListItem(
                 launchConfiguration: launchConfiguration,
                 slot: slot
             )
-        case .running(let launchConfiguration, let ipAddress):
+        case .running(let virtualMachine):
             RunningVMListItem(
-                launchConfiguration: launchConfiguration,
-                ipAddress: ipAddress,
+                launchConfiguration: virtualMachine.config,
+                ipAddress: virtualMachine.ip,
                 slot: slot
             )
         case .stopping:

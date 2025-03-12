@@ -50,11 +50,11 @@ extension VMHost: HostmgrServerDelegate {
         Logger.helper.log("Received stop request for \(handle)")
 
         if self.primaryVMSlot.isConfiguredForHandle(handle) {
-            try await primaryVMSlot.stopVirtualMachine()
+            try await primaryVMSlot.stop()
         }
 
         if self.secondaryVMSlot.isConfiguredForHandle(handle) {
-            try await secondaryVMSlot.stopVirtualMachine()
+            try await secondaryVMSlot.stop()
         }
     }
 
@@ -63,8 +63,8 @@ extension VMHost: HostmgrServerDelegate {
 
         repeat {
             do {
-                try await self.primaryVMSlot.stopVirtualMachine()
-                try await self.secondaryVMSlot.stopVirtualMachine()
+                try await self.primaryVMSlot.stop()
+                try await self.secondaryVMSlot.stop()
                 return
             } catch {
                 try await Task.sleep(for: .seconds(1))

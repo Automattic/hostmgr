@@ -10,10 +10,10 @@ struct VMWindowContent: View {
     }
 
     var body: some View {
-        switch vmSlot.status {
+        switch vmSlot.state {
         case .empty:  Text("VM not running")
         case .starting: ProgressView()
-        case .running: VirtualMachineDisplayView(virtualMachine: vmSlot.managedVirtualMachine?.machine)
+        case .running(let virtualMachine): VirtualMachineDisplayView(virtualMachine: virtualMachine.machine)
         .onAppear {
             NSApp.setActivationPolicy(.regular)
             NSApp.activate(ignoringOtherApps: true)
