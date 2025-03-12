@@ -20,6 +20,7 @@ public enum HostmgrError: Error, LocalizedError, Codable {
     case vmConfigurationFileMissing(URL)
     case invalidVMSourceImage(URL)
     case xpcError(String)
+    case sshAvailabilityTimeout
 
     public var errorDescription: String? {
         switch self {
@@ -64,6 +65,8 @@ public enum HostmgrError: Error, LocalizedError, Codable {
             return  "This Mac cannot create a VM from the disk image at \(url)"
         case .xpcError(let string):
             return string
+        case .sshAvailabilityTimeout:
+            return "Timeout while checking for the availability of the VM's SSH server"
         }
     }
 

@@ -221,7 +221,7 @@ extension VMManager {
                 case .failed(let error):
                     continuation.resume(throwing: error)
                 case .cancelled:
-                    continuation.resume(throwing: CocoaError(.serviceRequestTimedOut))
+                    continuation.resume(throwing: HostmgrError.sshAvailabilityTimeout)
                 default:
                     break
                 }
