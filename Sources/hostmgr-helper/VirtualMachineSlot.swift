@@ -68,7 +68,8 @@ class VirtualMachineSlot: NSObject, ObservableObject {
 
     /// Requests that the slot go to a running state with a VM configured by `launchConfiguration`.
     ///
-    /// This method throws an error if trying to start in an invalid state, or if there was an error initializing the VM.
+    /// This method throws an error if trying to start in an invalid state, or if there was an error
+    /// initializing the VM.
     /// - Parameter launchConfiguration: VM configuration.
     func start(launchConfiguration: LaunchConfiguration) async throws {
         Logger.helper.log("Launch request for \(launchConfiguration.handle).")
