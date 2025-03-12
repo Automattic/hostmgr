@@ -240,6 +240,8 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         if vm.canStop {
             Logger.helper.debug("VM \(handle) claims it can be stopped.")
             do {
+                // An attempt to help with https://github.com/Automattic/hostmgr/issues/128
+                vm.networkDevices.forEach { $0.attachment = nil }
                 try await vm.stop()
                 Logger.helper.log("Stopped VM \(handle).")
             } catch {
