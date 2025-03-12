@@ -66,6 +66,10 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         self.role = role
     }
 
+    /// Requests that the slot go to a running state with a VM configured by `launchConfiguration`.
+    ///
+    /// This method throws an error if trying to start in an invalid state, or if there was an error initializing the VM.
+    /// - Parameter launchConfiguration: VM configuration.
     func start(launchConfiguration: LaunchConfiguration) async throws {
         Logger.helper.log("Launch request for \(launchConfiguration.handle).")
 
@@ -94,14 +98,16 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         } catch {
             // MARK: Starting -> Stopping
             Logger.helper.error("Error launching VM: \(error.localizedDescription)")
-            try? await stopAndClean(withError: error)
+            // We only call stop to reset the slot state - VM stopping and cleanup already occurred.
+            try? await stop(withError: error)
             throw error
         }
     }
 
-    /// Stops a VM running in the slot. Does not clean a stopped VM.
+    /// Puts the slot into a stopped state if it's a valid request.
     ///
-    /// This method throws an error if trying to stop in a state other than `.starting` and `.running`.
+    /// - This method does not clean up stopped VMs.
+    /// - This method throws an error if trying to stop in a state other than `.starting` and `.running`.
     /// - Parameters:
     ///   - error: Error to include if the slot is stopping because of an error.
     func stop(withError error: Error? = nil) async throws {
@@ -156,6 +162,11 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         }
     }
 
+    /// Creates a running VM inside a `ManagedVirtualMachine` configured by a `LaunchConfiguration`.
+    ///
+    /// If any errors occur after the VM was started, this method will attempt to stop the VM and perform a cleanup.
+    /// - Parameter launchConfiguration: VM configuration.
+    /// - Returns: A `ManagedVirtualMachine` containing a running VM.
     private func createManagedVm(launchConfiguration: LaunchConfiguration) async throws -> ManagedVirtualMachine {
         Logger.helper.log("Creating VM \(launchConfiguration.handle).")
         let virtualMachine = try await launchConfiguration.setupVirtualMachine()
@@ -196,9 +207,12 @@ class VirtualMachineSlot: NSObject, ObservableObject {
             }
         }
     }
+}
 
+// MARK: VZVirtualMachineDelegate conformance
+extension VirtualMachineSlot: VZVirtualMachineDelegate {
     /// Used internally by the class when it needs to stop the VM and run the clean up step afterwards. This may
-    /// be called because of an "external" event: A VM gracefully stopped via macOS, crashed, or failed to initialize.
+    /// be called because of an "external" event via the `VZVirtualMachineDelegate` calls.
     ///
     /// VMs typically stop via the `hostmgr stop` command which handles cleanup on its own.
     /// Only ephemeral VM files are removed.
@@ -213,18 +227,15 @@ class VirtualMachineSlot: NSObject, ObservableObject {
 
         Logger.helper.log("Cleaning up VM \(handle).")
         do {
-            // Remove working (ephemeral) VMs only
+            // Remove working (ephemeral) VMs only.
             try vmManager.removeWorkingVM(handle: handle)
             Logger.helper.log("Cleaned up VM \(handle).")
         } catch {
             Logger.helper.error("Failure when removing VM files: \(error)")
         }
     }
-}
 
-// MARK: VZVirtualMachineDelegate conformance
-extension VirtualMachineSlot: VZVirtualMachineDelegate {
-    /// Called when a VM is stopped gracefully
+    /// Called when a VM is stopped gracefully.
     nonisolated func guestDidStop(_ virtualMachine: VZVirtualMachine) {
         Logger.helper.log("Virtual Machine Stopped")
         Task {
