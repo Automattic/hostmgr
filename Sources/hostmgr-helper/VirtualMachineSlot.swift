@@ -175,6 +175,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
             // Guarantee that the VM is stopped and cleaned before throwing.
             Logger.helper.error("Stopping VM \(launchConfiguration.handle) that was being launched: \(error)")
             await stopVm(virtualMachine, handle: launchConfiguration.handle)
+            // Note: This cleans ALL types of VMs that failed to start - even persistent
             try? vmManager.removeVM(name: launchConfiguration.handle)
             throw error
         }
@@ -203,7 +204,6 @@ class VirtualMachineSlot: NSObject, ObservableObject {
     /// Only ephemeral VM files are removed.
     /// - Parameters:
     ///   - error: Error to include if the slot is stopping because of an error.
-    ///   - cleanAllTypes: If `true` the VM will be deleted even if a persistent or template type.
     private func stopAndClean(withError error: Error? = nil) async throws {
         Logger.helper.log("Stopping and cleaning \(role.displayName).")
         try await stop(withError: error)
