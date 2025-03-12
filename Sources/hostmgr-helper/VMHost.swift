@@ -3,6 +3,7 @@ import Virtualization
 import libhostmgr
 import OSLog
 import Network
+import Sentry
 
 @MainActor
 class VMHost: NSObject, ObservableObject {
@@ -38,6 +39,10 @@ extension VMHost: HostmgrServerDelegate {
             return
         }
 
+        if Configuration.shared.reportNoSlotsErrorToSentry == true {
+            Logger.helper.debug("Reporting no slots error to Sentry")
+            SentrySDK.capture(error: HostmgrError.noVMSlotsAvailable)
+        }
         throw HostmgrError.noVMSlotsAvailable
     }
 
