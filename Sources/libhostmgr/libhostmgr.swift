@@ -1,7 +1,7 @@
 import Foundation
 import OSLog
 
-public let hostmgrVersion = "0.54.0"
+public let hostmgrVersion = "0.54.2"
 
 public extension Logger {
     private static let subsystem = "com.automattic.hostmgr"
