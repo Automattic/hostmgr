@@ -134,18 +134,21 @@ class VirtualMachineSlot: NSObject, ObservableObject {
             Logger.helper.error("Error launching VM: \(error.localizedDescription)")
             // We only call stop to reset the slot state - VM stopping and cleanup already occurred.
             try? await stop(withError: error)
+
             throw error
         }
     }
 
     /// Puts the slot into a stopped state if it's a valid request.
     ///
-    /// - This method does not clean up stopped VMs.
     /// - This method throws an error if trying to stop in a state other than `.starting` and `.running`.
     /// - Parameters:
     ///   - error: Error to include if the slot is stopping because of an error.
-    func stop(withError error: Error? = nil) async throws {
-        Logger.helper.log("Stopping \(role.displayName) slot with current status \(state).")
+    ///   - clean: If VM files should also be cleaned.
+    func stop(withError error: Error? = nil, clean: Bool = false) async throws {
+        Logger.helper.log(
+            "Stopping \(clean ? "and cleaning " : "")\(role.displayName) slot with current status \(state)."
+        )
         switch state {
         case .starting(let config, let task):
             // MARK: Starting -> Stopping
@@ -155,6 +158,7 @@ class VirtualMachineSlot: NSObject, ObservableObject {
             // MARK: Running -> Stopping
             self.state.transitionTo(newState: .stopping(mvm.config))
             await stopVm(mvm.machine, handle: mvm.handle)
+            if clean { cleanVm(handle: mvm.handle) }
         default:
             Logger.helper.error("Stop called while state was \(state).")
             throw Errors.invalidStopState
@@ -232,6 +236,10 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         }
     }
 
+    /// Stops a VZVirtualMachine if it's in a state to be stopped.
+    /// - Parameters:
+    ///   - vm: VZVirtualMachine
+    ///   - handle: Handle to include in logs.
     private func stopVm(_ vm: VZVirtualMachine, handle: String) async {
         Logger.helper.log("Stopping VM \(handle).")
         // Quit responding to delegate methods.
@@ -249,24 +257,15 @@ class VirtualMachineSlot: NSObject, ObservableObject {
             }
         }
     }
-}
 
-// MARK: VZVirtualMachineDelegate conformance
-extension VirtualMachineSlot: VZVirtualMachineDelegate {
-    /// Used internally by the class when it needs to stop the VM and run the clean up step afterwards. This may
-    /// be called because of an "external" event via the `VZVirtualMachineDelegate` calls.
+    /// Used internally by the class to clean ephemeral VMs. This may be called because of an
+    /// "external" event via the `VZVirtualMachineDelegate` calls, or stopping from the menu bar.
     ///
     /// VMs typically stop via the `hostmgr stop` command which handles cleanup on its own.
     /// Only ephemeral VM files are removed.
     /// - Parameters:
-    ///   - error: Error to include if the slot is stopping because of an error.
-    private func stopAndClean(withError error: Error? = nil) async throws {
-        Logger.helper.log("Stopping and cleaning \(role.displayName).")
-        try await stop(withError: error)
-        guard let handle = state.handle else {
-            return
-        }
-
+    ///   - handle: Handle used to identify the bundle on disk.
+    private func cleanVm(handle: String) {
         Logger.helper.log("Cleaning up VM \(handle).")
         do {
             // Remove working (ephemeral) VMs only.
@@ -276,19 +275,22 @@ extension VirtualMachineSlot: VZVirtualMachineDelegate {
             Logger.helper.error("Failure when removing VM files: \(error)")
         }
     }
+}
 
+// MARK: VZVirtualMachineDelegate conformance
+extension VirtualMachineSlot: VZVirtualMachineDelegate {
     /// Called when a VM is stopped gracefully.
     nonisolated func guestDidStop(_ virtualMachine: VZVirtualMachine) {
         Logger.helper.log("Virtual Machine Stopped")
         Task {
-            try await stopAndClean()
+            try await stop(clean: true)
         }
     }
 
     nonisolated func virtualMachine(_ virtualMachine: VZVirtualMachine, didStopWithError error: Error) {
         Logger.helper.error("Virtual Machine Crashed: \(error.localizedDescription)")
         Task {
-            try await stopAndClean(withError: error)
+            try await stop(withError: error, clean: true)
         }
     }
 
@@ -299,7 +301,7 @@ extension VirtualMachineSlot: VZVirtualMachineDelegate {
     ) {
         Logger.helper.error("Network attachment was disconnected: \(error.localizedDescription)")
         Task {
-            try await stopAndClean()
+            try await stop(clean: true)
         }
     }
 }
