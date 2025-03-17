@@ -159,9 +159,12 @@ class VirtualMachineSlot: NSObject, ObservableObject {
             self.state.transitionTo(newState: .stopping(mvm.config))
             await stopVm(mvm.machine, handle: mvm.handle)
             if clean { cleanVm(handle: mvm.handle) }
-        default:
-            Logger.helper.error("Stop called while state was \(state).")
+        case.stopping:
+            Logger.helper.error("Error: Stop was called while stopping.")
             throw Errors.invalidStopState
+        case .empty, .crashed:
+            Logger.helper.info("Stop called while state was \(state).")
+            return
         }
 
         if let error {
