@@ -29,13 +29,15 @@ extension VMHost: HostmgrServerDelegate {
 
         if self.primaryVMSlot.isAvailable {
             Logger.helper.log("Using Primary Slot")
-            try await primaryVMSlot.start(launchConfiguration: launchConfiguration)
+            let vm = try VZManagedVirtualMachine(launchConfiguration: launchConfiguration)
+            try await primaryVMSlot.start(managedVirtualMachine: vm)
             return
         }
 
         if self.secondaryVMSlot.isAvailable {
             Logger.helper.log("Using Secondary Slot")
-            try await secondaryVMSlot.start(launchConfiguration: launchConfiguration)
+            let vm = try VZManagedVirtualMachine(launchConfiguration: launchConfiguration)
+            try await secondaryVMSlot.start(managedVirtualMachine: vm)
             return
         }
 
