@@ -6,12 +6,18 @@ import libhostmgr
 
 @MainActor
 protocol ManagedVirtualMachine: Sendable {
+    /// The configuration used to launch the VM.
     var config: LaunchConfiguration { get }
+    /// The IP address of the VM.
     var ip: IPv4Address { get }
 
+    /// Starts the VM. Handles clean-up if anything goes wrong.
     func start() async throws
+    /// Stops the VM.
     func stop() async
+    /// Cleans the VM files.
     func clean()
+    /// Sets the slot to be a delegate for the VM.
     func setDelegate(_ delegate: VirtualMachineSlot)
 }
 
@@ -38,6 +44,7 @@ class VZManagedVirtualMachine: ManagedVirtualMachine {
             self.config = launchConfiguration
         } catch {
             // Note: This cleans ALL types of VMs that failed to start - even persistent.
+            Logger.helper.info("Cleaning all VM files for \(launchConfiguration.handle).")
             try? vmManager.removeVM(name: launchConfiguration.handle)
             throw error
         }
@@ -61,6 +68,7 @@ class VZManagedVirtualMachine: ManagedVirtualMachine {
             Logger.helper.error("Stopping VM \(config.handle) that was being launched: \(error)")
             await stop()
             // Note: This cleans ALL types of VMs that failed to start - even persistent.
+            Logger.helper.info("Cleaning all VM files for \(config.handle).")
             try? vmManager.removeVM(name: handle)
             throw error
         }
