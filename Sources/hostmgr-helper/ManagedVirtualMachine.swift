@@ -56,8 +56,10 @@ class VZManagedVirtualMachine: ManagedVirtualMachine {
     func start() async throws {
         Logger.helper.log("Starting VM \(handle).")
         do {
+            try Task.checkCancellation()
             try await machine.start()
             if config.waitForNetworking {
+                try Task.checkCancellation()
                 self.ip = try await vmManager.ipAddress(forVmWithName: config.handle)
                 Logger.helper.log("Startup complete – IP Address: \(ip.debugDescription).")
             } else {

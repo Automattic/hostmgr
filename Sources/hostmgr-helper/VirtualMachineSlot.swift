@@ -32,11 +32,16 @@ class VirtualMachineSlot: NSObject, ObservableObject {
             let startTask = Task { try await managedVirtualMachine.start() }
             try state.transitionTo(.starting(managedVirtualMachine, startTask))
             try await startTask.value
+            // If the start task caught a cancellation (e.g. during a Task.sleep() call), it will throw.
+            // We also want to check for the cancellation here in case startup completed.
+            if startTask.isCancelled {
+                throw Errors.vmStartCancelled
+            }
 
             Logger.helper.log("Setting \(role.displayName) slot to running \(managedVirtualMachine.config.handle).")
             managedVirtualMachine.setDelegate(self)
             try state.transitionTo(.running(managedVirtualMachine))
-        } catch is CancellationError {
+        } catch is CancellationError, Errors.vmStartCancelled {
             // We're already transitioning from Starting -> Stopping by an external call, so
             // we just throw.
             Logger.helper.debug("Start task was cancelled for \(managedVirtualMachine.config.handle).")
@@ -61,9 +66,11 @@ class VirtualMachineSlot: NSObject, ObservableObject {
             "Stopping \(clean ? "and cleaning " : "")\(role.displayName) slot with current status \(state)."
         )
         switch state {
-        case .starting(let config, let task):
-            try state.transitionTo(.stopping(config))
+        case .starting(let mvm, let task):
+            try state.transitionTo(.stopping(mvm))
             task.cancel()
+            await mvm.stop()
+            if clean { mvm.clean() }
         case .running(let mvm):
             try state.transitionTo(.stopping(mvm))
             await mvm.stop()
