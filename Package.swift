@@ -53,6 +53,10 @@ let package = Package(
             ],
             swiftSettings: sharedSettings
         ),
+        .testTarget(
+            name: "hostmgr-helperTests",
+            dependencies: ["hostmgr-helper"]
+        ),
         .target(
             name: "libhostmgr",
             dependencies: [

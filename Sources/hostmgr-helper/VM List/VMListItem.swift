@@ -8,9 +8,9 @@ struct VMListItem: View {
     var body: some View {
         switch slot.state {
         case .empty: EmptyVMListItem(slot: slot)
-        case .starting(let launchConfiguration, _):
+        case .starting(let mvm, _):
             PendingVMListItem(
-                launchConfiguration: launchConfiguration,
+                launchConfiguration: mvm.config,
                 slot: slot
             )
         case .running(let virtualMachine):

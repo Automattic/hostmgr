@@ -4,11 +4,12 @@ import Virtualization
 struct VirtualMachineDisplayView: NSViewRepresentable {
     typealias NSViewType = VZVirtualMachineView
 
-    let virtualMachine: VZVirtualMachine?
+    let virtualMachine: ManagedVirtualMachine
 
     func makeNSView(context: Context) -> VZVirtualMachineView {
         let view = VZVirtualMachineView()
-        view.virtualMachine = virtualMachine
+        view.virtualMachine = (virtualMachine as? VZManagedVirtualMachine)?.machine
+
         if #available(macOS 14.0, *) {
             view.automaticallyReconfiguresDisplay = true
         }
