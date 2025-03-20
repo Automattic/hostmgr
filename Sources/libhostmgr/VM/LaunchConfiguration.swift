@@ -97,7 +97,7 @@ Persistence: \(persistent)
         }
     }
 
-    public func setupVirtualMachine() async throws -> VZVirtualMachine {
+    public func setupVirtualMachine() throws -> VZVirtualMachine {
         let sourceBundle = try VMBundle(at: vmSourcePath)
         let bundle = self.persistent
             ? sourceBundle
