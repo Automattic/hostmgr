@@ -16,5 +16,8 @@ AllCops:
   TargetRubyVersion: 3.2.2
   SuggestExtensions: false
 
+Metrics/MethodLength:
+  Max: 16
+
 Style/HashSyntax:
   EnforcedShorthandSyntax: never
