@@ -27,17 +27,36 @@ final class VMConfigFileTests: XCTestCase {
     }
 
     func testThatHardwareModelIsParsedCorrectly() throws {
-        XCTAssert(
-            try configFileSample1.hardwareModel.dataRepresentation,
-            hasHash: "3aTbdKrJ+27C8JaCzSmHNr32t5IbeuA5VjC48XCcGu8="
-        )
+        let dataRep = try configFileSample1.hardwareModel.dataRepresentation
+        // The `dataRepresentation` is supposed to be an opaque value / implementation detail,
+        // but that's the only property we have access to and we can thus use for testing correct parsing.
+        //
+        // This `dataRepresentation` happens to be a binary plist representation of a NSDictionary.
+        // We can't just compare the `dataRepresentation` directly with a fixed value though, because different
+        // versions of macOS might serialize the exact same NSDictionary as a slightly different NSData representation.
+        // Besides, future macOS versions might add additional keys in that internal representation of those objects.
+        //
+        // So the best we can do is check that the `dataRepresentation` is not nil and check some keys in that dict.
+        // This is a bit fragile but at least it's more resilient than comparing the `dataRepresentation` directly.
+        let dictRep = try XCTUnwrap(PropertyListSerialization.propertyList(from: dataRep, format: nil) as? NSDictionary)
+        XCTAssertEqual(dictRep["MinimumSupportedOS"] as? NSArray, [13, 0, 0])
+        XCTAssertEqual(dictRep["PlatformVersion"] as? NSNumber, 2)
     }
 
     func testThatMachineIdentifierIsParsedCorrectly() throws {
-        XCTAssert(
-            try configFileSample1.machineIdentifier.dataRepresentation,
-            hasHash: "0DXW7UIFta6W86ZZd24QUy4Gx3EX1+r9i+yYk7xHi0s="
-        )
+        let dataRep = try configFileSample1.machineIdentifier.dataRepresentation
+        // The `dataRepresentation` is supposed to be an opaque value / implementation detail,
+        // but that's the only property we have access to and we can thus use for testing correct parsing.
+        //
+        // This `dataRepresentation` happens to be a binary plist representation of a NSDictionary.
+        // We can't just compare the `dataRepresentation` directly with a fixed value though, because different
+        // versions of macOS might serialize the exact same NSDictionary as a slightly different NSData representation.
+        // Besides, future macOS versions might add additional keys in that internal representation of those objects.
+        //
+        // So the best we can do is check that the `dataRepresentation` is not nil and check some keys in that dict.
+        // This is a bit fragile but at least it's more resilient than comparing the `dataRepresentation` directly.
+        let dictRep = try XCTUnwrap(PropertyListSerialization.propertyList(from: dataRep, format: nil) as? NSDictionary)
+        XCTAssertNotNil(dictRep["ECID"])
     }
 
     func testThatMacAddressIsParsedCorrectly() throws {
