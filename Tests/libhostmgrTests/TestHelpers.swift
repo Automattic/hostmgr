@@ -18,14 +18,6 @@ extension S3Object {
     }
 }
 
-extension XCTest {
-    func XCTAssert(_ data: Data, hasHash hash: String, file: StaticString = #file, line: UInt = #line) {
-        var hasher = SHA256()
-        hasher.update(data: data)
-        XCTAssertEqual(Data(hasher.finalize()).base64EncodedString(), hash, file: file, line: line)
-    }
-}
-
 func getPathForEnvFile(named key: String) -> URL {
     Bundle.module.url(forResource: key, withExtension: "env")!
 }
