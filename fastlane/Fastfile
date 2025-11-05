@@ -53,8 +53,13 @@ lane :upload_release do
   )
 end
 
-desc 'Download the development signing certificates to this machine'
+desc 'Download all certificates and provisioning profiles for code signing'
 lane :set_up_signing do |readonly: true|
+  set_up_signing_development(readonly: readonly)
+end
+
+desc 'Download the development signing certificates to this machine'
+lane :set_up_signing_development do |readonly: true|
   require_env_vars!(*ASC_API_KEY_ENV_VARS, *CODE_SIGNING_STORAGE_ENV_VARS)
 
   sync_code_signing(
