@@ -80,7 +80,7 @@ lane :set_up_signing_development do |readonly: true|
 end
 
 desc 'Download the release signing certificates to this machine'
-lane :set_up_signing_release do |readonly: true|
+lane :set_up_signing_release do
   require_env_vars!(*ASC_API_KEY_ENV_VARS, *CODE_SIGNING_STORAGE_ENV_VARS)
 
   get_certificates(
