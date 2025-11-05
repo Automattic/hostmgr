@@ -10,6 +10,18 @@ CERTIFICATE_NAME_RELEASE = Apple Distribution: Automattic, Inc. (PZYM8XX95Q)
 clean:
 	rm -rf .build
 
+fetch-codesignging:
+	bundle install
+	bundle exec fastlane set_up_signing
+
+fetch-codesignging-debug:
+	bundle install
+	bundle exec fastlane set_up_signing_development
+
+fetch-codesignging-release:
+	bundle install
+	bundle exec fastlane set_up_signing_release
+
 build:
 	@echo "--- Building Release"
 	swift build -c release --arch arm64
