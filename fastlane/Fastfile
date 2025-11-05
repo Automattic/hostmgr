@@ -85,6 +85,12 @@ lane :set_up_signing_release do
 
   get_certificates(
     development: false,
+
+    # Do not create a new certificate.
+    # Always and only attempt to acquire existing one.
+    generate_apple_certs: false,
+    force: false,
+
     team_id: APPLE_TEAM_ID,
     api_key: app_store_connect_api_key
   )
