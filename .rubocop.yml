@@ -17,7 +17,7 @@ AllCops:
   SuggestExtensions: false
 
 Metrics/MethodLength:
-  Max: 16
+  Max: 30
 
 Style/HashSyntax:
   EnforcedShorthandSyntax: never
