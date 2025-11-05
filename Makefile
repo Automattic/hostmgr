@@ -45,19 +45,19 @@ release: build
 create-vm-debug:
 	@echo "--- Building and Signing hostmgr for Local Development"
 	swift build
-	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "${CERTIFICATE_NAME_DEBUG}" .build/arm64-apple-macosx/debug/hostmgr -v
+	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "${CERTIFICATE_NAME_DEBUG}" .build/arm64-apple-macosx/debug/hostmgr --force --verbose
 
 	./.build/arm64-apple-macosx/debug/hostmgr vm create xcode-143 --disk-size 92
 
 build-debug:
 	@echo "--- Building and Signing for Local Development"
 	swift build
-	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "${CERTIFICATE_NAME_DEBUG}" .build/arm64-apple-macosx/debug/hostmgr -v
+	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "${CERTIFICATE_NAME_DEBUG}" .build/arm64-apple-macosx/debug/hostmgr --force --verbose
 
 build-helper-debug:
 	@echo "--- Building and Signing helper for Local Development"
 	swift build
-	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "${CERTIFICATE_NAME_DEBUG}" .build/arm64-apple-macosx/debug/hostmgr-helper -v
+	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "${CERTIFICATE_NAME_DEBUG}" .build/arm64-apple-macosx/debug/hostmgr-helper --force --verbose
 
 run-helper-debug: build-debug build-helper-debug
 	./.build/arm64-apple-macosx/debug/hostmgr-helper --debug true
