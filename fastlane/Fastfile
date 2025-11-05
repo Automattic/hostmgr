@@ -61,44 +61,12 @@ end
 
 desc 'Download the development signing certificates to this machine'
 lane :set_up_signing_development do |readonly: true|
-  require_env_vars!(*ASC_API_KEY_ENV_VARS, *CODE_SIGNING_STORAGE_ENV_VARS)
-
-  sync_code_signing(
-    platform: 'macos',
-    app_identifier: APPLE_BUNDLE_IDENTIFIER,
-    team_id: APPLE_TEAM_ID,
-    api_key: app_store_connect_api_key,
-    type: 'development',
-    certificate_id: 'Apple Development: Created via API (886NX39KP6)',
-
-    storage_mode: 's3',
-    s3_region: 'us-east-2',
-    s3_bucket: 'a8c-fastlane-match',
-
-    readonly: readonly
-  )
+  set_up_certificate_in_keychain(type: 'development', readonly: readonly)
 end
 
 desc 'Download the release signing certificates to this machine'
 lane :set_up_signing_release do |readonly: true|
-  require_env_vars!(*ASC_API_KEY_ENV_VARS, *CODE_SIGNING_STORAGE_ENV_VARS)
-
-  # This will downaload a provisioning profile which we don't use.
-  # The purpose of the lane is to setup the distribution certificate in the machine's keychain.
-  # This will make it accessible by the rest the rest of the automation later on.
-  sync_code_signing(
-    platform: 'macos',
-    app_identifier: APPLE_BUNDLE_IDENTIFIER,
-    team_id: APPLE_TEAM_ID,
-    api_key: app_store_connect_api_key,
-    type: 'appstore',
-
-    storage_mode: 's3',
-    s3_region: 'us-east-2',
-    s3_bucket: 'a8c-fastlane-match',
-
-    readonly: readonly
-  )
+  set_up_certificate_in_keychain(type: 'appstore', readonly: readonly)
 end
 
 def create_release_zip
@@ -125,4 +93,26 @@ def get_required_env!(key)
   return ENV.fetch(key) if ENV.key?(key)
 
   UI.user_error!("Environment variable `#{key}` is not set.")
+end
+
+def set_up_certificate_in_keychain(type:, readonly:)
+  require_env_vars!(*ASC_API_KEY_ENV_VARS, *CODE_SIGNING_STORAGE_ENV_VARS)
+
+  # This will fetch the certificate and provisioning profile for the given type from remote storage.
+  # It will then set them up in the local keychain, where 'codesign' looks for identities.
+  #
+  # Notice we do not need the provisioning profile because we sign with 'codesign' elsewhere.
+  # However, there is no other way to set up the certificate in the keychain.
+  # Fastlane offers a tool called cert, but it only downloads certificates.
+  sync_code_signing(
+    platform: 'macos',
+    app_identifier: APPLE_BUNDLE_IDENTIFIER,
+    team_id: APPLE_TEAM_ID,
+    api_key: app_store_connect_api_key,
+    type: type,
+    storage_mode: 's3',
+    s3_region: 'us-east-2',
+    s3_bucket: 'a8c-fastlane-match',
+    readonly: readonly
+  )
 end
