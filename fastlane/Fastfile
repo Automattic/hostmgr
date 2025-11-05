@@ -56,6 +56,7 @@ end
 desc 'Download all certificates and provisioning profiles for code signing'
 lane :set_up_signing do |readonly: true|
   set_up_signing_development(readonly: readonly)
+  set_up_signing_release(readonly: readonly)
 end
 
 desc 'Download the development signing certificates to this machine'
@@ -76,6 +77,33 @@ lane :set_up_signing_development do |readonly: true|
 
     readonly: readonly
   )
+end
+
+desc 'Download the release signing certificates to this machine'
+lane :set_up_signing_release do |readonly: true|
+  require_env_vars!(*ASC_API_KEY_ENV_VARS, *CODE_SIGNING_STORAGE_ENV_VARS)
+
+  get_certificates(
+    development: false,
+    team_id: APPLE_TEAM_ID,
+    api_key: app_store_connect_api_key
+  )
+
+  UI.message "Path #{lane_context[SharedValues::CERT_FILE_PATH]}"
+  UI.message "ID #{lane_context[SharedValues::CERT_CERTIFICATE_ID]}"
+  # sync_code_signing(
+  #   platform: 'macos',
+  #   app_identifier: APPLE_BUNDLE_IDENTIFIER,
+  #   team_id: APPLE_TEAM_ID,
+  #   api_key: app_store_connect_api_key,
+  #   type: '',
+
+  #   storage_mode: 's3',
+  #   s3_region: 'us-east-2',
+  #   s3_bucket: 'a8c-fastlane-match',
+
+  #   readonly: readonly
+  # )
 end
 
 def create_release_zip
