@@ -173,6 +173,7 @@ GEM
     nanaimo (0.4.0)
     naturally (2.3.0)
     nkf (0.2.0)
+    openssl (4.0.0)
     optparse (0.8.0)
     os (1.1.4)
     parallel (1.26.3)
@@ -247,7 +248,8 @@ PLATFORMS
 DEPENDENCIES
   aws-sdk-s3 (~> 1.119)
   fastlane (~> 2.212)
+  openssl (~> 4.0)
   rubocop (~> 1.64)
 
 BUNDLED WITH
-   2.5.22
+   2.4.22
