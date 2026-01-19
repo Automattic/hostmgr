@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# This file is `source`'d before calling `buildkite-agent pipeline upload`, and can be used
+# to set up some variables that will be interpolated in the `.yml` pipeline before uploading it.
+
+CI_TOOLKIT_PLUGIN_VERSION="6.0.1"
+
+SCRIPT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
+
+XCODE_VERSION_FILE="$SCRIPT_DIR/../.xcode-version"
+if [[ ! -s "$XCODE_VERSION_FILE" ]]; then
+    echo "Error: '$XCODE_VERSION_FILE' not found or empty." >&2
+    exit 1
+fi
+# The ~> modifier is not currently used, but we strip it just in case
+XCODE_VERSION=$(sed -E 's/^~> ?//' "$XCODE_VERSION_FILE")
+
+export IMAGE_ID="xcode-$XCODE_VERSION"
+export CI_TOOLKIT_PLUGIN="automattic/a8c-ci-toolkit#$CI_TOOLKIT_PLUGIN_VERSION"
