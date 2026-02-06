@@ -55,15 +55,32 @@ public struct VMManager {
     /// Unpack a packaged VM
     ///
     /// This method expects that the packaged VM is located in the `vm-images` directory – referencing it by name
-    /// will attempt to unpack the VM at that location. If there is no packaged VM at that location, this method will
-    /// emit an error.
+    /// will attempt to unpack the VM at that location.
+    /// - If there is no packaged VM at that location, this method will emit an error.
+    /// - If an extracted VM already exists at the final destination path, this method will emit an error.
+    /// - If an error occurs, this method will attempt to clean up any extracted files.
     public func unpackVM(name: String) async throws {
+        let finalDestination = Paths.toVMTemplate(named: name)
+
+        guard !FileManager.default.fileExists(atPath: finalDestination.path) else {
+            throw CocoaError(.fileWriteFileExists)
+        }
+
+        let tempDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("hostmgr-vm-unpack-\(name)-\(UUID().uuidString)")
+
+        defer {
+            try? FileManager.default.removeItem(at: tempDirectory)
+        }
+
         try Compressor.decompress(
             archiveAt: Paths.toArchivedVM(named: name),
-            to: Paths.toVMTemplate(named: name)
+            to: tempDirectory
         )
 
-        try VMTemplate(at: Paths.toVMTemplate(named: name)).validate()
+        try VMTemplate(at: tempDirectory).validate()
+
+        try FileManager.default.moveItem(at: tempDirectory, to: finalDestination)
     }
 
     /// Package a VM for use on other machines
