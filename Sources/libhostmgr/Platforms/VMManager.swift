@@ -55,11 +55,12 @@ public struct VMManager {
     /// Unpack a packaged VM
     ///
     /// This method expects that the packaged VM is located in the `vm-images` directory – referencing it by name
-    /// will attempt to unpack the VM at that location.
+    /// will attempt to unpack the VM at that location. If unpacking is successful, the source archive is deleted.
     /// - If there is no packaged VM at that location, this method will emit an error.
     /// - If an extracted VM already exists at the final destination path, this method will emit an error.
     /// - If an error occurs, this method will attempt to clean up any extracted files.
     public func unpackVM(name: String) async throws {
+        let archivePath = Paths.toArchivedVM(named: name)
         let finalDestination = Paths.toVMTemplate(named: name)
 
         guard !FileManager.default.fileExists(atPath: finalDestination.path) else {
@@ -74,13 +75,17 @@ public struct VMManager {
         }
 
         try Compressor.decompress(
-            archiveAt: Paths.toArchivedVM(named: name),
+            archiveAt: archivePath,
             to: tempDirectory
         )
 
         try VMTemplate(at: tempDirectory).validate()
 
         try FileManager.default.moveItem(at: tempDirectory, to: finalDestination)
+
+        // Clean up the archive after successful unpack. Use try? to avoid failing
+        // the operation if archive deletion fails - the VM is already unpacked successfully.
+        try? FileManager.default.removeItem(at: archivePath)
     }
 
     /// Package a VM for use on other machines
