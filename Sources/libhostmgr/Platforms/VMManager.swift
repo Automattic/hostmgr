@@ -85,7 +85,7 @@ public struct VMManager {
 
         // Clean up the archive after successful unpack. Use try? to avoid failing
         // the operation if archive deletion fails - the VM is already unpacked successfully.
-        try? FileManager.default.removeItem(at: archiveDestination)
+        try? FileManager.default.removeItem(at: archivePath)
     }
 
     /// Package a VM for use on other machines
