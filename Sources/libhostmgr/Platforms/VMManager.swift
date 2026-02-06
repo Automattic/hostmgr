@@ -60,7 +60,7 @@ public struct VMManager {
     /// - If an extracted VM already exists at the final destination path, this method will emit an error.
     /// - If an error occurs, this method will attempt to clean up any extracted files.
     public func unpackVM(name: String) async throws {
-        let archiveDestination = Paths.toArchivedVM(named: name)
+        let archivePath = Paths.toArchivedVM(named: name)
         let finalDestination = Paths.toVMTemplate(named: name)
 
         guard !FileManager.default.fileExists(atPath: finalDestination.path) else {
