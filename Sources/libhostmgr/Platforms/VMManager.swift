@@ -75,7 +75,7 @@ public struct VMManager {
         }
 
         try Compressor.decompress(
-            archiveAt: archiveDestination,
+            archiveAt: archivePath,
             to: tempDirectory
         )
 
