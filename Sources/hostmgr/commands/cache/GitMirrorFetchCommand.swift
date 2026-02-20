@@ -32,7 +32,14 @@ struct GitMirrorFetchCommand: AsyncParsableCommand {
             Console.info("Fetching the Git Mirror for \(gitMirror.url)")
 
             guard let server = try await servers.first(havingFileNamed: gitMirror.remoteFilename) else {
-                Console.exit("No Git Mirror found for \(gitMirror.slug)", style: .error)
+                Console.exit(
+                    """
+                    No Git Mirror found for \(gitMirror.slug).
+                    To publish one, clone the repo locally and run:
+                      hostmgr cache publish-git-mirror --git-mirror \(gitMirror.url)
+                    """,
+                    style: .error
+                )
             }
 
             let progress = Console.startProgress("Downloading Git Mirror", type: .download)
