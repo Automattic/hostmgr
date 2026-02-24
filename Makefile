@@ -7,7 +7,7 @@ RUBY_VERSION = $(shell cat .ruby-version)
 CERTIFICATE_NAME_DEBUG = Apple Development: Created via API (886NX39KP6)
 CERTIFICATE_NAME_RELEASE = Apple Distribution: Automattic, Inc. (PZYM8XX95Q)
 
-bootstrap: bootstrap-ruby lint build-debug
+bootstrap: bootstrap-ruby lint test build-debug
 
 bootstrap-ruby:
 	bundle install
