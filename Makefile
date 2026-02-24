@@ -7,19 +7,21 @@ RUBY_VERSION = $(shell cat .ruby-version)
 CERTIFICATE_NAME_DEBUG = Apple Development: Created via API (886NX39KP6)
 CERTIFICATE_NAME_RELEASE = Apple Distribution: Automattic, Inc. (PZYM8XX95Q)
 
+bootstrap: bootstrap-ruby lint build-debug
+
+bootstrap-ruby:
+	bundle install
+
 clean:
 	rm -rf .build
 
-fetch-codesignging:
-	bundle install
+fetch-codesignging: boostrap-ruby
 	bundle exec fastlane set_up_signing
 
-fetch-codesignging-debug:
-	bundle install
+fetch-codesignging-debug: boostrap-ruby
 	bundle exec fastlane set_up_signing_development
 
-fetch-codesignging-release:
-	bundle install
+fetch-codesignging-release: bootstrap-ruby
 	bundle exec fastlane set_up_signing_release
 
 build:
