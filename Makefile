@@ -15,6 +15,9 @@ bootstrap-ruby:
 clean:
 	rm -rf .build
 
+test:
+	swift test
+
 fetch-codesignging: boostrap-ruby
 	bundle exec fastlane set_up_signing
 
