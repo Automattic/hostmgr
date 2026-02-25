@@ -23,6 +23,11 @@ fastlane/              # Code signing and release automation
 .buildkite/            # CI pipeline
 ```
 
+## Environment
+
+- See `.xcode-version` for the expected Xcode toolchain.
+- See `.ruby-version` for the expected Ruby version
+
 ## Commands
 
 ```bash
