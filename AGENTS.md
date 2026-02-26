@@ -69,8 +69,5 @@ Key runtime assumption:
 
 ## Common Pitfalls
 
-- `make lint` runs SwiftLint and RuboCop in Docker containers — won't work without Docker
-- Release builds need signing certificates fetched via Fastlane Match (`bundle exec fastlane set_up_signing`)
-- The project targets ARM64 only — no Intel support
 - `hostmgr-helper` requires macOS entitlements (`Sources/hostmgr/hostmgr.entitlements`) for Virtualization framework access
 - The `vendor/` directory contains bundled Ruby gems — don't modify or commit changes there
