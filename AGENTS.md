@@ -1,8 +1,9 @@
 # hostmgr
 
 A suite of tools for managing macOS virtual machines using Apple's Virtualization framework.
-Designed for Automattic's our Mac CI infrastructure, which uses S3 to store VM templates, and Buildkite for CI orchestration.
+Designed for our Mac CI infrastructure at Automattic, which uses S3 to store VM templates, and Buildkite for CI orchestration.
 
+In particular, on the `mac` queue of our Buildkite setup, when our self-hosted MacMinis receive a job, an agent hook intercepts that job early in the process, looks at the `IMAGE_ID` env var set in the pipeline to know which VM to run the job on (e.g. `xcode-26.0`), then call `hostmgr` to fetch the corresponding VM, boot it, and transfer the job to run into the booted VM. Then during pre-exit the VM is shut down using `hostmgr stop` at the end of the job.
 Only supports Apple Silicon / ARM64.
 
 ## Project Structure
@@ -46,7 +47,7 @@ Release builds require code-signing certificates via `bundle exec fastlane set_u
 
 - **Main branch**: `trunk`
 - **Version**: defined in `Sources/libhostmgr/libhostmgr.swift`
-- **Release process**: bump version in a PR, merge, push a tag — CI publishes to GitHub Releases
+- **Release process**: bump version in a PR, merge, push a tag — CI publishes to GitHub Releases. See @README.md for details.
 - **SwiftLint**: config in `.swiftlint.yml`
 - **RuboCop**: config in `.rubocop.yml`
 
