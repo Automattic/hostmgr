@@ -24,6 +24,10 @@ struct GitMirrorFetchCommand: AsyncParsableCommand {
         case gitMirror
     }
 
+    /// Minimum valid archive size in bytes. Archives smaller than this are almost certainly corrupted
+    /// or empty, since even a minimal git repo compresses to more than 1 KB.
+    static let minimumArchiveSize = 1024
+
     func run() async throws {
 
         let gitMirror = try self.gitMirror ?? GitMirror.fromEnvironment(key: "BUILDKITE_REPO")
@@ -42,12 +46,29 @@ struct GitMirrorFetchCommand: AsyncParsableCommand {
                 progress: progress.update
             )
 
+            // Validate the downloaded archive is not empty or corrupted
+            let archiveSize = try FileManager.default.size(ofObjectAt: gitMirror.archivePath)
+            if archiveSize < Self.minimumArchiveSize {
+                Console.warn("Downloaded archive is too small (\(archiveSize) bytes) – removing corrupted file")
+                try FileManager.default.removeItem(at: gitMirror.archivePath)
+                Console.exit("Downloaded Git Mirror archive appears corrupted", style: .error)
+            }
+
             Console.success("Download Complete")
         }
 
         if try !gitMirror.existsLocally {
             Console.info("Decompressing to \(Format.path(gitMirror.localPath))")
-            try gitMirror.decompress()
+            do {
+                try gitMirror.decompress()
+            } catch {
+                // Clean up the corrupted archive and partial decompression directory so that the
+                // next run will re-download from the server instead of retrying the same bad file.
+                Console.warn("Decompression failed – removing corrupted archive and partial output")
+                try? FileManager.default.removeItemIfExists(at: gitMirror.archivePath)
+                try? FileManager.default.removeItemIfExists(at: gitMirror.localPath)
+                throw error
+            }
         }
 
         Console.success("Git Mirror is ready")
