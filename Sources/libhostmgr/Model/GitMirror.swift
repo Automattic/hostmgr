@@ -38,7 +38,7 @@ public struct GitMirror {
 
     func calculateRemoteFilename(given date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "YYYY-MM"
+        formatter.dateFormat = "yyyy-MM"
 
         return slug + "-" + formatter.string(from: date) + ".aar"
     }
