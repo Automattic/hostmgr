@@ -62,11 +62,11 @@ struct GitMirrorFetchCommand: AsyncParsableCommand {
             do {
                 try gitMirror.decompress()
             } catch {
-                // Clean up the corrupted archive and partial decompression directory so that the
-                // next run will re-download from the server instead of retrying the same bad file.
-                Console.warn("Decompression failed – removing corrupted archive and partial output")
+                // Clean up the corrupted archive so that the next run will re-download from the
+                // server instead of retrying the same bad file. The partial decompression output
+                // is cleaned up by the defer block in GitMirror.decompress().
+                Console.warn("Decompression failed – removing corrupted archive")
                 try? FileManager.default.removeItemIfExists(at: gitMirror.archivePath)
-                try? FileManager.default.removeItemIfExists(at: gitMirror.localPath)
                 throw error
             }
         }

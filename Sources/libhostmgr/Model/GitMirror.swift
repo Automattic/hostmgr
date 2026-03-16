@@ -73,10 +73,19 @@ public struct GitMirror {
     }
 
     public func decompress() throws {
+        let tempDirectory = Paths.tempDirectory
+            .appendingPathComponent("git-mirror-unpack-\(slug)-\(UUID().uuidString)")
+
+        defer {
+            try? FileManager.default.removeItemIfExists(at: tempDirectory)
+        }
+
         try Compressor.decompress(
             archiveAt: archivePath,
-            to: localPath
+            to: tempDirectory
         )
+
+        try FileManager.default.moveItem(at: tempDirectory, to: localPath)
     }
 
     public static func fromEnvironment(
