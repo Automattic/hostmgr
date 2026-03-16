@@ -14,11 +14,14 @@ public struct FileTransferProgress {
     }
 
     var fractionComplete: Percentage {
-        Decimal(Double(self.completed) / Double(self.total))
+        guard total > 0 else { return 0 }
+        return Decimal(Double(self.completed) / Double(self.total))
     }
 
     var dataRate: Double {
-        return Double(self.completed) / Date().timeIntervalSince(startDate)
+        let elapsed = Date().timeIntervalSince(startDate)
+        guard elapsed > 0 else { return 0 }
+        return Double(self.completed) / elapsed
     }
 
     var estimatedTimeRemaining: TimeInterval {
