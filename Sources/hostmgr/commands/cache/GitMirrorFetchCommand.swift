@@ -49,11 +49,9 @@ struct GitMirrorFetchCommand: AsyncParsableCommand {
             // Validate the downloaded archive is not empty or corrupted
             let archiveSize = try FileManager.default.size(ofObjectAt: gitMirror.archivePath)
             if archiveSize < Self.minimumArchiveSize {
-                Console.warn("Downloaded archive is too small (\(archiveSize) bytes) – removing corrupted file")
-                try FileManager.default.removeItem(at: gitMirror.archivePath)
-                throw ValidationError(
-                    "Downloaded Git Mirror archive appears corrupted (\(archiveSize) bytes)"
-                )
+                Console.error("Downloaded archive is too small (\(archiveSize) bytes) – removing corrupted file")
+                try? FileManager.default.removeItemIfExists(at: gitMirror.archivePath)
+                throw ExitCode.failure
             }
 
             Console.success("Download Complete")
