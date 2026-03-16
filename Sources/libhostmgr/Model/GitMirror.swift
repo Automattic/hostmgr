@@ -38,6 +38,9 @@ public struct GitMirror {
 
     func calculateRemoteFilename(given date: Date) -> String {
         let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.timeZone = TimeZone(identifier: "UTC")
         formatter.dateFormat = "yyyy-MM"
 
         return slug + "-" + formatter.string(from: date) + ".aar"
