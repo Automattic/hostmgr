@@ -6,9 +6,8 @@ import AppleArchive
 public struct Compressor {
 
     enum Errors: Error {
-        case fileExistsAtPath
-        case unableToCompress
-        case unableToDecompress
+        case fileExists(at: String)
+        case invalidPath(String)
     }
 
     // From Apple Sample Code: https://developer.apple.com/documentation/accelerate/compressing_file_system_directories
@@ -19,21 +18,22 @@ public struct Compressor {
 
         let destination = destination ?? FileManager.default.temporaryDirectory.appendingPathComponent("archive.aar")
 
-        guard
-            let archiveFilePath = FilePath(destination),
-            let writeFileStream = ArchiveByteStream.fileStream(
-                path: archiveFilePath,
-                mode: .writeOnly,
-                options: [ .create ],
-                permissions: FilePermissions(rawValue: 0o644)
-            ),
-            let compressionStream = ArchiveByteStream.compressionStream(using: .lzfse, writingTo: writeFileStream),
-            let encodeStream = ArchiveStream.encodeStream(writingTo: compressionStream)
-        else {
-            throw Errors.unableToCompress
+        guard let archiveFilePath = FilePath(destination) else {
+            throw Errors.invalidPath(destination.path())
         }
 
-        try encodeStream.writeDirectoryContents(archiveFrom: FilePath(directory.path), keySet: keySet)
+        try ArchiveByteStream.withFileStream(
+            path: archiveFilePath,
+            mode: .writeOnly,
+            options: [ .create ],
+            permissions: FilePermissions(rawValue: 0o644)
+        ) { writeFileStream in
+            try ArchiveByteStream.withCompressionStream(using: .lzfse, writingTo: writeFileStream) { compStream in
+                try ArchiveStream.withEncodeStream(writingTo: compStream) { encodeStream in
+                    try encodeStream.writeDirectoryContents(archiveFrom: FilePath(directory.path), keySet: keySet)
+                }
+            }
+        }
 
         return destination
     }
@@ -42,31 +42,36 @@ public struct Compressor {
     public static func decompress(archiveAt archivePath: URL, to destination: URL) throws -> URL {
 
         guard !FileManager.default.fileExists(at: destination) else {
-            throw Errors.fileExistsAtPath
+            throw Errors.fileExists(at: destination.path())
         }
 
         try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
 
-        guard
-            let archiveFilePath = FilePath(archivePath),
-            let readFileStream = ArchiveByteStream.fileStream(
-                path: archiveFilePath,
-                mode: .readOnly,
-                options: [ ],
-                permissions: FilePermissions(rawValue: 0o644)
-            ),
-            let decompressionStream = ArchiveByteStream.decompressionStream(readingFrom: readFileStream),
-            let decodeStream = ArchiveStream.decodeStream(readingFrom: decompressionStream),
-            let decompressDestination = FilePath(destination),
-            let extractStream = ArchiveStream.extractStream(
-                extractingTo: decompressDestination,
-                flags: [ .ignoreOperationNotPermitted ]
-            )
-        else {
-            throw Errors.unableToDecompress
+        guard let archiveFilePath = FilePath(archivePath) else {
+            throw Errors.invalidPath(archivePath.path())
         }
 
-        _ = try ArchiveStream.process(readingFrom: decodeStream, writingTo: extractStream)
+        guard let decompressDestination = FilePath(destination) else {
+            throw Errors.invalidPath(destination.path())
+        }
+
+        try ArchiveByteStream.withFileStream(
+            path: archiveFilePath,
+            mode: .readOnly,
+            options: [ ],
+            permissions: FilePermissions(rawValue: 0o644)
+        ) { readFileStream in
+            try ArchiveByteStream.withDecompressionStream(readingFrom: readFileStream) { decompStream in
+                try ArchiveStream.withDecodeStream(readingFrom: decompStream) { decodeStream in
+                    try ArchiveStream.withExtractStream(
+                        extractingTo: decompressDestination,
+                        flags: [ .ignoreOperationNotPermitted ]
+                    ) { extractStream in
+                        _ = try ArchiveStream.process(readingFrom: decodeStream, writingTo: extractStream)
+                    }
+                }
+            }
+        }
 
         return destination
     }
