@@ -6,9 +6,8 @@ import AppleArchive
 public struct Compressor {
 
     enum Errors: Error {
-        case fileExistsAtPath
-        case unableToCompress
-        case unableToDecompress
+        case fileExists(at: String)
+        case invalidPath(String)
     }
 
     // From Apple Sample Code: https://developer.apple.com/documentation/accelerate/compressing_file_system_directories
@@ -20,7 +19,7 @@ public struct Compressor {
         let destination = destination ?? FileManager.default.temporaryDirectory.appendingPathComponent("archive.aar")
 
         guard let archiveFilePath = FilePath(destination) else {
-            throw Errors.unableToCompress
+            throw Errors.invalidPath(destination.path())
         }
 
         try ArchiveByteStream.withFileStream(
@@ -43,16 +42,17 @@ public struct Compressor {
     public static func decompress(archiveAt archivePath: URL, to destination: URL) throws -> URL {
 
         guard !FileManager.default.fileExists(at: destination) else {
-            throw Errors.fileExistsAtPath
+            throw Errors.fileExists(at: destination.path())
         }
 
         try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
 
-        guard
-            let archiveFilePath = FilePath(archivePath),
-            let decompressDestination = FilePath(destination)
-        else {
-            throw Errors.unableToDecompress
+        guard let archiveFilePath = FilePath(archivePath) else {
+            throw Errors.invalidPath(archivePath.path())
+        }
+
+        guard let decompressDestination = FilePath(destination) else {
+            throw Errors.invalidPath(destination.path())
         }
 
         try ArchiveByteStream.withFileStream(
