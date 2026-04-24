@@ -25,4 +25,22 @@ final class GitMirrorTests: XCTestCase {
         let environment = ["TEST_KEY": ""]
         XCTAssertThrowsError(try GitMirror.fromEnvironment(key: "TEST_KEY", environment: environment))
     }
+
+    func testRemoveArchiveDeletesFile() throws {
+        let archivePath = subject.archivePath
+        try FileManager.default.createDirectory(
+            at: archivePath.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        FileManager.default.createFile(atPath: archivePath.path, contents: Data("test".utf8))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: archivePath.path))
+
+        try subject.removeArchive()
+        XCTAssertFalse(FileManager.default.fileExists(atPath: archivePath.path))
+    }
+
+    func testRemoveArchiveSucceedsWhenFileDoesNotExist() throws {
+        XCTAssertFalse(FileManager.default.fileExists(atPath: subject.archivePath.path))
+        XCTAssertNoThrow(try subject.removeArchive())
+    }
 }

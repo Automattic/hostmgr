@@ -28,6 +28,11 @@ struct GitMirrorFetchCommand: AsyncParsableCommand {
 
         let gitMirror = try self.gitMirror ?? GitMirror.fromEnvironment(key: "BUILDKITE_REPO")
 
+        guard try !gitMirror.existsLocally else {
+            Console.success("Git Mirror is ready")
+            return
+        }
+
         if try !gitMirror.archiveExistsLocally {
             Console.info("Fetching the Git Mirror for \(gitMirror.url)")
 
@@ -45,10 +50,9 @@ struct GitMirrorFetchCommand: AsyncParsableCommand {
             Console.success("Download Complete")
         }
 
-        if try !gitMirror.existsLocally {
-            Console.info("Decompressing to \(Format.path(gitMirror.localPath))")
-            try gitMirror.decompress()
-        }
+        Console.info("Decompressing to \(Format.path(gitMirror.localPath))")
+        try gitMirror.decompress()
+        try? gitMirror.removeArchive()
 
         Console.success("Git Mirror is ready")
     }
