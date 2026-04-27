@@ -29,7 +29,7 @@ struct GitMirrorFetchCommand: AsyncParsableCommand {
         let gitMirror = try self.gitMirror ?? GitMirror.fromEnvironment(key: "BUILDKITE_REPO")
 
         guard try !gitMirror.existsLocally else {
-            Console.success("Git Mirror is ready")
+            Console.success("Git Mirror already exists locally and is ready to use")
             return
         }
 
