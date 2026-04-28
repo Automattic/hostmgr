@@ -76,6 +76,10 @@ public struct GitMirror {
         )
     }
 
+    public func removeArchive() throws {
+        try FileManager.default.removeItemIfExists(at: archivePath)
+    }
+
     public static func fromEnvironment(
         key: String,
         environment: [String: String] = ProcessInfo.processInfo.environment
