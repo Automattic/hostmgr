@@ -38,7 +38,10 @@ public struct GitMirror {
 
     func calculateRemoteFilename(given date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "YYYY-MM"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        formatter.dateFormat = "yyyy-MM"
 
         return slug + "-" + formatter.string(from: date) + ".aar"
     }
@@ -70,10 +73,20 @@ public struct GitMirror {
     }
 
     public func decompress() throws {
+        let tempDirectory = Paths.tempDirectory
+            .appendingPathComponent("git-mirror-unpack-\(slug)-\(UUID().uuidString)")
+
+        defer {
+            try? FileManager.default.removeItemIfExists(at: tempDirectory)
+        }
+
         try Compressor.decompress(
             archiveAt: archivePath,
-            to: localPath
+            to: tempDirectory
         )
+
+        try FileManager.default.createParentDirectoryIfNotExists(for: localPath)
+        try FileManager.default.moveItem(at: tempDirectory, to: localPath)
     }
 
     public func removeArchive() throws {
