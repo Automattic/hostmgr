@@ -46,6 +46,7 @@ struct GitMirrorPublishCommand: AsyncParsableCommand {
             .converted(to: .megabytes)
         if archiveSizeInMB.value < 50 {
             Console.info("Skipping uploading the git mirror because it is too small")
+            try? gitMirror.removeArchive()
             return
         }
 
@@ -60,6 +61,8 @@ struct GitMirrorPublishCommand: AsyncParsableCommand {
             allowResume: false,
             progress: progress.update
         )
+
+        try? gitMirror.removeArchive()
 
         Console.success("Upload complete")
     }

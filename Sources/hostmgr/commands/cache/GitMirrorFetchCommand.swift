@@ -32,6 +32,11 @@ struct GitMirrorFetchCommand: AsyncParsableCommand {
 
         let gitMirror = try self.gitMirror ?? GitMirror.fromEnvironment(key: "BUILDKITE_REPO")
 
+        guard try !gitMirror.existsLocally else {
+            Console.success("Git Mirror already exists locally and is ready to use")
+            return
+        }
+
         if try !gitMirror.archiveExistsLocally {
             Console.info("Fetching the Git Mirror for \(gitMirror.url)")
 
@@ -57,18 +62,16 @@ struct GitMirrorFetchCommand: AsyncParsableCommand {
             Console.success("Download Complete")
         }
 
-        if try !gitMirror.existsLocally {
-            Console.info("Decompressing to \(Format.path(gitMirror.localPath))")
-            do {
-                try gitMirror.decompress()
-            } catch {
-                // Clean up the corrupted archive so that the next run will re-download from the
-                // server instead of retrying the same bad file. The partial decompression output
-                // is cleaned up by the defer block in GitMirror.decompress().
-                Console.warn("Decompression failed – removing corrupted archive")
-                try? FileManager.default.removeItemIfExists(at: gitMirror.archivePath)
-                throw error
-            }
+        Console.info("Decompressing to \(Format.path(gitMirror.localPath))")
+        do {
+            try gitMirror.decompress()
+        } catch {
+            // Clean up the corrupted archive so that the next run will re-download from the
+            // server instead of retrying the same bad file. The partial decompression output
+            // is cleaned up by the defer block in GitMirror.decompress().
+            Console.warn("Decompression failed – removing corrupted archive")
+            try? gitMirror.removeArchive()
+            throw error
         }
 
         Console.success("Git Mirror is ready")
