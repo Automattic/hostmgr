@@ -24,6 +24,7 @@ public struct BuildkiteScriptBuilder {
     ///
     /// If there's an existing environment variable with the same name, it will be overwritten.
     public mutating func addEnvironmentVariable(named key: String, value: String) {
+        precondition(Self.isValidEnvironmentVariableName(key), "Invalid environment variable name: \(key)")
         self.environmentVariables[key] = Value(wrapping: value)
     }
 
@@ -43,10 +44,10 @@ public struct BuildkiteScriptBuilder {
             Self.isValidEnvironmentVariableName(existingVariableName),
             "Invalid existing environment variable name: \(existingVariableName)"
         )
-        precondition(!paths.isEmpty, "PATH must have at least one component")
+        precondition(!paths.isEmpty, "\(key) must have at least one path component")
         precondition(
             paths.allSatisfy { !$0.isEmpty && !$0.contains(":") },
-            "PATH components must be non-empty and cannot contain ':'"
+            "\(key) path components must be non-empty and cannot contain ':'"
         )
         self.environmentVariables[key] = Value(pathPrepending: paths, existingVariableName: existingVariableName)
     }
@@ -62,12 +63,14 @@ public struct BuildkiteScriptBuilder {
     }
 
     /// Copy environment variables from the existing environment into the build script based on their prefix.
+    ///
+    /// Variables with names that cannot be represented safely in POSIX shell `export` syntax are ignored.
     public mutating func copyEnvironmentVariables(
         prefixedBy prefix: String,
         from environment: [String: String] = ProcessInfo.processInfo.environment
     ) {
-        for (key, value) in environment where key.starts(with: prefix) {
-            environmentVariables[key] = Value(wrapping: value)
+        for (key, value) in environment where key.starts(with: prefix) && Self.isValidEnvironmentVariableName(key) {
+            addEnvironmentVariable(named: key, value: value)
         }
     }
 
@@ -135,6 +138,7 @@ public struct BuildkiteScriptBuilder {
     /// export foo='hello world'
     /// ```
     func convertEnvironmentVariableToExport(_ pair: (String, Value)) -> String {
+        precondition(Self.isValidEnvironmentVariableName(pair.0), "Invalid environment variable name: \(pair.0)")
         return "export \(pair.0)=\(pair.1.shellRepresentation)".trimmingWhitespace
     }
 

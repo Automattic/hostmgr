@@ -70,6 +70,24 @@ class BuildkiteScriptBuilderTests: XCTestCase {
         )
     }
 
+    func testThatInvalidCopiedEnvironmentVariableNamesAreIgnored() throws {
+        let invalidName = "BUILDKITE_BAD; printf injected >&2 #"
+
+        scriptBuilder.copyEnvironmentVariables(
+            prefixedBy: "BUILDKITE_",
+            from: [
+                "BUILDKITE_SAFE": "safe",
+                invalidName: "unsafe"
+            ]
+        )
+
+        let script = scriptBuilder.build()
+        XCTAssertTrue(script.components(separatedBy: "\n").contains("export BUILDKITE_SAFE=safe"))
+        XCTAssertNil(scriptBuilder.environmentVariables[invalidName])
+        XCTAssertFalse(script.contains(invalidName))
+        XCTAssertEqual("safe", try readExportedVariable(named: "BUILDKITE_SAFE", fromScript: script))
+    }
+
     // MARK: - Shell-injection regression tests
     //
     // BUILDKITE_MESSAGE is attacker-controllable — its value is the head commit's
