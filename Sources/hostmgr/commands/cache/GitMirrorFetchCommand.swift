@@ -73,6 +73,7 @@ struct GitMirrorFetchCommand: AsyncParsableCommand {
             try? gitMirror.removeArchive()
             throw error
         }
+        try? gitMirror.removeArchive()
 
         Console.success("Git Mirror is ready")
     }

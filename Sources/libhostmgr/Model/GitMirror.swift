@@ -85,6 +85,7 @@ public struct GitMirror {
             to: tempDirectory
         )
 
+        try FileManager.default.createParentDirectoryIfNotExists(for: localPath)
         try FileManager.default.moveItem(at: tempDirectory, to: localPath)
     }
 

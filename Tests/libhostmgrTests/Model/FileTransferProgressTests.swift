@@ -15,9 +15,10 @@ final class FileTransferProgressTests: XCTestCase {
     }
 
     func testDataRateWithZeroElapsedTime() {
-        let progress = FileTransferProgress(completed: 100, total: 200, startDate: Date())
-        XCTAssertFalse(progress.dataRate.isNaN)
-        XCTAssertFalse(progress.dataRate.isInfinite)
+        // startDate in the future so elapsed time is non-positive when dataRate is read,
+        // exercising the `guard elapsed > 0` branch deterministically.
+        let progress = FileTransferProgress(completed: 100, total: 200, startDate: Date(timeIntervalSinceNow: 60))
+        XCTAssertEqual(progress.dataRate, 0)
     }
 
     func testDataRateWithElapsedTime() {
