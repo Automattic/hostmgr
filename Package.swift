@@ -78,8 +78,6 @@ let package = Package(
                 .copy("resources/buildkite-environment-variables-basic-expected-output.txt"),
                 .copy("resources/buildkite-environment-variables-basic.env"),
                 .copy("resources/buildkite-environment-variables-with-code-quotes.env"),
-                .copy("resources/buildkite-commit-message-original.txt"),
-                .copy("resources/buildkite-commit-message-expected.txt"),
                 .copy("resources/dhcpd_leases-1"),
                 .copy("resources/dhcpd_leases-2"),
                 .copy("resources/dotenv-fixtures.env"),
