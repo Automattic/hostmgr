@@ -27,6 +27,30 @@ public struct BuildkiteScriptBuilder {
         self.environmentVariables[key] = Value(wrapping: value)
     }
 
+    /// Add a PATH-like environment variable that prepends paths to an existing shell variable.
+    ///
+    /// This is intentionally narrower than accepting a raw shell expression: each
+    /// path is shell-escaped, and only the final existing variable reference is
+    /// emitted as shell syntax. Path components must be non-empty and cannot
+    /// contain `:`, because PATH-like shell variables use `:` as their separator.
+    public mutating func addPathEnvironmentVariable(
+        named key: String,
+        prepending paths: [String],
+        existingVariableName: String
+    ) {
+        precondition(Self.isValidEnvironmentVariableName(key), "Invalid environment variable name: \(key)")
+        precondition(
+            Self.isValidEnvironmentVariableName(existingVariableName),
+            "Invalid existing environment variable name: \(existingVariableName)"
+        )
+        precondition(!paths.isEmpty, "PATH must have at least one component")
+        precondition(
+            paths.allSatisfy { !$0.isEmpty && !$0.contains(":") },
+            "PATH components must be non-empty and cannot contain ':'"
+        )
+        self.environmentVariables[key] = Value(pathPrepending: paths, existingVariableName: existingVariableName)
+    }
+
     /// Removes an environment variable pair from the build script.
     public mutating func removeEnvironmentVariable(named key: String) {
         self.environmentVariables.removeValue(forKey: key)
@@ -88,7 +112,7 @@ public struct BuildkiteScriptBuilder {
 
     /// Helper that takes an environment variable key/value pair to an `export` statement.
     ///
-    /// Renders the value via `Value.shellQuoted`, which delegates to
+    /// Renders literal values via `Value.shellQuoted`, which delegates to
     /// `spm_shellEscaped()`. Values containing only allowlisted characters
     /// (alphanumerics plus `-_/:@%+=.,`) are emitted unquoted; anything else
     /// is wrapped in single quotes on Unix (with `'\''` for embedded single
@@ -96,6 +120,10 @@ public struct BuildkiteScriptBuilder {
     /// expansion of the value, which is the property we rely on to safely
     /// pass attacker-controlled data such as `BUILDKITE_MESSAGE` through to
     /// the remote shell.
+    ///
+    /// PATH-like values are emitted by shell-escaping each path component and
+    /// conditionally appending a validated existing variable reference such as
+    /// `${PATH:+:$PATH}`.
     ///
     /// Examples:
     ///
@@ -107,7 +135,7 @@ public struct BuildkiteScriptBuilder {
     /// export foo='hello world'
     /// ```
     func convertEnvironmentVariableToExport(_ pair: (String, Value)) -> String {
-        return "export \(pair.0)=\(pair.1.shellQuoted)".trimmingWhitespace
+        return "export \(pair.0)=\(pair.1.shellRepresentation)".trimmingWhitespace
     }
 
     /// Helper that wraps command escape logic for shorthand use in a `map` statement.
@@ -119,10 +147,23 @@ public struct BuildkiteScriptBuilder {
     ///
     /// Mostly just a way to organize escaping
     struct Value: Equatable {
-        let rawValue: String
+        private let representation: ValueRepresentation
+
+        var rawValue: String {
+            switch representation {
+            case .literal(let value):
+                value
+            case .pathPrepending(let paths, let existingVariableName):
+                paths.joined(separator: ":") + "${\(existingVariableName):+:$\(existingVariableName)}"
+            }
+        }
 
         init(wrapping: String) {
-            self.rawValue = wrapping
+            self.representation = .literal(wrapping)
+        }
+
+        init(pathPrepending paths: [String], existingVariableName: String) {
+            self.representation = .pathPrepending(paths, existingVariableName: existingVariableName)
         }
 
         /// The value formatted for safe placement in a shell script as a quoted token.
@@ -136,6 +177,22 @@ public struct BuildkiteScriptBuilder {
         var shellQuoted: String {
             rawValue.spm_shellEscaped()
         }
+
+        /// The value formatted for placement after `KEY=` in an export statement.
+        var shellRepresentation: String {
+            switch representation {
+            case .literal:
+                shellQuoted
+            case .pathPrepending(let paths, let existingVariableName):
+                paths.map { $0.spm_shellEscaped() }.joined(separator: ":")
+                    + "${\(existingVariableName):+:$\(existingVariableName)}"
+            }
+        }
+    }
+
+    private enum ValueRepresentation: Equatable {
+        case literal(String)
+        case pathPrepending([String], existingVariableName: String)
     }
 
     /// An object representing one command in a shell script
@@ -166,5 +223,27 @@ public struct BuildkiteScriptBuilder {
 extension String {
     var escapingSpaces: String {
         replacingOccurrences(of: " ", with: "\\ ")
+    }
+}
+
+private extension BuildkiteScriptBuilder {
+    static func isValidEnvironmentVariableName(_ name: String) -> Bool {
+        guard let first = name.utf8.first else {
+            return false
+        }
+
+        let validFirstCharacter = first == UInt8(ascii: "_")
+            || (UInt8(ascii: "a")...UInt8(ascii: "z")).contains(first)
+            || (UInt8(ascii: "A")...UInt8(ascii: "Z")).contains(first)
+        guard validFirstCharacter else {
+            return false
+        }
+
+        return name.utf8.dropFirst().allSatisfy {
+            $0 == UInt8(ascii: "_")
+                || (UInt8(ascii: "a")...UInt8(ascii: "z")).contains($0)
+                || (UInt8(ascii: "A")...UInt8(ascii: "Z")).contains($0)
+                || (UInt8(ascii: "0")...UInt8(ascii: "9")).contains($0)
+        }
     }
 }
