@@ -70,6 +70,24 @@ class BuildkiteScriptBuilderTests: XCTestCase {
         )
     }
 
+    func testThatInvalidCopiedEnvironmentVariableNamesAreIgnored() throws {
+        let invalidName = "BUILDKITE_BAD; printf injected >&2 #"
+
+        scriptBuilder.copyEnvironmentVariables(
+            prefixedBy: "BUILDKITE_",
+            from: [
+                "BUILDKITE_SAFE": "safe",
+                invalidName: "unsafe"
+            ]
+        )
+
+        let script = scriptBuilder.build()
+        XCTAssertTrue(script.components(separatedBy: "\n").contains("export BUILDKITE_SAFE=safe"))
+        XCTAssertNil(scriptBuilder.environmentVariables[invalidName])
+        XCTAssertFalse(script.contains(invalidName))
+        XCTAssertEqual("safe", try readExportedVariable(named: "BUILDKITE_SAFE", fromScript: script))
+    }
+
     // MARK: - Shell-injection regression tests
     //
     // BUILDKITE_MESSAGE is attacker-controllable — its value is the head commit's
@@ -206,18 +224,127 @@ class BuildkiteScriptBuilderTests: XCTestCase {
     ) throws {
         var builder = BuildkiteScriptBuilder()
         builder.addEnvironmentVariable(named: "BUILDKITE_TEST_VALUE", value: value)
-        let exportLine = builder.build()
+        let observed = try readExportedVariable(
+            named: "BUILDKITE_TEST_VALUE",
+            fromScript: builder.build(),
+            file: file,
+            line: line
+        )
+        XCTAssertEqual(
+            observed, value,
+            "value did not round-trip through the shell",
+            file: file, line: line
+        )
+    }
 
+}
+
+class BuildkiteScriptBuilderPathTests: XCTestCase {
+    func testThatLiteralPathValueDoesNotExtendExistingPath() throws {
+        // This documents the regression introduced by applying safe literal
+        // escaping to the hard-coded PATH expression from the buildkite-job
+        // generator. With normal environment variables, `$PATH` is deliberately
+        // kept literal and does not extend the shell's existing path.
+        var builder = BuildkiteScriptBuilder()
+        builder.addEnvironmentVariable(named: "PATH", value: "/opt/homebrew/bin:/opt/ci/bin:$PATH")
+
+        let observed = try readExportedVariable(
+            named: "PATH",
+            fromScript: builder.build(),
+            environment: ["PATH": "/usr/bin:/bin"]
+        )
+
+        XCTAssertEqual("/opt/homebrew/bin:/opt/ci/bin:$PATH", observed)
+        XCTAssertNotEqual("/opt/homebrew/bin:/opt/ci/bin:/usr/bin:/bin", observed)
+    }
+
+    func testThatPathPrependingValueExtendsExistingPath() throws {
+        var builder = BuildkiteScriptBuilder()
+        builder.addPathEnvironmentVariable(
+            named: "PATH",
+            prepending: ["/opt/homebrew/bin", "/opt/ci/bin"],
+            existingVariableName: "PATH"
+        )
+
+        let script = builder.build()
+        XCTAssertTrue(
+            script.components(separatedBy: "\n").contains("export PATH=/opt/homebrew/bin:/opt/ci/bin${PATH:+:$PATH}")
+        )
+
+        let observed = try readExportedVariable(
+            named: "PATH",
+            fromScript: script,
+            environment: ["PATH": "/usr/bin:/bin"]
+        )
+
+        XCTAssertEqual("/opt/homebrew/bin:/opt/ci/bin:/usr/bin:/bin", observed)
+    }
+
+    func testThatPathPrependingValueDoesNotAddEmptyPathEntryWhenExistingValueIsUnset() throws {
+        var builder = BuildkiteScriptBuilder()
+        builder.addPathEnvironmentVariable(
+            named: "HOSTMGR_PATH",
+            prepending: ["/opt/homebrew/bin", "/opt/ci/bin"],
+            existingVariableName: "HOSTMGR_EXISTING_PATH"
+        )
+
+        let observed = try readExportedVariable(
+            named: "HOSTMGR_PATH",
+            fromScript: builder.build(),
+            environment: ["PATH": "/usr/bin:/bin"]
+        )
+
+        XCTAssertEqual("/opt/homebrew/bin:/opt/ci/bin", observed)
+        XCTAssertNotEqual("/opt/homebrew/bin:/opt/ci/bin:", observed)
+    }
+
+    func testThatPathPrependingEscapesPathComponents() throws {
+        var builder = BuildkiteScriptBuilder()
+        builder.addPathEnvironmentVariable(
+            named: "PATH",
+            prepending: ["/Users/my user/bin", "/opt/ci/bin"],
+            existingVariableName: "PATH"
+        )
+
+        let script = builder.build()
+        XCTAssertTrue(
+            script.components(separatedBy: "\n")
+                .contains("export PATH='/Users/my user/bin':/opt/ci/bin${PATH:+:$PATH}")
+        )
+
+        let observed = try readExportedVariable(
+            named: "PATH",
+            fromScript: script,
+            environment: ["PATH": "/usr/bin:/bin"]
+        )
+
+        XCTAssertEqual("/Users/my user/bin:/opt/ci/bin:/usr/bin:/bin", observed)
+    }
+}
+
+extension XCTestCase {
+    fileprivate func readExportedVariable(
+        named variableName: String,
+        fromScript script: String,
+        environment: [String: String]? = nil,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) throws -> String {
         // Source the generated script and emit the variable verbatim, framed by
         // sentinels so we can extract it cleanly even if it contains newlines.
+        let sentinel = "HOSTMGR-\(UUID().uuidString)"
+        let startSentinel = "\(sentinel)-START"
+        let endSentinel = "\(sentinel)-END"
+
         let shellScript = """
-        \(exportLine)
-        printf '<<<%s>>>' "$BUILDKITE_TEST_VALUE"
+        \(script)
+        printf '%s%s%s' '\(startSentinel)' "$\(variableName)" '\(endSentinel)'
         """
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/bin/sh")
         process.arguments = ["-c", shellScript]
+        process.environment = environment
         let stdout = Pipe()
         let stderr = Pipe()
         process.standardOutput = stdout
@@ -241,20 +368,16 @@ class BuildkiteScriptBuilderTests: XCTestCase {
             file: file, line: line
         )
 
-        guard let start = stdoutText.range(of: "<<<"),
-              let end = stdoutText.range(of: ">>>", options: .backwards) else {
+        guard let start = stdoutText.range(of: startSentinel),
+              let end = stdoutText.range(of: endSentinel, options: .backwards) else {
             XCTFail(
                 "could not extract sentinel-framed value from stdout: \(stdoutText)",
                 file: file, line: line
             )
-            return
+            return ""
         }
-        let observed = String(stdoutText[start.upperBound..<end.lowerBound])
-        XCTAssertEqual(
-            observed, value,
-            "value did not round-trip through the shell",
-            file: file, line: line
-        )
+
+        return String(stdoutText[start.upperBound..<end.lowerBound])
     }
 }
 

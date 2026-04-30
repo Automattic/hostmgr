@@ -39,9 +39,10 @@ struct GenerateBuildkiteJobScript: ParsableCommand {
         scriptBuilder.addEnvironmentVariable(named: "BUILDKITE", value: "true")
         scriptBuilder.copyEnvironmentVariables(prefixedBy: "BUILDKITE_")
 
-        scriptBuilder.addEnvironmentVariable(
+        scriptBuilder.addPathEnvironmentVariable(
             named: "PATH",
-            value: "/opt/homebrew/bin:/opt/ci/bin:$PATH"
+            prepending: ["/opt/homebrew/bin", "/opt/ci/bin"],
+            existingVariableName: "PATH"
         )
 
         scriptBuilder.addCommand("buildkite-agent bootstrap")
