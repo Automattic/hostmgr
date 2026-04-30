@@ -88,16 +88,23 @@ public struct BuildkiteScriptBuilder {
 
     /// Helper that takes an environment variable key/value pair to an `export` statement.
     ///
-    /// Wraps the value using shell single-quote escaping. Single quotes disable all
-    /// shell expansion (no command substitution, no variable expansion, no backslash
-    /// processing), which is the only safe way to pass arbitrary attacker-controlled
-    /// data such as `BUILDKITE_MESSAGE` through to the remote shell.
+    /// Renders the value via `Value.shellQuoted`, which delegates to
+    /// `spm_shellEscaped()`. Values containing only allowlisted characters
+    /// (alphanumerics plus `-_/:@%+=.,`) are emitted unquoted; anything else
+    /// is wrapped in single quotes on Unix (with `'\''` for embedded single
+    /// quotes) or double quotes on Windows. Either form disables shell
+    /// expansion of the value, which is the property we rely on to safely
+    /// pass attacker-controlled data such as `BUILDKITE_MESSAGE` through to
+    /// the remote shell.
     ///
-    /// Example:
+    /// Examples:
     ///
     /// ```
-    /// # Given `foo:bar`
-    /// export foo='bar'
+    /// # Given foo=bar       (allowlist-clean — emitted unquoted)
+    /// export foo=bar
+    ///
+    /// # Given foo=hello world
+    /// export foo='hello world'
     /// ```
     func convertEnvironmentVariableToExport(_ pair: (String, Value)) -> String {
         return "export \(pair.0)=\(pair.1.shellQuoted)".trimmingWhitespace
