@@ -88,16 +88,19 @@ public struct BuildkiteScriptBuilder {
 
     /// Helper that takes an environment variable key/value pair to an `export` statement.
     ///
-    /// Automatically quote-wraps the value and escapes quotes as needed.
+    /// Wraps the value using shell single-quote escaping. Single quotes disable all
+    /// shell expansion (no command substitution, no variable expansion, no backslash
+    /// processing), which is the only safe way to pass arbitrary attacker-controlled
+    /// data such as `BUILDKITE_MESSAGE` through to the remote shell.
     ///
     /// Example:
     ///
     /// ```
     /// # Given `foo:bar`
-    /// export foo="bar"
+    /// export foo='bar'
     /// ```
     func convertEnvironmentVariableToExport(_ pair: (String, Value)) -> String {
-        return "export \(pair.0)=\"\(pair.1.escapedRepresentation)\"".trimmingWhitespace
+        return "export \(pair.0)=\(pair.1.shellQuoted)".trimmingWhitespace
     }
 
     /// Helper that wraps command escape logic for shorthand use in a `map` statement.
@@ -115,11 +118,16 @@ public struct BuildkiteScriptBuilder {
             self.rawValue = wrapping
         }
 
-        /// An version of this value suitable for placement in a shell script
-        var escapedRepresentation: String {
-            rawValue
-                .escapingCodeQuotes
-                .escapingDoubleQuotes
+        /// The value formatted for safe placement in a shell script as a quoted token.
+        ///
+        /// Delegates to `spm_shellEscaped()`, which uses single-quote wrapping (with
+        /// `'\''` escaping for embedded single quotes). Single-quoted strings perform
+        /// no expansion in POSIX shells, so the resulting token is safe even when the
+        /// value contains backticks, dollar signs, backslashes, or other shell
+        /// metacharacters. Values that contain only allowlisted characters are
+        /// returned unquoted.
+        var shellQuoted: String {
+            rawValue.spm_shellEscaped()
         }
     }
 
@@ -151,13 +159,5 @@ public struct BuildkiteScriptBuilder {
 extension String {
     var escapingSpaces: String {
         replacingOccurrences(of: " ", with: "\\ ")
-    }
-
-    var escapingCodeQuotes: String {
-        replacingOccurrences(of: "`", with: "\\`")
-    }
-
-    var escapingDoubleQuotes: String {
-        replacingOccurrences(of: "\"", with: "\\\"")
     }
 }
