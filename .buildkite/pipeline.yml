@@ -42,7 +42,7 @@ steps:
     key: "validate-release-build"
     command: |
       install_gems
-      bundle exec fastlane set_up_signing
+      bundle exec fastlane set_up_signing_release
       make build verify-signing
     plugins: [$CI_TOOLKIT_PLUGIN]
 
@@ -53,7 +53,7 @@ steps:
     key: "publish"
     command: |
       install_gems
-      bundle exec fastlane set_up_signing
+      bundle exec fastlane set_up_signing_release
       make build
       bundle exec fastlane upload_release
     plugins: [$CI_TOOLKIT_PLUGIN]
