@@ -2,10 +2,10 @@
 
 source 'https://rubygems.org'
 
-gem 'aws-sdk-s3', '~> 1.119'
-gem 'fastlane', '~> 2.233'
+gem 'aws-sdk-s3', '~> 1.226'
+gem 'fastlane', '~> 2.236'
 
-gem 'rubocop', '~> 1.64', require: false
+gem 'rubocop', '~> 1.88', require: false
 
 # only added to work around a Ruby 
 # failure that's present on the CI image
