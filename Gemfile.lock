@@ -186,7 +186,6 @@ GEM
     net-http (0.9.1)
       uri (>= 0.11.1)
     nkf (0.3.0)
-    openssl (4.0.2)
     optparse (0.8.1)
     os (1.1.4)
     ostruct (0.6.3)
@@ -283,7 +282,6 @@ PLATFORMS
 DEPENDENCIES
   aws-sdk-s3 (~> 1.229)
   fastlane (~> 2.238)
-  openssl (~> 4.0)
   rubocop (~> 1.89)
 
 BUNDLED WITH
