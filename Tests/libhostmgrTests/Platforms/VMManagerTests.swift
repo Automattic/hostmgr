@@ -6,7 +6,7 @@ final class VMManagerTests: XCTestCase {
 
     /// Test that unpackVM throws the correct error when a VM already exists at the destination
     func testUnpackVMThrowsWhenVMAlreadyExists() async throws {
-        let vmName = "test-vm"
+        let vmName = "test-vm-\(UUID().uuidString)"
         let expectedVMPath = Paths.toVMTemplate(named: vmName)
 
         // Create the destination directory to simulate an existing VM
@@ -27,7 +27,7 @@ final class VMManagerTests: XCTestCase {
 
     /// Test that unpackVM throws an error when the source archive doesn't exist
     func testUnpackVMThrowsWhenArchiveDoesNotExist() async throws {
-        let vmName = "non-existent-vm"
+        let vmName = "non-existent-vm-\(UUID().uuidString)"
         let vmManager = VMManager()
 
         do {
@@ -40,7 +40,7 @@ final class VMManagerTests: XCTestCase {
 
     /// Test that temporary directories are properly cleaned up when unpackVM fails
     func testUnpackVMCleansUpTempDirectoryOnFailure() async throws {
-        let vmName = "test-vm-cleanup"
+        let vmName = "test-vm-cleanup-\(UUID().uuidString)"
         let vmManager = VMManager()
 
         do {
@@ -59,7 +59,7 @@ final class VMManagerTests: XCTestCase {
 
     /// Test that when unpacking an invalid archive fails, no folder is left at the final destination
     func testUnpackVMDoesNotLeaveDestinationFolderOnInvalidArchive() async throws {
-        let vmName = "test-invalid-archive"
+        let vmName = "test-invalid-archive-\(UUID().uuidString)"
         let archivePath = Paths.toArchivedVM(named: vmName)
         let finalDestination = Paths.toVMTemplate(named: vmName)
 
@@ -71,7 +71,7 @@ final class VMManagerTests: XCTestCase {
         try "invalid archive content".write(to: archivePath, atomically: true, encoding: .utf8)
 
         defer {
-            try? FileManager.default.removeItem(at: archivePath.deletingLastPathComponent())
+            try? FileManager.default.removeItem(at: archivePath)
             try? FileManager.default.removeItem(at: finalDestination)
         }
 
