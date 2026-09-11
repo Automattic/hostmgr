@@ -106,7 +106,8 @@ final class ObservedSSHConnection: SSHReadinessConnection {
     func cancel() { connection.cancel() }
 }
 
-/// Choose an unused loopback port, then release it so the first connection is refused.
+/// Release the port to get ECONNREFUSED; a bound, non-listening socket can leave
+/// NWConnection preparing on macOS.
 final class DeferredTCPListener {
     private let descriptor: Int32
     let port: UInt16
