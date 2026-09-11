@@ -54,6 +54,47 @@ _(We can potentially automate this step, but for now this is still manual)_
 1. Create a config file in `/opt/ci/hostmgr.json`. You can copy [the file we use to provision our macOS CI hosts](https://github.com/Automattic/buildkite-ci/blob/trunk/src/agents/macos-hosts/resources/hostmgr.json) _(Automattic internal link)_ directly there.
 1. Open a Terminal and run `hostmgr-helper` to launch the "hostmgr-helper" macOS app, which needs to be running during building VM images.
 
+## Troubleshooting VM startup
+
+`hostmgr vm start` waits for a TCP connection to the guest's SSH port (22). It retries
+while SSH is starting, with a 30-second overall deadline by default. If it times out, check the
+reported connection error and verify that Remote Login is enabled in the guest.
+Use `hostmgr vm details <handle> --ip-address` with the handle printed by `vm start`
+to confirm that you are testing the same VM address.
+
+### Local Network permission on the host
+
+A Local Network denial prevents the host's `hostmgr` process from reaching the
+guest. On the **host Mac**, allow the responsible launching app in
+**System Settings > Privacy & Security > Local Network**. This may be your terminal,
+IDE, or `buildkite-agent`. The SSH probe runs in the CLI, so granting permission
+only to `hostmgr-helper` may not address it.
+The check keeps waiting while you respond to a permission prompt and reports a
+specific error if access is still denied at the deadline.
+
+Apple documents exemptions for root and tools launched directly from Terminal.app
+or SSH, including children. `NSLocalNetworkUsageDescription` explains a prompt;
+it does not grant access. There is no per-binary exemption entitlement to add.
+
+macOS 15.5 and later support administrator-configured network exemptions. These
+allow **every program** to access the selected networks on Ethernet or Wi-Fi.
+Identify the VM network using `route -n get <VM-IP>` and `ifconfig <interface>`;
+verify its subnet and interface type. For example, **only if** the VM subnet is
+`192.168.64.0/24`:
+
+```sh
+VM_SUBNET="192.168.64.0/24"
+sudo defaults write com.apple.network.local-network AllowedEthernetLocalNetworkAddresses -array-add "$VM_SUBNET"
+sudo defaults write com.apple.network.local-network AllowedWiFiLocalNetworkAddresses -array-add "$VM_SUBNET"
+```
+
+The settings apply to their respective interface types and require a **host
+restart**. `-array-add` preserves existing entries. `hostmgr` does not apply these
+optional host settings automatically.
+
+See [Apple TN3179: Understanding local network privacy](https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy)
+for permission attribution, network exemptions, and troubleshooting details.
+
 ## Release
 
 1. Create a PR to update [the version property](Sources/libhostmgr/libhostmgr.swift).
