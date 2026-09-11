@@ -72,8 +72,8 @@ public enum HostmgrError: Error, LocalizedError, Codable {
         case .sshAvailabilityTimeoutWithError(let error):
             return "Timeout while checking for the availability of the VM's SSH server. Last connection error: \(error)"
         case .sshLocalNetworkAccessDenied:
-            return "macOS denied Local Network access while checking the VM's SSH server. "
-                + "On the host Mac, allow the app that launched hostmgr (such as your terminal or CI agent) "
+            return "macOS denied Local Network access to the VM. "
+                + "On the host Mac, allow the app that launched hostmgr "
                 + "in System Settings > Privacy & Security > Local Network, then retry."
         }
     }

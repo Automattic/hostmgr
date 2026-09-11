@@ -2,7 +2,7 @@ import Foundation
 import Network
 import OSLog
 
-/// The connection callbacks must run on the queue passed to start(queue:).
+/// Callbacks run on the queue passed to start(queue:).
 protocol SSHReadinessConnection: AnyObject {
     var state: NWConnection.State { get }
     var stateUpdateHandler: (@Sendable (NWConnection.State) -> Void)? { get set }
@@ -18,7 +18,7 @@ extension NWConnection: SSHReadinessConnection {
     }
 }
 
-/// All mutable state, connection operations, and completion paths are confined to queue.
+/// All state and connection operations are confined to queue.
 final class SSHReadinessCheck: @unchecked Sendable {
     private let queue = DispatchQueue(label: "com.automattic.hostmgr.ssh-readiness")
     private let connection: SSHReadinessConnection
@@ -39,7 +39,6 @@ final class SSHReadinessCheck: @unchecked Sendable {
     ) async throws {
         let check = SSHReadinessCheck(connection: connection)
         try await withTaskCancellationHandler {
-            try Task.checkCancellation()
             try await withCheckedThrowingContinuation { continuation in
                 check.queue.async {
                     check.start(continuation: continuation, timeout: timeout, retryInterval: retryInterval)
@@ -77,9 +76,8 @@ final class SSHReadinessCheck: @unchecked Sendable {
         self.deadlineTimer = deadlineTimer
         deadlineTimer.resume()
 
-        // A refused connection can stay waiting forever without a path change. Explicitly
-        // restart waiting connections. A Local Network permission grant automatically retries
-        // a denied connection; leave it waiting so its denial reason remains available.
+        // Refusals need retries without a path change. Leave denied connections waiting:
+        // permission grants retry them automatically, and a restart could hide the denial.
         let retryTimer = DispatchSource.makeTimerSource(queue: queue)
         retryTimer.schedule(deadline: .now() + retryInterval, repeating: retryInterval)
         retryTimer.setEventHandler { [weak self] in
@@ -100,10 +98,7 @@ final class SSHReadinessCheck: @unchecked Sendable {
             finish(.success(()))
         case .waiting(let error):
             lastWaitingError = error
-            Logger.lib.debug("""
-                Waiting for the VM's SSH server: \(String(describing: error)), \
-                localNetworkDenied: \(self.connection.isLocalNetworkDenied)
-                """)
+            Logger.lib.debug("Waiting for VM SSH: \(error), localNetworkDenied: \(connection.isLocalNetworkDenied)")
         case .failed(let error):
             finish(.failure(error))
         case .cancelled:
@@ -114,7 +109,7 @@ final class SSHReadinessCheck: @unchecked Sendable {
     }
 
     private func timedOut() {
-        // Check the current path so a previous denial does not mask a subsequent problem.
+        // The current path reflects permission changes during the wait.
         if connection.isLocalNetworkDenied {
             finish(.failure(HostmgrError.sshLocalNetworkAccessDenied))
         } else if let lastWaitingError {

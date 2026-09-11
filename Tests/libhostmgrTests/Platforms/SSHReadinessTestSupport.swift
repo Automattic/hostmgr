@@ -3,7 +3,7 @@ import Network
 import Darwin
 @testable import libhostmgr
 
-/// State shared with the test task is locked; callbacks run on the readiness queue.
+/// Shared state is locked; callbacks run on the readiness queue.
 final class StubSSHConnection: SSHReadinessConnection, @unchecked Sendable {
     private let lock = NSLock()
     private var callbackQueue: DispatchQueue?
@@ -14,7 +14,7 @@ final class StubSSHConnection: SSHReadinessConnection, @unchecked Sendable {
     private var restarts = 0
     private var cancels = 0
 
-    // Configure these before passing the connection to the readiness check.
+    // Configure before starting the check.
     var onStart: ((StubSSHConnection) -> Void)?
     var onRestart: ((StubSSHConnection) -> Void)?
 
@@ -27,7 +27,6 @@ final class StubSSHConnection: SSHReadinessConnection, @unchecked Sendable {
     var startCount: Int { lock.withLock { starts } }
     var restartCount: Int { lock.withLock { restarts } }
     var cancelCount: Int { lock.withLock { cancels } }
-    var hasHandler: Bool { lock.withLock { handler != nil } }
 
     var stateUpdateHandler: (@Sendable (NWConnection.State) -> Void)? {
         get { lock.withLock { handler } }
@@ -58,7 +57,7 @@ final class StubSSHConnection: SSHReadinessConnection, @unchecked Sendable {
         emit(.cancelled)
     }
 
-    /// Keep simulated path and state changes atomic relative to the readiness timers.
+    /// Serialize path and state changes with readiness timers.
     func performAfter(_ delay: TimeInterval, _ update: @escaping @Sendable () -> Void) {
         let queue = lock.withLock { callbackQueue }
         queue?.asyncAfter(deadline: .now() + delay, execute: update)
@@ -73,7 +72,7 @@ final class StubSSHConnection: SSHReadinessConnection, @unchecked Sendable {
     }
 }
 
-/// Starts the real listener only once a real NWConnection has received a refusal.
+/// Observes the first refusal before starting the listener.
 final class ObservedSSHConnection: SSHReadinessConnection {
     let connection: NWConnection
     private let onFirstWaiting: (NWError) -> Void
@@ -147,7 +146,7 @@ final class DeferredTCPListener {
                 bind(descriptor, $0, socklen_t(MemoryLayout<sockaddr_in>.size))
             }
         }
-        // Report a bind failure if another process claimed this ephemeral port in the meantime.
+        // Fail if another process claimed the port.
         return result == 0 ? Darwin.listen(descriptor, 1) : result
     }
     func close() { Darwin.close(descriptor) }

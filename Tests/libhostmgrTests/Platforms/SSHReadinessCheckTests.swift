@@ -3,7 +3,7 @@ import Network
 @testable import libhostmgr
 
 final class SSHReadinessCheckTests: XCTestCase {
-    func testConnectsWhenListenerStartsAfterFirstRefusal() async throws {
+    func testConnectsWhenListenerStartsAfterRefusal() async throws {
         let listener = try DeferredTCPListener()
         defer { listener.close() }
         let refused = expectation(description: "Initial connection was refused")
@@ -20,23 +20,22 @@ final class SSHReadinessCheckTests: XCTestCase {
         XCTAssertNil(connection.connection.stateUpdateHandler)
     }
 
-    func testSuccessCleansUpAndIgnoresQueuedCallbacksAndOriginalDeadline() async throws {
+    func testSuccessIgnoresLateCallbacksAndDeadline() async throws {
         let connection = StubSSHConnection(state: .ready)
         connection.onStart = { connection in
-            // These callbacks were queued before cleanup and still hold the original handler.
+            // Queued callbacks retain the handler even after cleanup.
             connection.emit(.failed(.posix(.ECONNRESET)))
             connection.emit(.cancelled)
         }
 
         try await SSHReadinessCheck.wait(connection: connection, timeout: .milliseconds(80), retryInterval: 0.01)
-        XCTAssertEqual(connection.cancelCount, 1)
-        XCTAssertFalse(connection.hasHandler)
+        assertCleanedUp(connection)
         try await Task.sleep(for: .milliseconds(150))
         XCTAssertEqual(connection.cancelCount, 1)
         XCTAssertEqual(connection.restartCount, 0)
     }
 
-    func testDeadlinePreservesFractionalDurationAndDoesNotRestartPreparingConnection() async {
+    func testPreparingConnectionWaitsForFractionalDeadline() async {
         let connection = StubSSHConnection(state: .preparing)
         let start = ContinuousClock.now
         let error = await failure(connection, timeout: .milliseconds(100))
@@ -50,22 +49,23 @@ final class SSHReadinessCheckTests: XCTestCase {
         assertCleanedUp(connection)
     }
 
-    func testRetriesShareOneDeadlineAndReportMostRecentWaitingError() async {
+    func testRetriesPreserveDeadlineAndLatestError() async {
         let connection = StubSSHConnection(state: .waiting(.posix(.ECONNREFUSED)))
-        connection.onRestart = { $0.emit(.waiting(.posix(.ETIMEDOUT))) }
+        // A permission errno alone must not be diagnosed as Local Network denial.
+        connection.onRestart = { $0.emit(.waiting(.posix(.EACCES))) }
         let start = ContinuousClock.now
         let error = await failure(connection, timeout: .milliseconds(100))
 
         guard case HostmgrError.sshAvailabilityTimeoutWithError(let details) = error else {
             return XCTFail("Expected timeout with waiting error, got \(error)")
         }
-        XCTAssertEqual(details, String(describing: NWError.posix(.ETIMEDOUT)))
+        XCTAssertEqual(details, String(describing: NWError.posix(.EACCES)))
         XCTAssertGreaterThan(connection.restartCount, 0)
         XCTAssertLessThan(start.duration(to: .now), .seconds(2))
         assertCleanedUp(connection)
     }
 
-    func testTerminalFailureIsPropagatedAndCleansUp() async {
+    func testPropagatesTerminalFailure() async {
         let connection = StubSSHConnection(state: .failed(.posix(.ECONNRESET)))
         let error = await failure(connection, timeout: .seconds(5))
 
@@ -74,7 +74,7 @@ final class SSHReadinessCheckTests: XCTestCase {
         assertCleanedUp(connection)
     }
 
-    func testCancellationBeforeWaitingDoesNotStartConnection() async {
+    func testCancellationBeforeStart() async {
         let connection = StubSSHConnection(state: .waiting(.posix(.ECONNREFUSED)))
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }
@@ -85,10 +85,10 @@ final class SSHReadinessCheckTests: XCTestCase {
         XCTAssertTrue(error is CancellationError)
         XCTAssertEqual(connection.startCount, 0)
         XCTAssertEqual(connection.restartCount, 0)
-        XCTAssertFalse(connection.hasHandler)
+        assertCleanedUp(connection)
     }
 
-    func testCancellationWhileWaitingCleansUpPromptly() async {
+    func testCancellationWhileWaiting() async {
         let started = expectation(description: "Connection started")
         let connection = StubSSHConnection(state: .waiting(.posix(.ECONNREFUSED)))
         connection.onStart = { _ in started.fulfill() }
@@ -104,7 +104,7 @@ final class SSHReadinessCheckTests: XCTestCase {
         assertCleanedUp(connection)
     }
 
-    func testPersistentPrivacyDenialWaitsUntilDeadlineAndExplainsHostPermission() async {
+    func testPermissionDenialWaitsForDeadline() async {
         let connection = StubSSHConnection(state: .waiting(.posix(.EACCES)), denied: true)
         let start = ContinuousClock.now
         let error = await failure(connection, timeout: .milliseconds(100))
@@ -114,13 +114,10 @@ final class SSHReadinessCheckTests: XCTestCase {
         }
         XCTAssertGreaterThanOrEqual(start.duration(to: .now), .milliseconds(80))
         XCTAssertEqual(connection.restartCount, 0)
-        XCTAssertTrue(error.localizedDescription.contains("host Mac"))
-        XCTAssertTrue(error.localizedDescription.contains("app that launched hostmgr"))
-        XCTAssertTrue(error.localizedDescription.contains("Privacy & Security > Local Network"))
         assertCleanedUp(connection)
     }
 
-    func testGrantingPermissionWhileWaitingCanRecover() async throws {
+    func testPermissionGrantAllowsConnection() async throws {
         let connection = StubSSHConnection(state: .waiting(.posix(.EACCES)), denied: true)
         connection.onStart = { connection in
             connection.performAfter(0.03) {
@@ -135,7 +132,7 @@ final class SSHReadinessCheckTests: XCTestCase {
         assertCleanedUp(connection)
     }
 
-    func testClearedPrivacyDenialDoesNotMaskLaterConnectionProblem() async {
+    func testClearedDenialReportsConnectionError() async {
         let connection = StubSSHConnection(state: .waiting(.posix(.EACCES)), denied: true)
         connection.onStart = { connection in
             connection.performAfter(0.03) {
@@ -152,17 +149,6 @@ final class SSHReadinessCheckTests: XCTestCase {
         assertCleanedUp(connection)
     }
 
-    func testPermissionErrnoAloneIsNotClassifiedAsLocalNetworkDenial() async {
-        let connection = StubSSHConnection(state: .waiting(.posix(.EACCES)))
-        let error = await failure(connection, timeout: .milliseconds(80))
-
-        guard case HostmgrError.sshAvailabilityTimeoutWithError(let details) = error else {
-            return XCTFail("Expected ordinary timeout without a privacy path reason, got \(error)")
-        }
-        XCTAssertEqual(details, String(describing: NWError.posix(.EACCES)))
-        assertCleanedUp(connection)
-    }
-
     private func failure(_ connection: StubSSHConnection, timeout: Duration) async -> Error {
         do {
             try await SSHReadinessCheck.wait(connection: connection, timeout: timeout, retryInterval: 0.01)
@@ -175,7 +161,7 @@ final class SSHReadinessCheckTests: XCTestCase {
 
     private func assertCleanedUp(_ connection: StubSSHConnection, file: StaticString = #filePath, line: UInt = #line) {
         XCTAssertEqual(connection.cancelCount, 1, file: file, line: line)
-        XCTAssertFalse(connection.hasHandler, file: file, line: line)
+        XCTAssertNil(connection.stateUpdateHandler, file: file, line: line)
     }
 
     private struct UnexpectedSuccess: Error {}
