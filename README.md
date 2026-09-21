@@ -54,6 +54,19 @@ _(We can potentially automate this step, but for now this is still manual)_
 1. Create a config file in `/opt/ci/hostmgr.json`. You can copy [the file we use to provision our macOS CI hosts](https://github.com/Automattic/buildkite-ci/blob/trunk/src/agents/macos-hosts/resources/hostmgr.json) _(Automattic internal link)_ directly there.
 1. Open a Terminal and run `hostmgr-helper` to launch the "hostmgr-helper" macOS app, which needs to be running during building VM images.
 
+## Troubleshooting VM startup
+
+`hostmgr vm start` retries the guest's SSH port (22) for up to 30 seconds by default.
+If it times out, check the reported error and ensure Remote Login is enabled in the
+guest. Use `hostmgr vm details <handle> --ip-address` to check the VM's address.
+
+For a Local Network denial, allow the app that launched `hostmgr` (such as your
+terminal or CI agent) in **System Settings > Privacy & Security > Local Network**
+on the **host Mac**. The SSH check runs in the CLI.
+
+See [Apple TN3179](https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy)
+for permission troubleshooting and administrator-managed subnet exemptions.
+
 ## Release
 
 1. Create a PR to update [the version property](Sources/libhostmgr/libhostmgr.swift).
