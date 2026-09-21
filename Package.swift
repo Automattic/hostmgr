@@ -1,4 +1,4 @@
-// swift-tools-version:5.9
+// swift-tools-version:6.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -21,12 +21,12 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.1.4"),
-        .package(url: "https://github.com/apple/swift-crypto.git", from: "2.0.0"),
+        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.8.2"),
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "2.6.0"),
         .package(url: "https://github.com/jkmassel/kcpassword-swift.git", from: "1.0.0"),
-        .package(url: "https://github.com/vapor/console-kit.git", .upToNextMajor(from: "4.9.0")),
-        .package(url: "https://github.com/swhitty/FlyingFox.git", .upToNextMajor(from: "0.12.2")),
-        .package(url: "https://github.com/getsentry/sentry-cocoa.git", .upToNextMajor(from: "8.29.0")),
+        .package(url: "https://github.com/vapor/console-kit.git", .upToNextMajor(from: "4.16.1")),
+        .package(url: "https://github.com/swhitty/FlyingFox.git", .upToNextMinor(from: "0.12.3")),
+        .package(url: "https://github.com/getsentry/sentry-cocoa.git", .upToNextMajor(from: "8.58.4")),
         .package(url: "https://github.com/swiftpackages/DotEnv.git", from: "3.0.0"),
     ],
     targets: [
@@ -129,5 +129,6 @@ let package = Package(
                 .copy("resources/ListPartsResponseResult.xml"),
             ]
         ),
-    ]
+    ],
+    swiftLanguageModes: [.v5]
 )
