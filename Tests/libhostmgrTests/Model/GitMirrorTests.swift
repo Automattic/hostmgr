@@ -46,7 +46,9 @@ final class GitMirrorTests: XCTestCase {
     }
 
     func testRemoveArchiveDeletesFile() throws {
+        let subject = GitMirror(url: URL(string: "https://example.com/test-\(UUID().uuidString).git")!)
         let archivePath = subject.archivePath
+        defer { try? FileManager.default.removeItem(at: archivePath) }
         try FileManager.default.createDirectory(
             at: archivePath.deletingLastPathComponent(),
             withIntermediateDirectories: true
@@ -59,6 +61,7 @@ final class GitMirrorTests: XCTestCase {
     }
 
     func testRemoveArchiveSucceedsWhenFileDoesNotExist() throws {
+        let subject = GitMirror(url: URL(string: "https://example.com/test-\(UUID().uuidString).git")!)
         XCTAssertFalse(FileManager.default.fileExists(atPath: subject.archivePath.path))
         XCTAssertNoThrow(try subject.removeArchive())
     }

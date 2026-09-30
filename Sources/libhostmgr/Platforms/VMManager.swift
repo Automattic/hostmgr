@@ -240,27 +240,8 @@ extension VMManager {
     }
 
     func waitForSSHServer(forAddress address: IPv4Address, timeout: Duration) async throws {
+        Logger.lib.debug("Checking the VM's SSH server at \(String(describing: address)):22")
         let connection = NWConnection(to: .hostPort(host: .ipv4(address), port: 22), using: .tcp)
-
-        return try await withCheckedThrowingContinuation { continuation in
-            connection.stateUpdateHandler = {newState in
-                switch newState {
-                case .ready:
-                    continuation.resume()
-                case .failed(let error):
-                    continuation.resume(throwing: error)
-                case .cancelled:
-                    continuation.resume(throwing: HostmgrError.sshAvailabilityTimeout)
-                default:
-                    break
-                }
-            }
-
-            DispatchQueue.global().asyncAfter(deadline: .now() + TimeInterval(timeout.components.seconds)) {
-                connection.cancel()
-            }
-
-            connection.start(queue: .main)
-        }
+        try await SSHReadinessCheck.wait(connection: connection, timeout: timeout)
     }
 }
