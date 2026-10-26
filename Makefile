@@ -18,13 +18,13 @@ clean:
 test:
 	swift test
 
-fetch-codesignging: boostrap-ruby
+fetch-codesigning: bootstrap-ruby
 	bundle exec fastlane set_up_signing
 
-fetch-codesignging-debug: boostrap-ruby
+fetch-codesigning-debug: bootstrap-ruby
 	bundle exec fastlane set_up_signing_development
 
-fetch-codesignging-release: bootstrap-ruby
+fetch-codesigning-release: bootstrap-ruby
 	bundle exec fastlane set_up_signing_release
 
 build:
