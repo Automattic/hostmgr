@@ -66,7 +66,8 @@ end
 
 desc 'Download the release signing certificates to this machine'
 lane :set_up_signing_release do |readonly: true|
-  set_up_certificate_in_keychain(type: 'appstore', readonly: readonly)
+  # A bare binary has no bundle to carry a provisioning profile.
+  set_up_certificate_in_keychain(type: 'developer_id', app_identifier: [], readonly: readonly)
 end
 
 def create_release_zip
@@ -95,7 +96,7 @@ def get_required_env!(key)
   UI.user_error!("Environment variable `#{key}` is not set.")
 end
 
-def set_up_certificate_in_keychain(type:, readonly:)
+def set_up_certificate_in_keychain(type:, readonly:, app_identifier: APPLE_BUNDLE_IDENTIFIER)
   require_env_vars!(*CODE_SIGNING_STORAGE_ENV_VARS)
   if readonly
     api_key = nil
@@ -112,7 +113,7 @@ def set_up_certificate_in_keychain(type:, readonly:)
   # Fastlane offers a tool called cert, but it only downloads certificates.
   sync_code_signing(
     platform: 'macos',
-    app_identifier: APPLE_BUNDLE_IDENTIFIER,
+    app_identifier: app_identifier,
     team_id: APPLE_TEAM_ID,
     api_key: api_key,
     type: type,
