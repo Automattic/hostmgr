@@ -53,6 +53,22 @@ lane :upload_release do
   )
 end
 
+desc 'Submit the Release Build products to Apple for notarization'
+lane :notarize_release do
+  UI.user_error!('No build products are present – did you run `make build`?') if ARTIFACT_PATHS.empty?
+  require_env_vars!(*ASC_API_KEY_ENV_VARS)
+
+  create_release_zip
+
+  notarize(
+    package: ZIP_FILE_PATH,
+    # Bare binaries can't hold a stapled ticket; Gatekeeper fetches it online instead.
+    skip_stapling: true,
+    api_key: app_store_connect_api_key,
+    print_log: true
+  )
+end
+
 desc 'Download all certificates and provisioning profiles for code signing'
 lane :set_up_signing do |readonly: true|
   set_up_signing_development(readonly: readonly)
