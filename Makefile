@@ -4,7 +4,7 @@ RELEASE_VERSION = $(shell .build/release/hostmgr --version)
 SWIFTLINT_VERSION=$(shell awk '/^swiftlint_version:/ {print $$2}' .swiftlint.yml)
 RUBY_VERSION = $(shell cat .ruby-version)
 
-CERTIFICATE_NAME_DEBUG = Apple Development: Created via API (886NX39KP6)
+CERTIFICATE_NAME_DEBUG = Apple Development: Created via API (H2HGJC7N5N)
 CERTIFICATE_NAME_RELEASE = Developer ID Application: Automattic, Inc. (PZYM8XX95Q)
 
 bootstrap: bootstrap-ruby lint test build-debug
