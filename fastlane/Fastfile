@@ -17,7 +17,6 @@ ZIP_FILE_PATH = File.join(PROJECT_ROOT_FOLDER, '.build', 'artifacts', 'hostmgr.z
 GITHUB_REPO = 'automattic/hostmgr'
 
 APPLE_TEAM_ID = 'PZYM8XX95Q'
-APPLE_BUNDLE_IDENTIFIER = 'com.automattic.hostmgr'
 
 ASC_API_KEY_ENV_VARS = %w[
   APP_STORE_CONNECT_API_KEY_KEY_ID
@@ -53,6 +52,22 @@ lane :upload_release do
   )
 end
 
+desc 'Submit the Release Build products to Apple for notarization'
+lane :notarize_release do
+  UI.user_error!('No build products are present – did you run `make build`?') if ARTIFACT_PATHS.empty?
+  require_env_vars!(*ASC_API_KEY_ENV_VARS)
+
+  create_release_zip
+
+  notarize(
+    package: ZIP_FILE_PATH,
+    # Bare binaries can't hold a stapled ticket; Gatekeeper fetches it online instead.
+    skip_stapling: true,
+    api_key: app_store_connect_api_key,
+    print_log: true
+  )
+end
+
 desc 'Download all certificates and provisioning profiles for code signing'
 lane :set_up_signing do |readonly: true|
   set_up_signing_development(readonly: readonly)
@@ -66,14 +81,14 @@ end
 
 desc 'Download the release signing certificates to this machine'
 lane :set_up_signing_release do |readonly: true|
-  set_up_certificate_in_keychain(type: 'appstore', readonly: readonly)
+  set_up_certificate_in_keychain(type: 'developer_id', readonly: readonly)
 end
 
 def create_release_zip
   File.delete(ZIP_FILE_PATH) if File.file? ZIP_FILE_PATH
 
   Dir.chdir(ARTIFACTS_ROOT) do
-    Zip::File.open(ZIP_FILE_PATH, Zip::File::CREATE) do |zipfile|
+    Zip::File.open(ZIP_FILE_PATH, create: true) do |zipfile|
       %w[hostmgr hostmgr-helper].each do |f|
         zipfile.add(File.basename(f), File.join(ARTIFACTS_ROOT, f))
       end
@@ -104,15 +119,11 @@ def set_up_certificate_in_keychain(type:, readonly:)
     api_key = app_store_connect_api_key
   end
 
-  # This will fetch the certificate and provisioning profile for the given type from remote storage.
-  # It will then set them up in the local keychain, where 'codesign' looks for identities.
-  #
-  # Notice we do not need the provisioning profile because we sign with 'codesign' elsewhere.
-  # However, there is no other way to set up the certificate in the keychain.
-  # Fastlane offers a tool called cert, but it only downloads certificates.
+  # Use match over cert because cert only downloads certificates, it doesn't install them in the keychain.
   sync_code_signing(
     platform: 'macos',
-    app_identifier: APPLE_BUNDLE_IDENTIFIER,
+    # Fetch only the certificate: a bare binary has no bundle to carry a provisioning profile.
+    app_identifier: [],
     team_id: APPLE_TEAM_ID,
     api_key: api_key,
     type: type,

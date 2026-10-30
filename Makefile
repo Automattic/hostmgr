@@ -4,8 +4,8 @@ RELEASE_VERSION = $(shell .build/release/hostmgr --version)
 SWIFTLINT_VERSION=$(shell awk '/^swiftlint_version:/ {print $$2}' .swiftlint.yml)
 RUBY_VERSION = $(shell cat .ruby-version)
 
-CERTIFICATE_NAME_DEBUG = Apple Development: Created via API (886NX39KP6)
-CERTIFICATE_NAME_RELEASE = Apple Distribution: Automattic, Inc. (PZYM8XX95Q)
+CERTIFICATE_NAME_DEBUG = Apple Development: Created via API (H2HGJC7N5N)
+CERTIFICATE_NAME_RELEASE = Developer ID Application: Automattic, Inc. (PZYM8XX95Q)
 
 bootstrap: bootstrap-ruby lint test build-debug
 
@@ -18,13 +18,13 @@ clean:
 test:
 	swift test
 
-fetch-codesignging: boostrap-ruby
+fetch-codesigning: bootstrap-ruby
 	bundle exec fastlane set_up_signing
 
-fetch-codesignging-debug: boostrap-ruby
+fetch-codesigning-debug: bootstrap-ruby
 	bundle exec fastlane set_up_signing_development
 
-fetch-codesignging-release: bootstrap-ruby
+fetch-codesigning-release: bootstrap-ruby
 	bundle exec fastlane set_up_signing_release
 
 build:
@@ -36,13 +36,15 @@ build:
 	cp .build/arm64-apple-macosx/release/hostmgr .build/artifacts/release/hostmgr
 	cp .build/arm64-apple-macosx/release/hostmgr-helper .build/artifacts/release/hostmgr-helper
 
-	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "${CERTIFICATE_NAME_RELEASE}" .build/artifacts/release/hostmgr --force --verbose
-	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "${CERTIFICATE_NAME_RELEASE}" .build/artifacts/release/hostmgr-helper --force --verbose
+	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "${CERTIFICATE_NAME_RELEASE}" --options runtime --timestamp .build/artifacts/release/hostmgr --force --verbose
+	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "${CERTIFICATE_NAME_RELEASE}" --options runtime --timestamp .build/artifacts/release/hostmgr-helper --force --verbose
 
 verify-signing: build
 	@echo "--- Checking Code Signing"
 	codesign --verify --strict .build/artifacts/release/hostmgr
+	codesign --display --verbose=2 .build/artifacts/release/hostmgr 2>&1 | grep -qF "Authority=${CERTIFICATE_NAME_RELEASE}"
 	codesign --verify --strict .build/artifacts/release/hostmgr-helper
+	codesign --display --verbose=2 .build/artifacts/release/hostmgr-helper 2>&1 | grep -qF "Authority=${CERTIFICATE_NAME_RELEASE}"
 
 install: build
 	cp .build/artifacts/release/hostmgr /opt/ci/bin/hostmgr
