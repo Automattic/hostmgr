@@ -4,6 +4,9 @@ RELEASE_VERSION = $(shell .build/release/hostmgr --version)
 SWIFTLINT_VERSION=$(shell awk '/^swiftlint_version:/ {print $$2}' .swiftlint.yml)
 RUBY_VERSION = $(shell cat .ruby-version)
 
+DEBUG_BIN_PATH = $(shell swift build --show-bin-path)
+RELEASE_BIN_PATH = $(shell swift build -c release --arch arm64 --show-bin-path)
+
 CERTIFICATE_NAME_DEBUG = Apple Development: Created via API (886NX39KP6)
 CERTIFICATE_NAME_RELEASE = Apple Distribution: Automattic, Inc. (PZYM8XX95Q)
 
@@ -33,8 +36,8 @@ build:
 
 	rm -rf .build/artifacts/release
 	mkdir -p .build/artifacts/release
-	cp .build/arm64-apple-macosx/release/hostmgr .build/artifacts/release/hostmgr
-	cp .build/arm64-apple-macosx/release/hostmgr-helper .build/artifacts/release/hostmgr-helper
+	cp $(RELEASE_BIN_PATH)/hostmgr .build/artifacts/release/hostmgr
+	cp $(RELEASE_BIN_PATH)/hostmgr-helper .build/artifacts/release/hostmgr-helper
 
 	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "${CERTIFICATE_NAME_RELEASE}" .build/artifacts/release/hostmgr --force --verbose
 	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "${CERTIFICATE_NAME_RELEASE}" .build/artifacts/release/hostmgr-helper --force --verbose
@@ -62,15 +65,15 @@ release: build
 build-debug:
 	@echo "--- Building and Signing for Local Development"
 	swift build
-	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "${CERTIFICATE_NAME_DEBUG}" .build/arm64-apple-macosx/debug/hostmgr --force --verbose
+	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "${CERTIFICATE_NAME_DEBUG}" $(DEBUG_BIN_PATH)/hostmgr --force --verbose
 
 build-helper-debug:
 	@echo "--- Building and Signing helper for Local Development"
 	swift build
-	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "${CERTIFICATE_NAME_DEBUG}" .build/arm64-apple-macosx/debug/hostmgr-helper --force --verbose
+	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "${CERTIFICATE_NAME_DEBUG}" $(DEBUG_BIN_PATH)/hostmgr-helper --force --verbose
 
 run-helper-debug: build-debug build-helper-debug
-	./.build/arm64-apple-macosx/debug/hostmgr-helper --debug true
+	$(DEBUG_BIN_PATH)/hostmgr-helper --debug true
 
 reload-helper-debug: build-helper-debug
 	launchctl unload ~/Library/LaunchAgents/com.automattic.hostmgr.helper.plist
