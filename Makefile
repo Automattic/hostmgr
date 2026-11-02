@@ -4,7 +4,7 @@ RELEASE_VERSION = $(shell .build/release/hostmgr --version)
 SWIFTLINT_VERSION=$(shell awk '/^swiftlint_version:/ {print $$2}' .swiftlint.yml)
 RUBY_VERSION = $(shell cat .ruby-version)
 
-DEBUG_BIN_PATH = $(shell swift build --show-bin-path)
+DEBUG_BIN_PATH = $(shell swift build -c debug --show-bin-path)
 RELEASE_BIN_PATH = $(shell swift build -c release --arch arm64 --show-bin-path)
 
 CERTIFICATE_NAME_DEBUG = Apple Development: Created via API (886NX39KP6)
