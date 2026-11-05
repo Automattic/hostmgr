@@ -44,6 +44,7 @@ steps:
       install_gems
       bundle exec fastlane set_up_signing_release
       make build verify-signing
+      bundle exec fastlane notarize_release
     plugins: [$CI_TOOLKIT_PLUGIN]
 
   #################
@@ -55,6 +56,7 @@ steps:
       install_gems
       bundle exec fastlane set_up_signing_release
       make build
+      bundle exec fastlane notarize_release
       bundle exec fastlane upload_release
     plugins: [$CI_TOOLKIT_PLUGIN]
     depends_on:
