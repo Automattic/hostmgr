@@ -36,16 +36,12 @@ struct VMConfiguration {
         return virtualMachineConfiguration
     }
 
-    func calculateCPUCount(shared: Bool) -> Int {
-        if shared {
-            return (ProcessInfo.processInfo.physicalProcessorCount - 1).quotientAndRemainder(dividingBy: 2).quotient
-        }
-
-        return ProcessInfo.processInfo.physicalProcessorCount
+    func calculateCPUCount() -> Int {
+        ProcessInfo.processInfo.physicalProcessorCount
     }
 
     var cpuCount: Int {
-        calculateCPUCount(shared: Configuration.shared.allowsMultipleVMs)
+        calculateCPUCount()
     }
 
     func calculateMemorySize(
