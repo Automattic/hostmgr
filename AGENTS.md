@@ -37,11 +37,11 @@ make test          # Run swift test
 make lint          # SwiftLint + RuboCop (both via Docker)
 make lintfix       # Auto-fix lint issues (both via Docker)
 make build         # Release build with code signing
-make build-debug   # Debug build with development signing
+make build-debug   # Debug build, ad-hoc signed
 ```
 
 `make lint` requires Docker running locally.
-Release builds require code-signing certificates via `bundle exec fastlane set_up_signing`.
+Release builds require the Developer ID certificate via `make fetch-codesigning`.
 
 ## Conventions
 
