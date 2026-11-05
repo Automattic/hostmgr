@@ -21,12 +21,6 @@ test:
 	swift test
 
 fetch-codesigning: bootstrap-ruby
-	bundle exec fastlane set_up_signing
-
-fetch-codesigning-debug: bootstrap-ruby
-	bundle exec fastlane set_up_signing_development
-
-fetch-codesigning-release: bootstrap-ruby
 	bundle exec fastlane set_up_signing_release
 
 build:
