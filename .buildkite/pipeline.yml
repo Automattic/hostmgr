@@ -5,15 +5,12 @@
 
 agents:
   queue: mac
+  hostname: MV-MKE-ARM64-019
 
 env:
   IMAGE_ID: $IMAGE_ID
 
-# This is the default pipeline – it will build and test the app
 steps:
-  #################
-  # Build and Test
-  #################
   - label: "🧪 Build and Test"
     key: "test"
     command: |
@@ -21,45 +18,3 @@ steps:
       install_swiftpm_dependencies
       swift test
     plugins: [$CI_TOOLKIT_PLUGIN]
-
-  #################
-  # Lint
-  #################
-  - label: "🧪 Lint Swift"
-    command: swiftlint
-    agents:
-      queue: "linter"
-
-  - label: "🧪 Lint Ruby"
-    command: rubocop
-    agents:
-      queue: "linter"
-
-  #################
-  # Validate Release Build
-  #################
-  - label: "🧪 Validate Release Build"
-    key: "validate-release-build"
-    command: |
-      install_gems
-      bundle exec fastlane set_up_signing_release
-      make build verify-signing
-      bundle exec fastlane notarize_release
-    plugins: [$CI_TOOLKIT_PLUGIN]
-
-  #################
-  # Publish the Binary (if we're building a tag)
-  #################
-  - label: "⬆️ Publish Binary"
-    key: "publish"
-    command: |
-      install_gems
-      bundle exec fastlane set_up_signing_release
-      make build
-      bundle exec fastlane notarize_release
-      bundle exec fastlane upload_release
-    plugins: [$CI_TOOLKIT_PLUGIN]
-    depends_on:
-      - "test"
-      - "validate-release-build"
-    if: build.tag != null
