@@ -11,6 +11,18 @@ env:
 
 # This is the default pipeline – it will build and test the app
 steps:
+  - label: "🔬 make fetch-codesigning"
+    command: .buildkite/commands/validate-fetch-codesigning.sh fetch-codesigning
+    plugins: [$CI_TOOLKIT_PLUGIN]
+
+  - label: "🔬 make fetch-codesigning-debug"
+    command: .buildkite/commands/validate-fetch-codesigning.sh fetch-codesigning-debug
+    plugins: [$CI_TOOLKIT_PLUGIN]
+
+  - label: "🔬 make fetch-codesigning-release"
+    command: .buildkite/commands/validate-fetch-codesigning.sh fetch-codesigning-release
+    plugins: [$CI_TOOLKIT_PLUGIN]
+
   #################
   # Build and Test
   #################
