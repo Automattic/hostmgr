@@ -7,7 +7,6 @@ RUBY_VERSION = $(shell cat .ruby-version)
 DEBUG_BIN_PATH = $(shell swift build -c debug --show-bin-path)
 RELEASE_BIN_PATH = $(shell swift build -c release --arch arm64 --show-bin-path)
 
-CERTIFICATE_NAME_DEBUG = Apple Development: Created via API (H2HGJC7N5N)
 CERTIFICATE_NAME_RELEASE = Developer ID Application: Automattic, Inc. (PZYM8XX95Q)
 
 bootstrap: bootstrap-ruby lint test build-debug
@@ -22,12 +21,6 @@ test:
 	swift test
 
 fetch-codesigning: bootstrap-ruby
-	bundle exec fastlane set_up_signing
-
-fetch-codesigning-debug: bootstrap-ruby
-	bundle exec fastlane set_up_signing_development
-
-fetch-codesigning-release: bootstrap-ruby
 	bundle exec fastlane set_up_signing_release
 
 build:
@@ -67,12 +60,12 @@ release: build
 build-debug:
 	@echo "--- Building and Signing for Local Development"
 	swift build
-	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "${CERTIFICATE_NAME_DEBUG}" $(DEBUG_BIN_PATH)/hostmgr --force --verbose
+	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s - $(DEBUG_BIN_PATH)/hostmgr --force --verbose
 
 build-helper-debug:
 	@echo "--- Building and Signing helper for Local Development"
 	swift build
-	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s "${CERTIFICATE_NAME_DEBUG}" $(DEBUG_BIN_PATH)/hostmgr-helper --force --verbose
+	codesign --entitlements Sources/hostmgr/hostmgr.entitlements -s - $(DEBUG_BIN_PATH)/hostmgr-helper --force --verbose
 
 run-helper-debug: build-debug build-helper-debug
 	$(DEBUG_BIN_PATH)/hostmgr-helper --debug true

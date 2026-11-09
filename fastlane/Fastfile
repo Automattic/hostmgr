@@ -68,17 +68,6 @@ lane :notarize_release do
   )
 end
 
-desc 'Download all certificates and provisioning profiles for code signing'
-lane :set_up_signing do |readonly: true|
-  set_up_signing_development(readonly: readonly)
-  set_up_signing_release(readonly: readonly)
-end
-
-desc 'Download the development signing certificates to this machine'
-lane :set_up_signing_development do |readonly: true|
-  set_up_certificate_in_keychain(type: 'development', readonly: readonly)
-end
-
 desc 'Download the release signing certificates to this machine'
 lane :set_up_signing_release do |readonly: true|
   set_up_certificate_in_keychain(type: 'developer_id', readonly: readonly)
