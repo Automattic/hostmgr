@@ -9,6 +9,15 @@ final class VMBundleTests: XCTestCase {
         let newBundle = try originalBundle.createEphemeralCopy(at: VMBundle.createRoot())
         XCTAssertNotEqual(originalBundle.macAddress, newBundle.macAddress)
     }
+
+    func testThatMachineIdentifierIsKeptInBundle() throws {
+        let originalBundle = try VMBundle.forTesting()
+        let newBundle = try originalBundle.createEphemeralCopy(at: VMBundle.createRoot())
+        XCTAssertEqual(
+            originalBundle.machineIdentifier.dataRepresentation,
+            newBundle.machineIdentifier.dataRepresentation
+        )
+    }
 }
 
 extension VMBundle {

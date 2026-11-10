@@ -34,6 +34,7 @@ extension Bundle {
     /// Doesn't alter the template in any way, and ensures that each copy has:
     /// - A unique place on the file system.
     /// - A unique MAC address
+    /// - The template's machine identifier
     ///
     public func createEphemeralCopy(at destination: URL) throws -> VMBundle {
         Logger.helper.log("Creating ephemeral copy of \(root) at \(destination)")
