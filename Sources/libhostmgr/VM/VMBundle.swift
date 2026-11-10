@@ -59,7 +59,10 @@ extension VMBundle: Bundle {
         }
     }
 
-    /// Update a cloned VMBundle to record its new name and have a unique MAC address
+    /// Update a cloned VMBundle to record its template name and have a unique MAC address
+    ///
+    /// Keeps the template's machine identifier: simulator runtimes in the image are personalized for it,
+    /// and a new identifier makes CoreSimulator remount them after boot, during which simulators can't boot.
     ///
     @discardableResult
     public func preparedForReuse() throws -> VMBundle {
@@ -67,7 +70,6 @@ extension VMBundle: Bundle {
 
         try newBundle.config
             .settingUniqueMacAddress()
-            .settingUniqueMachineIdentifier()
             .settingTemplateName(to: self.config.name)
             .write(to: newBundle.configurationFilePath)
 
