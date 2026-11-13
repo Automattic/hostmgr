@@ -18,8 +18,9 @@ steps:
     key: "test"
     command: |
       echo "--- :swift: Building + Testing"
-      install_swiftpm_dependencies
+      restore_swiftpm_cache --package-resolved Package.resolved --artifacts .build
       swift test
+      save_swiftpm_cache --package-resolved Package.resolved --artifacts .build
     plugins: [$CI_TOOLKIT_PLUGIN]
 
   #################
