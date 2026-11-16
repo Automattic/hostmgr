@@ -2,7 +2,7 @@
 
 source 'https://rubygems.org'
 
-gem 'aws-sdk-s3', '~> 1.240'
+gem 'aws-sdk-s3', '~> 1.242'
 gem 'fastlane', '~> 2.241'
 
 gem 'rubocop', '~> 1.92', require: false
