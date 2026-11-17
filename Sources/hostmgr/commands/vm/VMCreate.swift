@@ -20,7 +20,7 @@ struct VMCreateCommand: AsyncParsableCommand {
     @Option(help: "The disk size of machine that should be created, in GB")
     var diskSize: Int = 160
 
-    @Option(help: "Path or URL of the `.ipsw` restore image to install. Defaults to the latest one supported by this Mac")
+    @Option(help: "Path or URL of the `.ipsw` restore image to install. Defaults to the latest supported by this Mac")
     var ipsw: String?
 
     private enum CodingKeys: String, CodingKey {
