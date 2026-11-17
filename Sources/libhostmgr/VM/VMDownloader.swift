@@ -10,27 +10,41 @@ public struct RestoreImageLibrary {
         }
     }
 
-    public static func needsToDownload(restoreImage: VZMacOSRestoreImage) -> Bool {
-        let destination = Paths.restoreImageDirectory.appendingPathComponent(restoreImage.url.lastPathComponent)
-        return !FileManager.default.fileExists(at: destination)
+    public static func localPath(forRemoteImageAt url: URL) -> URL {
+        Paths.restoreImageDirectory.appendingPathComponent(url.lastPathComponent)
     }
 
-    public static func download(restoreImage: VZMacOSRestoreImage, progress: @escaping ProgressCallback) async throws {
+    public static func needsToDownload(imageAt url: URL) -> Bool {
+        !FileManager.default.fileExists(at: localPath(forRemoteImageAt: url))
+    }
+
+    public static func needsToDownload(restoreImage: VZMacOSRestoreImage) -> Bool {
+        needsToDownload(imageAt: restoreImage.url)
+    }
+
+    public static func download(imageAt url: URL, progress: @escaping ProgressCallback) async throws {
         try FileManager.default.createDirectory(at: Paths.restoreImageDirectory, withIntermediateDirectories: true)
 
-        let destination = Paths.restoreImageDirectory.appendingPathComponent(restoreImage.url.lastPathComponent)
+        let destination = localPath(forRemoteImageAt: url)
 
         // Don't redownload the restore image if we already have it
         guard !FileManager.default.fileExists(at: destination) else {
             return
         }
 
-        let tempPath = try await DownloadOperation(url: restoreImage.url).start(progressCallback: progress)
+        let tempPath = try await DownloadOperation(url: url).start(progressCallback: progress)
         try FileManager.default.copyItem(at: tempPath, to: destination)
     }
 
+    public static func download(restoreImage: VZMacOSRestoreImage, progress: @escaping ProgressCallback) async throws {
+        try await download(imageAt: restoreImage.url, progress: progress)
+    }
+
+    public static func localCopy(ofImageAt url: URL) async throws -> VZMacOSRestoreImage {
+        try await VZMacOSRestoreImage.image(from: localPath(forRemoteImageAt: url))
+    }
+
     public static func localCopy(of restoreImage: VZMacOSRestoreImage) async throws -> VZMacOSRestoreImage {
-        let destination = Paths.restoreImageDirectory.appendingPathComponent(restoreImage.url.lastPathComponent)
-        return try await VZMacOSRestoreImage.image(from: destination)
+        try await localCopy(ofImageAt: restoreImage.url)
     }
 }
