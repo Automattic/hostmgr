@@ -20,20 +20,18 @@ struct VMCreateCommand: AsyncParsableCommand {
     @Option(help: "The disk size of machine that should be created, in GB")
     var diskSize: Int = 160
 
+    @Option(help: "Path or URL of the `.ipsw` restore image to install. Defaults to the latest supported by this Mac")
+    var ipsw: String?
+
     private enum CodingKeys: String, CodingKey {
         case name
         case diskSize
         case quiet
+        case ipsw
     }
 
     mutating func run() async throws {
-        let restoreImage = try await VZMacOSRestoreImage.latestSupported
-
-        if RestoreImageLibrary.needsToDownload(restoreImage: restoreImage) {
-            try await download(restoreImage: restoreImage, withProgress: !quiet)
-        }
-
-        let localImage = try await RestoreImageLibrary.localCopy(of: restoreImage)
+        let localImage = try await resolveRestoreImage()
 
         let bundle = try VMBundle.createBundle(
             named: self.name,
@@ -46,16 +44,36 @@ struct VMCreateCommand: AsyncParsableCommand {
         Console.info("You now start the VM by running `hostmgr vm start \(name)`")
     }
 
-    private func download(restoreImage: VZMacOSRestoreImage, withProgress: Bool) async throws {
+    /// Returns a local copy of the restore image to install, downloading it first if needed
+    private func resolveRestoreImage() async throws -> VZMacOSRestoreImage {
+        guard let ipsw else {
+            let latest = try await VZMacOSRestoreImage.latestSupported
+            try await downloadIfNeeded(imageAt: latest.url, withProgress: !quiet)
+            return try await RestoreImageLibrary.localCopy(of: latest)
+        }
+
+        if let url = URL(string: ipsw), ["http", "https"].contains(url.scheme) {
+            try await downloadIfNeeded(imageAt: url, withProgress: !quiet)
+            return try await RestoreImageLibrary.localCopy(ofImageAt: url)
+        }
+
+        return try await VZMacOSRestoreImage.image(from: URL(fileURLWithPath: ipsw))
+    }
+
+    private func downloadIfNeeded(imageAt url: URL, withProgress: Bool) async throws {
+        guard RestoreImageLibrary.needsToDownload(imageAt: url) else {
+            return
+        }
+
         if withProgress {
-            let downloadProgressBar = Console.startFileDownload(restoreImage.url)
-            try await RestoreImageLibrary.download(restoreImage: restoreImage, progress: {
+            let downloadProgressBar = Console.startFileDownload(url)
+            try await RestoreImageLibrary.download(imageAt: url, progress: {
                 downloadProgressBar.update($0)
             })
             downloadProgressBar.succeed()
         } else {
-            Console.info("Downloading \(restoreImage.url) – this may take a while")
-            try await RestoreImageLibrary.download(restoreImage: restoreImage) { _ in }
+            Console.info("Downloading \(url) – this may take a while")
+            try await RestoreImageLibrary.download(imageAt: url) { _ in }
         }
     }
 
