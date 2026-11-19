@@ -67,7 +67,9 @@ class VZManagedVirtualMachine: ManagedVirtualMachine {
             }
         } catch {
             // Guarantee that the VM is stopped and cleaned before throwing. If it won't stop, throw that
-            // instead and keep its files, so the slot holds on to the VM rather than reporting itself free.
+            // instead, so the slot holds on to the VM rather than reporting itself free. Its files are kept:
+            // removing them wouldn't free any space while the VM has them open, and a VM that's still
+            // running keeps its bundle in the working directory.
             Logger.helper.error("Stopping VM \(config.handle) that was being launched: \(error)")
             try await stop()
             // Note: This cleans ALL types of VMs that failed to start - even persistent.

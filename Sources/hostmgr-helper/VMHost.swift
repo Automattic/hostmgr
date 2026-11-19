@@ -61,7 +61,8 @@ extension VMHost: HostmgrServerDelegate {
     }
 
     /// Stops both slots, retrying each one that fails. Throws the last failure if a slot still
-    /// hasn't stopped after 10 attempts, so the caller doesn't remove files from under a running VM.
+    /// hasn't stopped after 10 attempts, so the caller doesn't go on to reset the working directory
+    /// as if no VM were running.
     func stopAll() async throws {
         var count = 0
         var lastError: Error?
