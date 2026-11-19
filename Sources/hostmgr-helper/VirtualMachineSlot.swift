@@ -177,7 +177,7 @@ extension VirtualMachineSlot {
         }
 
         /// The name of every state, as reported in metrics.
-        nonisolated static let allNames = ["empty", "starting", "running", "stopping", "crashed"]
+        nonisolated static let allNames = ["empty", "starting", "running", "stopping", "crashed", "stop_failed"]
 
         var name: String {
             switch self {
@@ -186,6 +186,7 @@ extension VirtualMachineSlot {
             case .running: return "running"
             case .stopping: return "stopping"
             case .crashed: return "crashed"
+            case .stopFailed: return "stop_failed"
             }
         }
 

@@ -24,6 +24,18 @@ class SlotMetricsWriterTests: XCTestCase {
         XCTAssertTrue(lines.contains(#"hostmgr_vm_slot_available{slot="secondary"} 1"#))
     }
 
+    func testRenderReportsAVMThatFailedToStop() async throws {
+        let managedVirtualMachine = MockManagedVirtualMachine(name: "vm", handle: "job-1")
+        try await primarySlot.start(managedVirtualMachine: managedVirtualMachine)
+        managedVirtualMachine.shouldFailToStop = true
+        try? await primarySlot.stop()
+
+        let lines = SlotMetricsWriter.render(slots: [primarySlot]).split(separator: "\n")
+
+        XCTAssertTrue(lines.contains(#"hostmgr_vm_slot_state{slot="primary",state="stop_failed"} 1"#))
+        XCTAssertTrue(lines.contains(#"hostmgr_vm_slot_available{slot="primary"} 0"#))
+    }
+
     func testRenderReportsEveryStateForEverySlot() {
         let output = SlotMetricsWriter.render(slots: [primarySlot, secondarySlot])
 
