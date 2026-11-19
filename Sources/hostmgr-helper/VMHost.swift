@@ -60,19 +60,34 @@ extension VMHost: HostmgrServerDelegate {
         }
     }
 
+    /// Stops both slots, retrying each one that fails. Throws the last failure if a slot still
+    /// hasn't stopped after 10 attempts, so the caller doesn't remove files from under a running VM.
     func stopAll() async throws {
         var count = 0
+        var lastError: Error?
 
         repeat {
-            do {
-                try await self.primaryVMSlot.stop()
-                try await self.secondaryVMSlot.stop()
-                return
-            } catch {
-                try await Task.sleep(for: .seconds(1))
-                count += 1
+            lastError = nil
+
+            // Stop each slot independently, so one that fails doesn't keep the other running.
+            for slot in [self.primaryVMSlot, self.secondaryVMSlot] {
+                do {
+                    try await slot.stop()
+                } catch {
+                    lastError = error
+                }
             }
 
+            guard lastError != nil else {
+                return
+            }
+
+            try await Task.sleep(for: .seconds(1))
+            count += 1
         } while(count < 10)
+
+        if let lastError {
+            throw lastError
+        }
     }
 }

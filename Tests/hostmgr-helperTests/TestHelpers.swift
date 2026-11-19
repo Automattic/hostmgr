@@ -17,6 +17,7 @@ class MockManagedVirtualMachine: ManagedVirtualMachine {
 
     enum Errors: Error {
         case crashedAtStart
+        case failedToStop
         case genericError
     }
 
@@ -24,6 +25,8 @@ class MockManagedVirtualMachine: ManagedVirtualMachine {
 
     // used to simulate an error thrown when starting
     var shouldCrashAtStart = false
+    // used to simulate a VM that is still running after being asked to stop
+    var shouldFailToStop = false
     // whether the VM was asked to clean
     var cleaned = false
     // if the delegate has been set
@@ -44,8 +47,11 @@ class MockManagedVirtualMachine: ManagedVirtualMachine {
         self.state = .started
     }
 
-    func stop() async {
+    func stop() async throws {
         try? await Task.sleep(for: stopDelay)
+        if shouldFailToStop {
+            throw Errors.failedToStop
+        }
         self.state = .stopped
     }
 
