@@ -9,7 +9,14 @@ import Sentry
 @MainActor
 class VirtualMachineSlot: NSObject, ObservableObject {
     @Published
-    var state: State = .empty
+    var state: State = .empty {
+        didSet {
+            if state != oldValue { stateChangedAt = Date() }
+        }
+    }
+
+    /// When the slot entered its current state.
+    private(set) var stateChangedAt = Date()
 
     let role: Role
 
@@ -166,6 +173,19 @@ extension VirtualMachineSlot {
                 return true
             default:
                 return false
+            }
+        }
+
+        /// The name of every state, as reported in metrics.
+        nonisolated static let allNames = ["empty", "starting", "running", "stopping", "crashed"]
+
+        var name: String {
+            switch self {
+            case .empty: return "empty"
+            case .starting: return "starting"
+            case .running: return "running"
+            case .stopping: return "stopping"
+            case .crashed: return "crashed"
             }
         }
 

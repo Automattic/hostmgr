@@ -67,6 +67,10 @@ public struct Configuration: Codable {
 
     /// Should Sentry report an error if HostmgrError.noVMSlotsAvailable is thrown
     public var reportNoSlotsErrorToSentry: Bool?
+
+    /// Where `hostmgr-helper` writes VM slot metrics for node_exporter's textfile collector.
+    /// The file name must end in `.prom`. Leaving it unset disables the metrics.
+    public var metricsTextfilePath: String?
 }
 
 /// Accessor Helpers
