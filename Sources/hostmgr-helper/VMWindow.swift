@@ -19,7 +19,7 @@ struct VMWindowContent: View {
             NSApp.activate(ignoringOtherApps: true)
         }
         case .stopping: ProgressView()
-        case .crashed(let err): Text("VM Error: \(err.localizedDescription)")
+        case .crashed(let err), .stopFailed(_, let err): Text("VM Error: \(err.localizedDescription)")
         }
     }
 }

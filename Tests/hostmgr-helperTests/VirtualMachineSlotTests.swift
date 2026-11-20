@@ -156,4 +156,44 @@ class VirtualMachineSlotTests: XCTestCase {
             }
         }
     }
+
+    func testSlotStaysUnavailableWhenVMFailsToStop() async throws {
+        try await slot.start(managedVirtualMachine: managedVirtualMachine)
+        managedVirtualMachine.shouldFailToStop = true
+
+        do {
+            try await slot.stop(clean: true)
+            XCTFail("Expected stop to throw")
+        } catch MockManagedVirtualMachine.Errors.failedToStop {
+            // Expected
+        }
+
+        XCTAssertEqual(slot.state, .stopFailed(managedVirtualMachine, MockManagedVirtualMachine.Errors.failedToStop))
+        XCTAssertFalse(slot.isAvailable)
+        XCTAssertTrue(slot.isConfiguredForHandle(managedVirtualMachine.handle))
+        // A VM that may still be running keeps its files
+        XCTAssertFalse(managedVirtualMachine.cleaned)
+    }
+
+    func testStoppingAgainRetriesAVMThatFailedToStop() async throws {
+        try await slot.start(managedVirtualMachine: managedVirtualMachine)
+        managedVirtualMachine.shouldFailToStop = true
+        try? await slot.stop()
+
+        managedVirtualMachine.shouldFailToStop = false
+        try await slot.stop()
+
+        XCTAssertEqual(slot.state, .empty)
+        XCTAssertEqual(managedVirtualMachine.state, .stopped)
+    }
+
+    func testSlotStaysUnavailableWhenVMFailsToStopAfterFailedStart() async throws {
+        managedVirtualMachine.shouldCrashAtStart = true
+        managedVirtualMachine.shouldFailToStop = true
+
+        try? await slot.start(managedVirtualMachine: managedVirtualMachine)
+
+        XCTAssertEqual(slot.state, .stopFailed(managedVirtualMachine, MockManagedVirtualMachine.Errors.failedToStop))
+        XCTAssertFalse(slot.isAvailable)
+    }
 }
