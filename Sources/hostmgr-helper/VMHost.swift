@@ -15,6 +15,10 @@ class VMHost: NSObject, ObservableObject {
     @Published
     var secondaryVMSlot = VirtualMachineSlot(role: .secondary)
 
+    var slots: [VirtualMachineSlot] {
+        [primaryVMSlot, secondaryVMSlot]
+    }
+
     func vmSlot(for role: VirtualMachineSlot.Role) -> VirtualMachineSlot {
         switch role {
         case .primary: return primaryVMSlot

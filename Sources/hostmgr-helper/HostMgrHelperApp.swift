@@ -18,6 +18,8 @@ struct HostMgrHelperApp: App {
 
     private var serverTask: Task<Void, Error>!
 
+    private var metricsTask: Task<Void, Never>?
+
     init() {
         SentrySDK.start(options: sentryOptions)
 
@@ -30,6 +32,13 @@ struct HostMgrHelperApp: App {
 
         self.serverTask = Task {
             try await HostmgrServer(delegate: VMHost.shared).start()
+        }
+
+        // `try?` rather than `Configuration.shared`, which exits the process if the configuration can't be read
+        if let path = (try? ConfigurationRepository.getConfiguration())?.metricsTextfilePath {
+            self.metricsTask = Task { @MainActor in
+                await SlotMetricsWriter(path: URL(fileURLWithPath: path)).run { VMHost.shared.slots }
+            }
         }
     }
 
