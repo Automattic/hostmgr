@@ -4,6 +4,7 @@ import SwiftUI
 import OSLog
 import Network
 import libhostmgr
+import Sentry
 
 @MainActor
 class VirtualMachineSlot: NSObject, ObservableObject {
@@ -57,7 +58,9 @@ class VirtualMachineSlot: NSObject, ObservableObject {
 
     /// Puts the slot into a stopped state if it's a valid request.
     ///
-    /// - This method throws an error if trying to stop in a state other than `.starting` and `.running`.
+    /// - This method throws an error if trying to stop while already stopping.
+    /// - If the VM is still running afterwards, the slot moves to `.stopFailed`, which keeps it unavailable,
+    ///   and this method throws. Calling it again retries the stop.
     /// - Parameters:
     ///   - error: Error to include if the slot is stopping because of an error.
     ///   - clean: If VM files should also be cleaned.
@@ -69,12 +72,10 @@ class VirtualMachineSlot: NSObject, ObservableObject {
         case .starting(let mvm, let task):
             try state.transitionTo(.stopping(mvm))
             task.cancel()
-            await mvm.stop()
-            if clean { mvm.clean() }
-        case .running(let mvm):
+            try await stopMachine(mvm, clean: clean)
+        case .running(let mvm), .stopFailed(let mvm, _):
             try state.transitionTo(.stopping(mvm))
-            await mvm.stop()
-            if clean { mvm.clean() }
+            try await stopMachine(mvm, clean: clean)
         case .stopping:
             Logger.helper.error("Error: Stop was called while stopping.")
             throw Errors.invalidStopState
@@ -90,6 +91,19 @@ class VirtualMachineSlot: NSObject, ObservableObject {
             Logger.helper.log("Resetting slot to empty state.")
             try state.transitionTo(.empty)
         }
+    }
+
+    private func stopMachine(_ mvm: ManagedVirtualMachine, clean: Bool) async throws {
+        do {
+            try await mvm.stop()
+        } catch {
+            Logger.helper.error("\(role.displayName) slot stays unavailable: \(error.localizedDescription)")
+            SentrySDK.capture(error: error)
+            try state.transitionTo(.stopFailed(mvm, error))
+            throw error
+        }
+
+        if clean { mvm.clean() }
     }
 
     func isConfiguredForHandle(_ handle: String) -> Bool {
@@ -133,6 +147,8 @@ extension VirtualMachineSlot {
         case running(ManagedVirtualMachine)
         case stopping(ManagedVirtualMachine)
         case crashed(Error)
+        /// The VM was asked to stop but is still running, so the slot can't take another one.
+        case stopFailed(ManagedVirtualMachine, Error)
 
         nonisolated static func == (lhs: State, rhs: State) -> Bool {
             switch (lhs, rhs) {
@@ -146,6 +162,8 @@ extension VirtualMachineSlot {
                 return true
             case (.crashed, .crashed):
                 return true
+            case (.stopFailed, .stopFailed):
+                return true
             default:
                 return false
             }
@@ -153,7 +171,7 @@ extension VirtualMachineSlot {
 
         var handle: String? {
             switch self {
-            case .starting(let mvm, _), .running(let mvm), .stopping(let mvm):
+            case .starting(let mvm, _), .running(let mvm), .stopping(let mvm), .stopFailed(let mvm, _):
                 return mvm.config.handle
             case .empty, .crashed:
                 return nil
@@ -182,6 +200,12 @@ extension VirtualMachineSlot {
                 break
             case (.stopping, .crashed):
                 // The VM stopped due to an error.
+                break
+            case (.stopping, .stopFailed):
+                // The VM is still running after being asked to stop.
+                break
+            case (.stopFailed, .stopping):
+                // Retrying the stop of a VM that didn't stop.
                 break
             default:
                 // Invalid transition.

@@ -21,7 +21,7 @@ struct VMListItem: View {
             )
         case .stopping:
             EmptyVMListItem(slot: slot)
-        case .crashed(let error):
+        case .crashed(let error), .stopFailed(_, let error):
             ErrorVMListItem(slot: slot, error: error)
         }
     }
