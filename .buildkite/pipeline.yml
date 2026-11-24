@@ -16,9 +16,7 @@ steps:
   #################
   - label: "🧪 Build and Test"
     key: "test"
-    # Temporary: drop RBENV_VERSION once .ruby-version is 3.4.13 (AINFRA-3855); the Linux agents lack it until AINFRA-3889/3890/3891.
     command: |
-      export RBENV_VERSION=3.4.13
       echo "--- :swift: Building + Testing"
       restore_swiftpm_cache --package-resolved Package.resolved --artifacts .build
       swift test
@@ -44,7 +42,6 @@ steps:
   - label: "🧪 Validate Release Build"
     key: "validate-release-build"
     command: |
-      export RBENV_VERSION=3.4.13
       install_gems
       bundle exec fastlane set_up_signing_release
       make build verify-signing
@@ -57,7 +54,6 @@ steps:
   - label: "⬆️ Publish Binary"
     key: "publish"
     command: |
-      export RBENV_VERSION=3.4.13
       install_gems
       bundle exec fastlane set_up_signing_release
       make build
